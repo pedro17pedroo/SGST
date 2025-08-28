@@ -388,6 +388,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public tracking API (no authentication required)
+  app.get("/api/public/track/:trackingNumber", async (req, res) => {
+    try {
+      const { trackingNumber } = req.params;
+      
+      if (!trackingNumber || trackingNumber.trim() === '') {
+        res.status(400).json({ 
+          message: "Número de rastreamento é obrigatório",
+          error: "INVALID_TRACKING_NUMBER"
+        });
+        return;
+      }
+
+      const shipment = await storage.getShipmentByTrackingNumber(trackingNumber.trim());
+      
+      if (!shipment) {
+        res.status(404).json({ 
+          message: "Encomenda não encontrada. Verifique o número de rastreamento.",
+          error: "SHIPMENT_NOT_FOUND"
+        });
+        return;
+      }
+
+      // Return only public information (hide internal details)
+      const publicShipmentInfo = {
+        trackingNumber: shipment.trackingNumber,
+        status: shipment.status,
+        carrier: shipment.carrier,
+        estimatedDelivery: shipment.estimatedDelivery,
+        actualDelivery: shipment.actualDelivery,
+        shippingAddress: shipment.shippingAddress,
+        createdAt: shipment.createdAt,
+        order: shipment.order ? {
+          orderNumber: shipment.order.orderNumber,
+          customerName: shipment.order.customerName,
+          totalAmount: shipment.order.totalAmount
+        } : null,
+        items: shipment.orderItems?.map(item => ({
+          productName: item.product.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice
+        })) || []
+      };
+
+      res.json(publicShipmentInfo);
+    } catch (error) {
+      console.error('Tracking error:', error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor. Tente novamente mais tarde.",
+        error: "INTERNAL_SERVER_ERROR"
+      });
+    }
+  });
+
   // Order routes
   app.get("/api/orders", async (req, res) => {
     try {

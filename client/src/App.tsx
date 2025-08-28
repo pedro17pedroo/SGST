@@ -25,6 +25,7 @@ import Returns from "@/pages/returns";
 import Alerts from "@/pages/alerts";
 import AdvancedAnalytics from "@/pages/advanced-analytics";
 import QualityControl from "@/pages/quality-control";
+import PublicTracking from "@/pages/public-tracking";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -65,9 +66,18 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <AuthProvider>
-            <ProtectedRoute>
-              <Router />
-            </ProtectedRoute>
+            <Switch>
+              {/* Public route - no authentication required */}
+              <Route path="/track" component={PublicTracking} />
+              <Route path="/tracking" component={PublicTracking} />
+              
+              {/* Protected routes - authentication required */}
+              <Route>
+                <ProtectedRoute>
+                  <Router />
+                </ProtectedRoute>
+              </Route>
+            </Switch>
             <Toaster />
           </AuthProvider>
         </TooltipProvider>

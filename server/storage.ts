@@ -79,6 +79,7 @@ export interface IStorage {
   
   // Shipments
   getShipments(): Promise<Array<Shipment & { order?: Order | null; user?: User | null }>>;
+  getShipmentByTrackingNumber(trackingNumber: string): Promise<(Shipment & { order?: Order | null; orderItems?: Array<OrderItem & { product: Product }> }) | undefined>;
   createShipment(shipment: InsertShipment): Promise<Shipment>;
   updateShipment(id: string, shipment: Partial<InsertShipment>): Promise<Shipment>;
 
@@ -909,6 +910,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(shipments.id, id))
       .returning();
     return result;
+  }
+
+  async getShipmentByTrackingNumber(trackingNumber: string) {
+    const [shipment] = await db
+      .select({
+        id: shipments.id,
+        shipmentNumber: shipments.shipmentNumber,
+        orderId: shipments.orderId,
+        status: shipments.status,
+        carrier: shipments.carrier,
+        trackingNumber: shipments.trackingNumber,
+        shippingAddress: shipments.shippingAddress,
+        estimatedDelivery: shipments.estimatedDelivery,
+        actualDelivery: shipments.actualDelivery,
+        userId: shipments.userId,
+        createdAt: shipments.createdAt,
+        order: orders
+      })
+      .from(shipments)
+      .leftJoin(orders, eq(shipments.orderId, orders.id))
+      .where(eq(shipments.trackingNumber, trackingNumber));
+
+    if (!shipment) {
+      return undefined;
+    }
+
+    // Get order items if there's an order
+    let orderItems: Array<OrderItem & { product: Product }> = [];
+    if (shipment.orderId) {
+      orderItems = await this.getOrderItems(shipment.orderId);
+    }
+
+    return {
+      ...shipment,
+      orderItems
+    };
   }
 
   // Product Locations (RF1.5)

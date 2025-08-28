@@ -7,12 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Lock, User, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Nome de utilizador deve ter pelo menos 3 caracteres"),
   password: z.string().min(6, "Palavra-passe deve ter pelo menos 6 caracteres"),
+  acceptTerms: z.boolean().refine(val => val === true, {
+    message: "Deve aceitar os termos e condições para continuar",
+  }),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -31,6 +35,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     defaultValues: {
       username: "",
       password: "",
+      acceptTerms: false,
     },
   });
 
@@ -156,6 +161,36 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="acceptTerms"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="checkbox-accept-terms"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm">
+                        Aceito os{" "}
+                        <a 
+                          href="/terms" 
+                          className="text-primary hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          termos e condições
+                        </a>
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               <Button 
                 type="submit" 
                 className="w-full" 
@@ -167,15 +202,14 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             </form>
           </Form>
 
-          <div className="mt-6 pt-4 border-t border-border">
-            <div className="text-center text-sm text-muted-foreground">
-              <p className="mb-2">Credenciais de demonstração:</p>
-              <div className="space-y-1 text-xs">
-                <p><strong>Admin:</strong> admin / admin123</p>
-                <p><strong>Gestor:</strong> manager / manager123</p>
-                <p><strong>Operador:</strong> operator / operator123</p>
-              </div>
-            </div>
+          <div className="mt-4 text-center">
+            <a 
+              href="/forgot-password" 
+              className="text-sm text-primary hover:underline"
+              data-testid="link-forgot-password"
+            >
+              Esqueceu a sua palavra-passe?
+            </a>
           </div>
         </CardContent>
       </Card>

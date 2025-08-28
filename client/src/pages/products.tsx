@@ -1,23 +1,78 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { ProductForm } from "@/components/products/product-form";
+import { useToast } from "@/hooks/use-toast";
+import { deleteProduct } from "@/lib/api";
+
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  sku: string;
+  price: string;
+  isActive: boolean;
+  category?: {
+    name: string;
+  } | null;
+}
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
-  const filteredProducts = products.filter((product: any) =>
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/top-products"] });
+      toast({
+        title: "Produto eliminado",
+        description: "O produto foi eliminado com sucesso.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao eliminar produto.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setShowForm(true);
+  };
+
+  const handleDelete = (productId: string) => {
+    if (confirm("Tem certeza que deseja eliminar este produto?")) {
+      deleteMutation.mutate(productId);
+    }
+  };
+
+  const handleAddNew = () => {
+    setSelectedProduct(undefined);
+    setShowForm(true);
+  };
 
   return (
     <div className="min-h-screen bg-background" data-testid="products-page">
@@ -37,7 +92,7 @@ export default function Products() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             </div>
           </div>
-          <Button data-testid="add-product-button">
+          <Button onClick={handleAddNew} data-testid="add-product-button">
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Produto
           </Button>
@@ -133,6 +188,7 @@ export default function Products() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
+                              onClick={() => handleEdit(product)}
                               data-testid={`edit-product-${product.id}`}
                             >
                               <Edit className="w-4 h-4" />
@@ -140,6 +196,8 @@ export default function Products() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
+                              onClick={() => handleDelete(product.id)}
+                              disabled={deleteMutation.isPending}
                               data-testid={`delete-product-${product.id}`}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -160,6 +218,12 @@ export default function Products() {
             )}
           </div>
         </Card>
+
+        <ProductForm 
+          open={showForm} 
+          onOpenChange={setShowForm} 
+          product={selectedProduct}
+        />
       </div>
     </div>
   );

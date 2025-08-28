@@ -13,7 +13,7 @@ interface ProductWithStock {
   sales: number;
   category?: {
     name: string;
-  };
+  } | null;
 }
 
 interface ProductsTableProps {

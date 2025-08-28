@@ -211,6 +211,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Inventory routes
+  app.get("/api/inventory/low-stock", async (req, res) => {
+    try {
+      const lowStockProducts = await storage.getLowStockProducts();
+      res.json(lowStockProducts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch low stock products", error });
+    }
+  });
+
   app.get("/api/inventory/warehouse/:warehouseId", async (req, res) => {
     try {
       const { warehouseId } = req.params;

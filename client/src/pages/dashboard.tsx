@@ -3,6 +3,7 @@ import { KPICards } from "@/components/dashboard/kpi-cards";
 import { ChartsSection } from "@/components/dashboard/charts-section";
 import { RecentActivities } from "@/components/dashboard/recent-activities";
 import { ProductsTable } from "@/components/dashboard/products-table";
+import { StockAlerts } from "@/components/inventory/stock-alerts";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 
 export default function Dashboard() {
@@ -14,7 +15,14 @@ export default function Dashboard() {
       
       <div className="p-6 space-y-6">
         <KPICards data={stats} isLoading={isLoadingStats} />
-        <ChartsSection />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ChartsSection />
+          </div>
+          <div>
+            <StockAlerts />
+          </div>
+        </div>
         <RecentActivities activities={activities} isLoading={isLoadingActivities} />
         <ProductsTable products={topProducts} isLoading={isLoadingProducts} />
       </div>

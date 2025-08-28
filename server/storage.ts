@@ -22,7 +22,7 @@ export interface IStorage {
     monthlySales: string;
   }>;
   getTopProducts(): Promise<Array<Product & { stock: number; sales: number }>>;
-  getRecentActivities(): Promise<Array<StockMovement & { product: Product; user: User }>>;
+  getRecentActivities(): Promise<Array<StockMovement & { product: Product; user?: User }>>;
   
   // Categories
   getCategories(): Promise<Category[]>;
@@ -43,7 +43,7 @@ export interface IStorage {
   deleteWarehouse(id: string): Promise<void>;
   
   // Products
-  getProducts(): Promise<Array<Product & { category?: Category; supplier?: Supplier }>>;
+  getProducts(): Promise<Array<Product & { category?: Category | null; supplier?: Supplier | null }>>;
   getProduct(id: string): Promise<Product | undefined>;
   searchProducts(query: string): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
@@ -51,16 +51,17 @@ export interface IStorage {
   deleteProduct(id: string): Promise<void>;
   
   // Inventory
+  getLowStockProducts(): Promise<Array<Product & { stock: number; category?: Category | null }>>;
   getInventoryByWarehouse(warehouseId: string): Promise<Array<Inventory & { product: Product }>>;
   getProductInventory(productId: string): Promise<Array<Inventory & { warehouse: Warehouse }>>;
   updateInventory(productId: string, warehouseId: string, quantity: number): Promise<Inventory>;
   
   // Stock Movements
-  getStockMovements(limit?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User }>>;
+  getStockMovements(limit?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User | null }>>;
   createStockMovement(movement: InsertStockMovement): Promise<StockMovement>;
   
   // Orders
-  getOrders(): Promise<Array<Order & { supplier?: Supplier; user?: User }>>;
+  getOrders(): Promise<Array<Order & { supplier?: Supplier | null; user?: User | null }>>;
   getOrder(id: string): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrder(id: string, order: Partial<InsertOrder>): Promise<Order>;
@@ -71,7 +72,7 @@ export interface IStorage {
   createOrderItem(item: InsertOrderItem): Promise<OrderItem>;
   
   // Shipments
-  getShipments(): Promise<Array<Shipment & { order?: Order; user?: User }>>;
+  getShipments(): Promise<Array<Shipment & { order?: Order | null; user?: User | null }>>;
   createShipment(shipment: InsertShipment): Promise<Shipment>;
   updateShipment(id: string, shipment: Partial<InsertShipment>): Promise<Shipment>;
 }
@@ -318,6 +319,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: string): Promise<void> {
     await db.update(products).set({ isActive: false }).where(eq(products.id, id));
+  }
+
+  async getLowStockProducts() {
+    return await db
+      .select({
+        id: products.id,
+        name: products.name,
+        sku: products.sku,
+        minStockLevel: products.minStockLevel,
+        categoryId: products.categoryId,
+        supplierId: products.supplierId,
+        isActive: products.isActive,
+        createdAt: products.createdAt,
+        description: products.description,
+        barcode: products.barcode,
+        price: products.price,
+        weight: products.weight,
+        dimensions: products.dimensions,
+        stock: sql<number>`coalesce(sum(${inventory.quantity}), 0)`,
+        category: categories
+      })
+      .from(products)
+      .leftJoin(inventory, eq(products.id, inventory.productId))
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(
+        and(
+          eq(products.isActive, true),
+          sql`${products.minStockLevel} > 0`
+        )
+      )
+      .groupBy(products.id, categories.id)
+      .having(sql`coalesce(sum(${inventory.quantity}), 0) <= ${products.minStockLevel}`)
+      .orderBy(sql`coalesce(sum(${inventory.quantity}), 0) / ${products.minStockLevel}`);
   }
 
   async getInventoryByWarehouse(warehouseId: string) {

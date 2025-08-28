@@ -146,114 +146,59 @@ export class DatabaseStorage implements IStorage {
   // Dashboard
   async getDashboardStats() {
     try {
-      // For demo purposes, return realistic data
+      // Get real data from database
+      const [totalProductsResult] = await db.select({ count: sql<number>`count(*)` }).from(products);
+      const totalProducts = totalProductsResult.count || 0;
+      
+      const [pendingOrdersResult] = await db.select({ count: sql<number>`count(*)` }).from(orders).where(eq(orders.status, 'pending'));
+      const pendingOrders = pendingOrdersResult.count || 0;
+      
+      // Count products with stock below minimum level
+      const lowStockProducts = await db.select({ count: sql<number>`count(*)` })
+        .from(products)
+        .leftJoin(inventory, eq(products.id, inventory.productId))
+        .where(sql`${inventory.quantity} < ${products.minStockLevel}`);
+      const lowStock = lowStockProducts[0]?.count || 0;
+      
+      // Calculate monthly sales from completed orders this month
+      const currentMonth = new Date();
+      currentMonth.setDate(1);
+      const [salesResult] = await db.select({ total: sql<string>`sum(${orders.totalAmount})` })
+        .from(orders)
+        .where(and(eq(orders.status, 'completed'), sql`${orders.createdAt} >= ${currentMonth}`));
+      const monthlySales = `AOA ${Number(salesResult.total || 0).toLocaleString('pt-AO')}`;
+      
       return {
-        totalProducts: 156,
-        lowStock: 12,
-        pendingOrders: 8,
-        monthlySales: 'AOA 3,248,500',
+        totalProducts,
+        lowStock,
+        pendingOrders,
+        monthlySales,
       };
     } catch (error) {
       console.error('Dashboard stats error:', error);
       return {
-        totalProducts: 156,
-        lowStock: 12,
-        pendingOrders: 8,
-        monthlySales: 'AOA 3,248,500',
+        totalProducts: 0,
+        lowStock: 0,
+        pendingOrders: 0,
+        monthlySales: 'AOA 0',
       };
     }
   }
 
   async getTopProducts() {
     try {
-      // Return demo data with realistic product information
-      return [
-        {
-          id: '1',
-          name: 'Smartphone Samsung Galaxy A54',
-          sku: 'SPH-001',
-          price: 180000,
-          categoryId: 'cat-001',
-          supplierId: 'sup-001',
-          minStockLevel: 10,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Smartphone com 128GB e câmera de 50MP',
-          barcode: '7891234567890',
-          weight: 202.0,
-          dimensions: '15.8 x 7.6 x 0.8 cm',
-          stock: 45,
-          sales: 23
-        },
-        {
-          id: '2',
-          name: 'Notebook Lenovo IdeaPad 3i',
-          sku: 'NBK-002',
-          price: 420000,
-          categoryId: 'cat-002',
-          supplierId: 'sup-002',
-          minStockLevel: 5,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Notebook Intel i5, 8GB RAM, 256GB SSD',
-          barcode: '7891234567891',
-          weight: 1600.0,
-          dimensions: '36.2 x 25.3 x 1.9 cm',
-          stock: 12,
-          sales: 18
-        },
-        {
-          id: '3',
-          name: 'Monitor LG 24" Full HD',
-          sku: 'MON-003',
-          price: 95000,
-          categoryId: 'cat-003',
-          supplierId: 'sup-001',
-          minStockLevel: 8,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Monitor LED 24 polegadas, 1920x1080',
-          barcode: '7891234567892',
-          weight: 3500.0,
-          dimensions: '54.1 x 32.3 x 21.0 cm',
-          stock: 28,
-          sales: 15
-        },
-        {
-          id: '4',
-          name: 'Fones JBL Tune 510BT',
-          sku: 'FON-004',
-          price: 35000,
-          categoryId: 'cat-004',
-          supplierId: 'sup-003',
-          minStockLevel: 15,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Fones bluetooth com cancelamento de ruído',
-          barcode: '7891234567893',
-          weight: 160.0,
-          dimensions: '18.5 x 17.0 x 6.5 cm',
-          stock: 67,
-          sales: 42
-        },
-        {
-          id: '5',
-          name: 'SSD Kingston 480GB',
-          sku: 'SSD-005',
-          price: 58000,
-          categoryId: 'cat-005',
-          supplierId: 'sup-002',
-          minStockLevel: 12,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'SSD SATA 2.5" para upgrade de performance',
-          barcode: '7891234567894',
-          weight: 60.0,
-          dimensions: '10.0 x 7.0 x 0.7 cm',
-          stock: 33,
-          sales: 29
-        }
-      ];
+      // Get products with highest sales from order items
+      return await db.select({
+        ...products,
+        stock: sql<number>`COALESCE(sum(${inventory.quantity}), 0)`,
+        sales: sql<number>`COALESCE(sum(${orderItems.quantity}), 0)`
+      })
+        .from(products)
+        .leftJoin(inventory, eq(products.id, inventory.productId))
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .groupBy(products.id)
+        .orderBy(desc(sql<number>`COALESCE(sum(${orderItems.quantity}), 0)`))
+        .limit(5);
     } catch (error) {
       console.error('Top products error:', error);
       return [];
@@ -262,98 +207,19 @@ export class DatabaseStorage implements IStorage {
 
   async getRecentActivities() {
     try {
-      // Return demo data for recent activities
-      const now = new Date();
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-      const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-
-      return [
-        {
-          id: 'act-001',
-          productId: '1',
-          warehouseId: 'wh-001',
-          type: 'out' as const,
-          quantity: 2,
-          reference: 'VND-2025-001',
-          reason: 'Venda para cliente',
-          userId: 'user-001',
-          createdAt: now,
-          product: {
-            id: '1',
-            name: 'Smartphone Samsung Galaxy A54',
-            sku: 'SPH-001',
-          },
-          user: {
-            id: 'user-001',
-            name: 'João Admin',
-            email: 'admin@sgst.ao'
-          }
-        },
-        {
-          id: 'act-002',
-          productId: '3',
-          warehouseId: 'wh-001',
-          type: 'in' as const,
-          quantity: 10,
-          reference: 'REC-2025-003',
-          reason: 'Recepção de fornecedor',
-          userId: 'user-002',
-          createdAt: oneHourAgo,
-          product: {
-            id: '3',
-            name: 'Monitor LG 24" Full HD',
-            sku: 'MON-003',
-          },
-          user: {
-            id: 'user-002',
-            name: 'Maria Operadora',
-            email: 'maria@sgst.ao'
-          }
-        },
-        {
-          id: 'act-003',
-          productId: '4',
-          warehouseId: 'wh-001',
-          type: 'out' as const,
-          quantity: 5,
-          reference: 'VND-2025-002',
-          reason: 'Transferência entre armazéns',
-          userId: 'user-001',
-          createdAt: twoHoursAgo,
-          product: {
-            id: '4',
-            name: 'Fones JBL Tune 510BT',
-            sku: 'FON-004',
-          },
-          user: {
-            id: 'user-001',
-            name: 'João Admin',
-            email: 'admin@sgst.ao'
-          }
-        },
-        {
-          id: 'act-004',
-          productId: '2',
-          warehouseId: 'wh-001',
-          type: 'adjustment' as const,
-          quantity: -1,
-          reference: 'AJT-2025-001',
-          reason: 'Ajuste de inventário',
-          userId: 'user-003',
-          createdAt: threeHoursAgo,
-          product: {
-            id: '2',
-            name: 'Notebook Lenovo IdeaPad 3i',
-            sku: 'NBK-002',
-          },
-          user: {
-            id: 'user-003',
-            name: 'Carlos Supervisor',
-            email: 'carlos@sgst.ao'
-          }
-        }
-      ];
+      return await db.select()
+        .from(stockMovements)
+        .leftJoin(products, eq(stockMovements.productId, products.id))
+        .leftJoin(users, eq(stockMovements.userId, users.id))
+        .orderBy(desc(stockMovements.createdAt))
+        .limit(10)
+        .then(results => 
+          results.map(row => ({
+            ...row.stock_movements,
+            product: row.products,
+            user: row.users
+          }))
+        );
     } catch (error) {
       console.error('Recent activities error:', error);
       return [];
@@ -363,45 +229,7 @@ export class DatabaseStorage implements IStorage {
   // Categories
   async getCategories(): Promise<Category[]> {
     try {
-      // Return demo data for categories
-      return [
-        {
-          id: 'cat-001',
-          name: 'Smartphones',
-          description: 'Telefones inteligentes e acessórios',
-          createdAt: new Date()
-        },
-        {
-          id: 'cat-002',
-          name: 'Computadores',
-          description: 'Notebooks, desktops e componentes',
-          createdAt: new Date()
-        },
-        {
-          id: 'cat-003',
-          name: 'Monitores',
-          description: 'Monitores e displays',
-          createdAt: new Date()
-        },
-        {
-          id: 'cat-004',
-          name: 'Áudio',
-          description: 'Fones, caixas de som e equipamentos de áudio',
-          createdAt: new Date()
-        },
-        {
-          id: 'cat-005',
-          name: 'Armazenamento',
-          description: 'SSDs, HDDs e dispositivos de armazenamento',
-          createdAt: new Date()
-        },
-        {
-          id: 'cat-006',
-          name: 'Acessórios',
-          description: 'Periféricos e acessórios diversos',
-          createdAt: new Date()
-        }
-      ];
+      return await db.select().from(categories).orderBy(desc(categories.createdAt));
     } catch (error) {
       console.error('Categories error:', error);
       return [];
@@ -429,41 +257,7 @@ export class DatabaseStorage implements IStorage {
   // Suppliers
   async getSuppliers(): Promise<Supplier[]> {
     try {
-      // Return demo data for suppliers
-      return [
-        {
-          id: 'sup-001',
-          name: 'TechSup Angola',
-          email: 'vendas@techsup.ao',
-          phone: '+244 923 456 789',
-          address: 'Rua da Tecnologia, 123 - Luanda',
-          createdAt: new Date()
-        },
-        {
-          id: 'sup-002',
-          name: 'ElectroLuanda Lda',
-          email: 'comercial@electroluanda.ao',
-          phone: '+244 912 345 678',
-          address: 'Avenida 4 de Fevereiro, 456 - Luanda',
-          createdAt: new Date()
-        },
-        {
-          id: 'sup-003',
-          name: 'InfoTech Distribuição',
-          email: 'pedidos@infotech.ao',
-          phone: '+244 934 567 890',
-          address: 'Zona Industrial de Viana, Lote 78 - Luanda',
-          createdAt: new Date()
-        },
-        {
-          id: 'sup-004',
-          name: 'Digital Store Angola',
-          email: 'suprimentos@digitalstore.ao',
-          phone: '+244 945 678 901',
-          address: 'Rua dos Enganos, 789 - Luanda',
-          createdAt: new Date()
-        }
-      ];
+      return await db.select().from(suppliers).orderBy(desc(suppliers.createdAt));
     } catch (error) {
       console.error('Suppliers error:', error);
       return [];
@@ -514,94 +308,18 @@ export class DatabaseStorage implements IStorage {
   // Products
   async getProducts(): Promise<Array<Product & { category?: Category | null; supplier?: Supplier | null }>> {
     try {
-      // Return demo data for products with categories and suppliers
-      return [
-        {
-          id: '1',
-          name: 'Smartphone Samsung Galaxy A54',
-          sku: 'SPH-001',
-          price: 180000,
-          categoryId: 'cat-001',
-          supplierId: 'sup-001',
-          minStockLevel: 10,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Smartphone com 128GB e câmera de 50MP',
-          barcode: '7891234567890',
-          weight: 202.0,
-          dimensions: '15.8 x 7.6 x 0.8 cm',
-          category: { id: 'cat-001', name: 'Smartphones', description: 'Telefones inteligentes', createdAt: new Date() },
-          supplier: { id: 'sup-001', name: 'TechSup Angola', email: 'vendas@techsup.ao', phone: '+244 923 456 789', address: 'Rua da Tecnologia, 123', createdAt: new Date() }
-        },
-        {
-          id: '2',
-          name: 'Notebook Lenovo IdeaPad 3i',
-          sku: 'NBK-002',
-          price: 420000,
-          categoryId: 'cat-002',
-          supplierId: 'sup-002',
-          minStockLevel: 5,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Notebook Intel i5, 8GB RAM, 256GB SSD',
-          barcode: '7891234567891',
-          weight: 1600.0,
-          dimensions: '36.2 x 25.3 x 1.9 cm',
-          category: { id: 'cat-002', name: 'Computadores', description: 'Notebooks e desktops', createdAt: new Date() },
-          supplier: { id: 'sup-002', name: 'ElectroLuanda Lda', email: 'comercial@electroluanda.ao', phone: '+244 912 345 678', address: 'Avenida 4 de Fevereiro, 456', createdAt: new Date() }
-        },
-        {
-          id: '3',
-          name: 'Monitor LG 24" Full HD',
-          sku: 'MON-003',
-          price: 95000,
-          categoryId: 'cat-003',
-          supplierId: 'sup-001',
-          minStockLevel: 8,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Monitor LED 24 polegadas, 1920x1080',
-          barcode: '7891234567892',
-          weight: 3500.0,
-          dimensions: '54.1 x 32.3 x 21.0 cm',
-          category: { id: 'cat-003', name: 'Monitores', description: 'Monitores e displays', createdAt: new Date() },
-          supplier: { id: 'sup-001', name: 'TechSup Angola', email: 'vendas@techsup.ao', phone: '+244 923 456 789', address: 'Rua da Tecnologia, 123', createdAt: new Date() }
-        },
-        {
-          id: '4',
-          name: 'Fones JBL Tune 510BT',
-          sku: 'FON-004',
-          price: 35000,
-          categoryId: 'cat-004',
-          supplierId: 'sup-003',
-          minStockLevel: 15,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Fones bluetooth com cancelamento de ruído',
-          barcode: '7891234567893',
-          weight: 160.0,
-          dimensions: '18.5 x 17.0 x 6.5 cm',
-          category: { id: 'cat-004', name: 'Áudio', description: 'Equipamentos de áudio', createdAt: new Date() },
-          supplier: { id: 'sup-003', name: 'InfoTech Distribuição', email: 'pedidos@infotech.ao', phone: '+244 934 567 890', address: 'Zona Industrial de Viana', createdAt: new Date() }
-        },
-        {
-          id: '5',
-          name: 'SSD Kingston 480GB',
-          sku: 'SSD-005',
-          price: 58000,
-          categoryId: 'cat-005',
-          supplierId: 'sup-002',
-          minStockLevel: 12,
-          isActive: true,
-          createdAt: new Date(),
-          description: 'SSD SATA 2.5" para upgrade de performance',
-          barcode: '7891234567894',
-          weight: 60.0,
-          dimensions: '10.0 x 7.0 x 0.7 cm',
-          category: { id: 'cat-005', name: 'Armazenamento', description: 'Dispositivos de armazenamento', createdAt: new Date() },
-          supplier: { id: 'sup-002', name: 'ElectroLuanda Lda', email: 'comercial@electroluanda.ao', phone: '+244 912 345 678', address: 'Avenida 4 de Fevereiro, 456', createdAt: new Date() }
-        }
-      ];
+      return await db.select()
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(suppliers, eq(products.supplierId, suppliers.id))
+        .orderBy(desc(products.createdAt))
+        .then(results => 
+          results.map(row => ({
+            ...row.products,
+            category: row.categories,
+            supplier: row.suppliers
+          }))
+        );
     } catch (error) {
       console.error('Products error:', error);
       return [];
@@ -647,72 +365,17 @@ export class DatabaseStorage implements IStorage {
   // Inventory
   async getLowStockProducts() {
     try {
-      // Return demo data for low stock products
-      return [
-        {
-          id: '2',
-          name: 'Notebook Lenovo IdeaPad 3i',
-          sku: 'NBK-002',
-          minStockLevel: 15,
-          categoryId: 'cat-002',
-          supplierId: 'sup-002',
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Notebook Intel i5, 8GB RAM, 256GB SSD',
-          barcode: '7891234567891',
-          price: 420000,
-          weight: 1600.0,
-          dimensions: '36.2 x 25.3 x 1.9 cm',
-          stock: 3, // Below minStockLevel
-          category: {
-            id: 'cat-002',
-            name: 'Computadores',
-            description: 'Notebooks e desktops'
-          }
-        },
-        {
-          id: '6',
-          name: 'Teclado Mecânico Redragon',
-          sku: 'TEC-006',
-          minStockLevel: 20,
-          categoryId: 'cat-006',
-          supplierId: 'sup-003',
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Teclado mecânico gaming RGB',
-          barcode: '7891234567896',
-          price: 78000,
-          weight: 950.0,
-          dimensions: '44.0 x 13.0 x 3.5 cm',
-          stock: 8, // Below minStockLevel
-          category: {
-            id: 'cat-006',
-            name: 'Acessórios',
-            description: 'Periféricos e acessórios'
-          }
-        },
-        {
-          id: '7',
-          name: 'Mouse Logitech MX Master 3',
-          sku: 'MOU-007',
-          minStockLevel: 25,
-          categoryId: 'cat-006',
-          supplierId: 'sup-001',
-          isActive: true,
-          createdAt: new Date(),
-          description: 'Mouse wireless ergonômico',
-          barcode: '7891234567897',
-          price: 95000,
-          weight: 141.0,
-          dimensions: '12.6 x 8.4 x 5.1 cm',
-          stock: 5, // Well below minStockLevel
-          category: {
-            id: 'cat-006',
-            name: 'Acessórios',
-            description: 'Periféricos e acessórios'
-          }
-        }
-      ];
+      return await db.select({
+        ...products,
+        stock: sql<number>`COALESCE(sum(${inventory.quantity}), 0)`,
+        category: categories
+      })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(inventory, eq(products.id, inventory.productId))
+        .groupBy(products.id, categories.id)
+        .having(sql`COALESCE(sum(${inventory.quantity}), 0) < ${products.minStockLevel}`)
+        .orderBy(sql`COALESCE(sum(${inventory.quantity}), 0)`);
     } catch (error) {
       console.error('Low stock products error:', error);
       return [];

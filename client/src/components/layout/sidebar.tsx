@@ -3,6 +3,7 @@ import {
   BarChart3, 
   Box, 
   Warehouse, 
+  Package,
   Truck, 
   ShoppingCart, 
   FileText, 
@@ -27,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 const navigationItems = [
   { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { path: "/products", label: "Produtos", icon: Box },
-  { path: "/inventory", label: "Inventário", icon: Warehouse },
+  { path: "/inventory", label: "Inventário", icon: Package },
   { path: "/warehouses", label: "Armazéns", icon: Warehouse },
   { path: "/suppliers", label: "Fornecedores", icon: Building },
   { path: "/orders", label: "Pedidos", icon: ShoppingCart },

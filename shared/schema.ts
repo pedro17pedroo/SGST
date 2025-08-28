@@ -388,6 +388,39 @@ export const returnItems = pgTable("return_items", {
   qualityNotes: text("quality_notes"),
 });
 
+// Alerts and Notifications table (RF4.2)
+export const alerts = pgTable("alerts", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: varchar("type", { length: 50 }).notNull(), // low_stock, reorder_point, expiry, quality, system
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, critical
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, acknowledged, resolved, dismissed
+  entityType: varchar("entity_type", { length: 50 }), // product, warehouse, order, supplier
+  entityId: uuid("entity_id"),
+  userId: uuid("user_id").references(() => users.id), // User responsible or affected
+  acknowledgedBy: uuid("acknowledged_by").references(() => users.id),
+  resolvedBy: uuid("resolved_by").references(() => users.id),
+  metadata: json("metadata"), // Additional context data
+  scheduledFor: timestamp("scheduled_for"), // For scheduled notifications
+  expiresAt: timestamp("expires_at"), // Auto-dismiss after this time
+  createdAt: timestamp("created_at").defaultNow(),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+// Notification preferences for users
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  alertType: varchar("alert_type", { length: 50 }).notNull(),
+  channel: varchar("channel", { length: 20 }).notNull(), // email, sms, push, in_app
+  enabled: boolean("enabled").notNull().default(true),
+  threshold: json("threshold"), // Custom thresholds for this user
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Return relations
 export const returnsRelations = relations(returns, ({ one, many }) => ({
   originalOrder: one(orders, {
@@ -429,6 +462,29 @@ export const returnItemsRelations = relations(returnItems, ({ one }) => ({
   warehouse: one(warehouses, {
     fields: [returnItems.warehouseId],
     references: [warehouses.id],
+  }),
+}));
+
+// Alert relations
+export const alertsRelations = relations(alerts, ({ one }) => ({
+  user: one(users, {
+    fields: [alerts.userId],
+    references: [users.id],
+  }),
+  acknowledgedByUser: one(users, {
+    fields: [alerts.acknowledgedBy],
+    references: [users.id],
+  }),
+  resolvedByUser: one(users, {
+    fields: [alerts.resolvedBy],
+    references: [users.id],
+  }),
+}));
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationPreferences.userId],
+    references: [users.id],
   }),
 }));
 
@@ -512,6 +568,19 @@ export const insertReturnItemSchema = createInsertSchema(returnItems).omit({
   id: true,
 });
 
+export const insertAlertSchema = createInsertSchema(alerts).omit({
+  id: true,
+  createdAt: true,
+  acknowledgedAt: true,
+  resolvedAt: true,
+});
+
+export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -545,3 +614,7 @@ export type Return = typeof returns.$inferSelect;
 export type InsertReturn = z.infer<typeof insertReturnSchema>;
 export type ReturnItem = typeof returnItems.$inferSelect;
 export type InsertReturnItem = z.infer<typeof insertReturnItemSchema>;
+export type Alert = typeof alerts.$inferSelect;
+export type InsertAlert = z.infer<typeof insertAlertSchema>;
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;

@@ -22,6 +22,9 @@ import ProductLocations from "@/pages/product-locations";
 import InventoryCounts from "@/pages/inventory-counts";
 import PickingPacking from "@/pages/picking-packing";
 import Returns from "@/pages/returns";
+import Alerts from "@/pages/alerts";
+import AdvancedAnalytics from "@/pages/advanced-analytics";
+import QualityControl from "@/pages/quality-control";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -43,6 +46,9 @@ function Router() {
           <Route path="/inventory-counts" component={InventoryCounts} />
           <Route path="/picking-packing" component={PickingPacking} />
           <Route path="/returns" component={Returns} />
+          <Route path="/alerts" component={Alerts} />
+          <Route path="/advanced-analytics" component={AdvancedAnalytics} />
+          <Route path="/quality-control" component={QualityControl} />
           <Route path="/reports" component={Reports} />
           <Route path="/users" component={Users} />
           <Route path="/settings" component={Settings} />

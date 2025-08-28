@@ -15,7 +15,10 @@ import {
   MapPin,
   ClipboardList,
   PackageCheck,
-  RotateCcw
+  RotateCcw,
+  Bell,
+  TrendingUp,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
@@ -34,6 +37,9 @@ const navigationItems = [
   { path: "/inventory-counts", label: "Contagens", icon: ClipboardList },
   { path: "/picking-packing", label: "Picking & Packing", icon: PackageCheck },
   { path: "/returns", label: "Devoluções", icon: RotateCcw },
+  { path: "/alerts", label: "Alertas", icon: Bell },
+  { path: "/advanced-analytics", label: "Analytics Avançadas", icon: TrendingUp },
+  { path: "/quality-control", label: "Controlo Qualidade", icon: Shield },
   { path: "/reports", label: "Relatórios", icon: FileText },
   { path: "/users", label: "Utilizadores", icon: Users },
   { path: "/settings", label: "Configurações", icon: Settings },

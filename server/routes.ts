@@ -5,7 +5,7 @@ import {
   insertUserSchema, insertCategorySchema, insertSupplierSchema, insertWarehouseSchema,
   insertProductSchema, insertStockMovementSchema, insertOrderSchema, insertShipmentSchema,
   insertProductLocationSchema, insertInventoryCountSchema, insertInventoryCountItemSchema,
-  insertBarcodeScanSchema
+  insertBarcodeScanSchema, insertReturnSchema, insertReturnItemSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -1040,6 +1040,264 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(scans);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch scans for product", error });
+    }
+  });
+
+  // Returns routes (RF3.3 - Returns Management)
+  app.get("/api/returns", async (req, res) => {
+    try {
+      const { supplierId } = req.query;
+      const returnsData = await storage.getReturns(supplierId as string);
+      res.json(returnsData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch returns", error });
+    }
+  });
+
+  app.get("/api/returns/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const returnData = await storage.getReturn(id);
+      if (!returnData) {
+        return res.status(404).json({ message: "Return not found" });
+      }
+      res.json(returnData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch return", error });
+    }
+  });
+
+  app.post("/api/returns", async (req, res) => {
+    try {
+      const returnData = insertReturnSchema.parse(req.body);
+      const result = await storage.createReturn(returnData);
+      res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid return data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create return", error });
+      }
+    }
+  });
+
+  app.put("/api/returns/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertReturnSchema.partial().parse(req.body);
+      const result = await storage.updateReturn(id, updates);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid return data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update return", error });
+      }
+    }
+  });
+
+  app.get("/api/returns/:id/items", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const items = await storage.getReturnItems(id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch return items", error });
+    }
+  });
+
+  app.post("/api/return-items", async (req, res) => {
+    try {
+      const itemData = insertReturnItemSchema.parse(req.body);
+      const item = await storage.createReturnItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid return item data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create return item", error });
+      }
+    }
+  });
+
+  app.put("/api/return-items/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertReturnItemSchema.partial().parse(req.body);
+      const item = await storage.updateReturnItem(id, updates);
+      res.json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid return item data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update return item", error });
+      }
+    }
+  });
+
+  // Picking Lists routes (RF2.4 - Picking & Packing)
+  app.get("/api/picking-lists", async (req, res) => {
+    try {
+      // Demo data for now - replace with actual database calls
+      const pickingLists = [
+        {
+          id: 'pick-001',
+          orderNumber: 'ORD-2025-001',
+          warehouse: { id: 'wh-001', name: 'Armazém Principal' },
+          status: 'pending',
+          priority: 'high',
+          items: [
+            {
+              id: 'item-001',
+              product: {
+                id: '1',
+                name: 'Smartphone Samsung Galaxy A54',
+                sku: 'SPH-001',
+                barcode: '7891234567890'
+              },
+              quantity: 2,
+              location: { zone: 'A', shelf: 'A1', bin: 'A1-01' }
+            }
+          ],
+          createdAt: new Date().toISOString(),
+          notes: 'Prioridade alta - cliente VIP'
+        }
+      ];
+      res.json(pickingLists);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch picking lists", error });
+    }
+  });
+
+  app.post("/api/picking-lists", async (req, res) => {
+    try {
+      // Demo implementation - would create actual picking list
+      const pickingData = req.body;
+      const result = {
+        id: 'pick-' + Date.now(),
+        ...pickingData,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create picking list", error });
+    }
+  });
+
+  // Packing Tasks routes (RF2.4)
+  app.get("/api/packing-tasks", async (req, res) => {
+    try {
+      // Demo data for now
+      const packingTasks = [
+        {
+          id: 'pack-001',
+          pickingList: { id: 'pick-003', orderNumber: 'ORD-2025-003' },
+          packageType: 'Caixa Média',
+          status: 'completed',
+          weight: 2.5,
+          dimensions: { length: 30, width: 20, height: 15 },
+          trackingNumber: 'TRK-001-2025',
+          packedBy: { id: 'user-001', username: 'João Admin' },
+          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          completedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+      res.json(packingTasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch packing tasks", error });
+    }
+  });
+
+  app.post("/api/packing-tasks", async (req, res) => {
+    try {
+      // Demo implementation
+      const packingData = req.body;
+      const result = {
+        id: 'pack-' + Date.now(),
+        ...packingData,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create packing task", error });
+    }
+  });
+
+  // Advanced Analytics routes (RF5.2-5.3)
+  app.get("/api/analytics/demand-forecast", async (req, res) => {
+    try {
+      // Demo predictive analytics data
+      const forecast = {
+        period: '30 days',
+        predictions: [
+          {
+            productId: '1',
+            productName: 'Smartphone Samsung Galaxy A54',
+            currentStock: 45,
+            predictedDemand: 28,
+            recommendedReorder: 15,
+            confidence: 0.89,
+            seasonalFactor: 1.2
+          },
+          {
+            productId: '2',
+            productName: 'Notebook Lenovo IdeaPad 3i',
+            currentStock: 12,
+            predictedDemand: 8,
+            recommendedReorder: 5,
+            confidence: 0.76,
+            seasonalFactor: 0.95
+          }
+        ],
+        generatedAt: new Date().toISOString()
+      };
+      res.json(forecast);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate demand forecast", error });
+    }
+  });
+
+  app.get("/api/analytics/turnover-analysis", async (req, res) => {
+    try {
+      // Demo turnover analysis
+      const analysis = {
+        period: '6 months',
+        categories: [
+          {
+            categoryId: 'cat-001',
+            categoryName: 'Smartphones',
+            turnoverRate: 4.2,
+            averageDaysToSell: 87,
+            fastMovingProducts: 5,
+            slowMovingProducts: 2,
+            status: 'healthy'
+          },
+          {
+            categoryId: 'cat-002',
+            categoryName: 'Computadores',
+            turnoverRate: 2.8,
+            averageDaysToSell: 130,
+            fastMovingProducts: 3,
+            slowMovingProducts: 4,
+            status: 'attention'
+          }
+        ],
+        obsoleteItems: [
+          {
+            productId: '8',
+            productName: 'Impressora Antiga X200',
+            daysInStock: 365,
+            currentValue: 25000,
+            recommendation: 'liquidate'
+          }
+        ],
+        generatedAt: new Date().toISOString()
+      };
+      res.json(analysis);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate turnover analysis", error });
     }
   });
 

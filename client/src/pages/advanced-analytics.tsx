@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -20,7 +20,10 @@ import {
   Filter,
   PieChart as PieChartIcon,
   Target,
-  Calendar
+  Calendar,
+  Brain,
+  Clock,
+  RefreshCw
 } from "lucide-react";
 import { 
   BarChart, 
@@ -115,6 +118,315 @@ const predictiveData = [
 ];
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff8042', '#8dd1e1', '#d084d0'];
+
+// AI Analytics Component using real API data
+function AIAnalyticsSection() {
+  // Get demand forecast data
+  const { data: demandForecast, isLoading: isLoadingForecast } = useQuery({
+    queryKey: ['/api/analytics/demand-forecast'],
+    queryFn: async () => {
+      const response = await fetch('/api/analytics/demand-forecast');
+      if (!response.ok) throw new Error('Failed to fetch demand forecast');
+      return response.json();
+    }
+  });
+
+  // Get turnover analysis data
+  const { data: turnoverAnalysis, isLoading: isLoadingTurnover } = useQuery({
+    queryKey: ['/api/analytics/turnover-analysis'],
+    queryFn: async () => {
+      const response = await fetch('/api/analytics/turnover-analysis');
+      if (!response.ok) throw new Error('Failed to fetch turnover analysis');
+      return response.json();
+    }
+  });
+
+  const getConfidenceBadge = (confidence: number) => {
+    if (confidence >= 0.8) return <Badge variant="default">Alta ({(confidence * 100).toFixed(0)}%)</Badge>;
+    if (confidence >= 0.6) return <Badge variant="secondary">Média ({(confidence * 100).toFixed(0)}%)</Badge>;
+    return <Badge variant="outline">Baixa ({(confidence * 100).toFixed(0)}%)</Badge>;
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "healthy":
+        return <Badge variant="default" className="bg-green-500"><TrendingUp className="w-3 h-3 mr-1" />Saudável</Badge>;
+      case "attention":
+        return <Badge variant="secondary"><AlertTriangle className="w-3 h-3 mr-1" />Atenção</Badge>;
+      case "critical":
+        return <Badge variant="destructive"><TrendingDown className="w-3 h-3 mr-1" />Crítico</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getRecommendationBadge = (recommendation: string) => {
+    switch (recommendation) {
+      case "liquidate":
+        return <Badge variant="destructive">Liquidar</Badge>;
+      case "discount":
+        return <Badge variant="secondary">Descontar</Badge>;
+      case "return":
+        return <Badge variant="outline">Devolver</Badge>;
+      default:
+        return <Badge variant="outline">{recommendation}</Badge>;
+    }
+  };
+
+  return (
+    <>
+      {/* AI Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center space-x-2">
+            <Brain className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm font-medium">Algoritmo IA</p>
+              <p className="text-xs text-muted-foreground">Machine Learning</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center space-x-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm font-medium">Período</p>
+              <p className="text-xs text-muted-foreground">{demandForecast?.period || "30 dias"}</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center space-x-2">
+            <RefreshCw className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm font-medium">Última Atualização</p>
+              <p className="text-xs text-muted-foreground">
+                {demandForecast && new Date(demandForecast.generatedAt).toLocaleString('pt-PT')}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Demand Forecast Section */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <Target className="w-5 h-5 mr-2 text-primary" />
+          Previsões de Demanda com IA
+        </h3>
+        
+        {isLoadingForecast ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-16 bg-muted rounded-lg"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {demandForecast?.predictions.map((prediction: any) => (
+              <div 
+                key={prediction.productId} 
+                className="border border-border rounded-lg p-4 space-y-3"
+                data-testid={`prediction-${prediction.productId}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Package className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground">{prediction.productName}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Stock Atual: {prediction.currentStock} unidades
+                      </p>
+                    </div>
+                  </div>
+                  {getConfidenceBadge(prediction.confidence)}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Demanda Prevista</span>
+                      <span className="font-medium">{prediction.predictedDemand} un.</span>
+                    </div>
+                    <Progress 
+                      value={(prediction.predictedDemand / prediction.currentStock) * 100} 
+                      className="h-2" 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Reposição Sugerida</span>
+                      <span className="font-medium text-orange-600">{prediction.recommendedReorder} un.</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="text-xs">
+                        Fator Sazonal: {prediction.seasonalFactor}x
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Status</span>
+                      <span className="font-medium">
+                        {prediction.currentStock < prediction.predictedDemand ? (
+                          <Badge variant="destructive">Stock Baixo</Badge>
+                        ) : (
+                          <Badge variant="default">OK</Badge>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Turnover Analysis Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2 text-primary" />
+            Análise de Rotatividade por Categoria
+          </h3>
+          
+          {isLoadingTurnover ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-20 bg-muted rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {turnoverAnalysis?.categories.map((category: any) => (
+                <div 
+                  key={category.categoryId} 
+                  className="border border-border rounded-lg p-4"
+                  data-testid={`category-${category.categoryId}`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-foreground">{category.categoryName}</h4>
+                    {getStatusBadge(category.status)}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Taxa de Rotatividade</p>
+                      <p className="font-semibold text-lg">{category.turnoverRate}x</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Dias Médios de Venda</p>
+                      <p className="font-semibold text-lg">{category.averageDaysToSell}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Produtos Rápidos</p>
+                      <p className="font-semibold text-green-600">{category.fastMovingProducts}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Produtos Lentos</p>
+                      <p className="font-semibold text-red-600">{category.slowMovingProducts}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <AlertTriangle className="w-5 h-5 mr-2 text-orange-500" />
+            Itens Obsoletos
+          </h3>
+          
+          {isLoadingTurnover ? (
+            <div className="space-y-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-16 bg-muted rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {turnoverAnalysis?.obsoleteItems.map((item: any) => (
+                <div 
+                  key={item.productId} 
+                  className="border border-border rounded-lg p-4 bg-orange-50 dark:bg-orange-900/10"
+                  data-testid={`obsolete-${item.productId}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-foreground">{item.productName}</h4>
+                    {getRecommendationBadge(item.recommendation)}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        {item.daysInStock} dias em stock
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        AOA {item.currentValue.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Summary Metrics */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Resumo de Análises com IA</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="text-center p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
+            <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Categorias Saudáveis</p>
+            <p className="text-2xl font-bold text-green-600">
+              {turnoverAnalysis?.categories.filter((c: any) => c.status === 'healthy').length || 0}
+            </p>
+          </div>
+          <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
+            <AlertTriangle className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Requer Atenção</p>
+            <p className="text-2xl font-bold text-yellow-600">
+              {turnoverAnalysis?.categories.filter((c: any) => c.status === 'attention').length || 0}
+            </p>
+          </div>
+          <div className="text-center p-4 bg-red-50 dark:bg-red-900/10 rounded-lg">
+            <TrendingDown className="w-8 h-8 text-red-600 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Itens Obsoletos</p>
+            <p className="text-2xl font-bold text-red-600">
+              {turnoverAnalysis?.obsoleteItems.length || 0}
+            </p>
+          </div>
+          <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+            <DollarSign className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Valor Obsoleto</p>
+            <p className="text-2xl font-bold text-blue-600">
+              AOA {turnoverAnalysis?.obsoleteItems.reduce((sum: number, item: any) => sum + item.currentValue, 0).toLocaleString() || '0'}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </>
+  );
+}
 
 export default function AdvancedAnalyticsPage() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -366,91 +678,9 @@ export default function AdvancedAnalyticsPage() {
           </Card>
         </TabsContent>
 
-        {/* Predictive Analytics Tab */}
+        {/* Predictive Analytics Tab - Using Real API Data */}
         <TabsContent value="predictive" className="space-y-6">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Previsões de Receita</h3>
-              <Badge variant="outline">Próximos 4 meses</Badge>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={predictiveData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value, name) => {
-                  if (name === 'predicted') return [formatCurrency(Number(value)), 'Receita Prevista'];
-                  if (name === 'confidence') return [`${value}%`, 'Confiança'];
-                  return [value, name];
-                }} />
-                <Line 
-                  type="monotone" 
-                  dataKey="predicted" 
-                  stroke="#8884d8" 
-                  strokeWidth={3}
-                  strokeDasharray="5 5"
-                  name="predicted"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Previsões Detalhadas</h3>
-              <div className="space-y-4">
-                {predictiveData.map((prediction, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{prediction.month} 2025</p>
-                      <p className="text-sm text-muted-foreground">Demanda: {prediction.demand}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{formatCurrency(prediction.predicted)}</p>
-                      <Badge variant={prediction.confidence > 80 ? "default" : "secondary"}>
-                        {prediction.confidence}% confiança
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Recomendações de Stock</h3>
-              <div className="space-y-4">
-                <div className="p-3 border rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
-                  <div className="flex items-center space-x-2">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                    <p className="font-medium text-yellow-800 dark:text-yellow-200">Ação Requerida</p>
-                  </div>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                    Aumentar stock de Smartphones em 25% para Agosto
-                  </p>
-                </div>
-                
-                <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-900/20">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                    <p className="font-medium text-green-800 dark:text-green-200">Oportunidade</p>
-                  </div>
-                  <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                    Promover Acessórios - crescimento previsto de 30%
-                  </p>
-                </div>
-
-                <div className="p-3 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <div className="flex items-center space-x-2">
-                    <Package className="w-5 h-5 text-blue-600" />
-                    <p className="font-medium text-blue-800 dark:text-blue-200">Otimização</p>
-                  </div>
-                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                    Reduzir stock de Monitores - demanda em declínio
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
+          <AIAnalyticsSection />
         </TabsContent>
 
         {/* Efficiency Tab */}

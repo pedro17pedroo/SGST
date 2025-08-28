@@ -1,12 +1,12 @@
 import {
   users, categories, suppliers, warehouses, products, inventory, stockMovements, orders, orderItems, shipments,
-  productLocations, inventoryCounts, inventoryCountItems, barcodeScans,
+  productLocations, inventoryCounts, inventoryCountItems, barcodeScans, returns, returnItems,
   type User, type InsertUser, type Category, type InsertCategory, type Supplier, type InsertSupplier,
   type Warehouse, type InsertWarehouse, type Product, type InsertProduct, type Inventory, type InsertInventory,
   type StockMovement, type InsertStockMovement, type Order, type InsertOrder, type OrderItem, type InsertOrderItem,
   type Shipment, type InsertShipment, type ProductLocation, type InsertProductLocation,
   type InventoryCount, type InsertInventoryCount, type InventoryCountItem, type InsertInventoryCountItem,
-  type BarcodeScan, type InsertBarcodeScan
+  type BarcodeScan, type InsertBarcodeScan, type Return, type InsertReturn, type ReturnItem, type InsertReturnItem
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, ilike, sum } from "drizzle-orm";
@@ -1110,6 +1110,106 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(barcodeScans.userId, users.id))
       .where(eq(barcodeScans.productId, productId))
       .orderBy(desc(barcodeScans.createdAt));
+  }
+
+  // Returns Management (RF3.3)
+  async getReturns(supplierId?: string) {
+    const query = db
+      .select({
+        id: returns.id,
+        returnNumber: returns.returnNumber,
+        type: returns.type,
+        status: returns.status,
+        originalOrderId: returns.originalOrderId,
+        customerId: returns.customerId,
+        supplierId: returns.supplierId,
+        reason: returns.reason,
+        condition: returns.condition,
+        totalAmount: returns.totalAmount,
+        refundMethod: returns.refundMethod,
+        qualityInspection: returns.qualityInspection,
+        notes: returns.notes,
+        approvedBy: returns.approvedBy,
+        processedBy: returns.processedBy,
+        userId: returns.userId,
+        createdAt: returns.createdAt,
+        approvedAt: returns.approvedAt,
+        processedAt: returns.processedAt,
+        originalOrder: orders,
+        supplier: suppliers,
+        user: users
+      })
+      .from(returns)
+      .leftJoin(orders, eq(returns.originalOrderId, orders.id))
+      .leftJoin(suppliers, eq(returns.supplierId, suppliers.id))
+      .leftJoin(users, eq(returns.userId, users.id));
+
+    if (supplierId) {
+      query.where(eq(returns.supplierId, supplierId));
+    }
+
+    return await query.orderBy(desc(returns.createdAt));
+  }
+
+  async getReturn(id: string) {
+    const [returnRecord] = await db
+      .select()
+      .from(returns)
+      .where(eq(returns.id, id));
+    return returnRecord || undefined;
+  }
+
+  async createReturn(returnData: InsertReturn): Promise<Return> {
+    const [result] = await db.insert(returns).values(returnData).returning();
+    return result;
+  }
+
+  async updateReturn(id: string, returnData: Partial<InsertReturn>): Promise<Return> {
+    const [result] = await db
+      .update(returns)
+      .set(returnData)
+      .where(eq(returns.id, id))
+      .returning();
+    return result;
+  }
+
+  async getReturnItems(returnId: string) {
+    return await db
+      .select({
+        id: returnItems.id,
+        returnId: returnItems.returnId,
+        productId: returnItems.productId,
+        originalOrderItemId: returnItems.originalOrderItemId,
+        quantity: returnItems.quantity,
+        reason: returnItems.reason,
+        condition: returnItems.condition,
+        unitPrice: returnItems.unitPrice,
+        refundAmount: returnItems.refundAmount,
+        restockable: returnItems.restockable,
+        restocked: returnItems.restocked,
+        warehouseId: returnItems.warehouseId,
+        qualityNotes: returnItems.qualityNotes,
+        product: products,
+        warehouse: warehouses
+      })
+      .from(returnItems)
+      .innerJoin(products, eq(returnItems.productId, products.id))
+      .leftJoin(warehouses, eq(returnItems.warehouseId, warehouses.id))
+      .where(eq(returnItems.returnId, returnId));
+  }
+
+  async createReturnItem(item: InsertReturnItem): Promise<ReturnItem> {
+    const [result] = await db.insert(returnItems).values(item).returning();
+    return result;
+  }
+
+  async updateReturnItem(id: string, item: Partial<InsertReturnItem>): Promise<ReturnItem> {
+    const [result] = await db
+      .update(returnItems)
+      .set(item)
+      .where(eq(returnItems.id, id))
+      .returning();
+    return result;
   }
 }
 

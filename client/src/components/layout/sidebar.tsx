@@ -60,7 +60,8 @@ export function Sidebar() {
 
   return (
     <aside className="bg-card border-r border-border w-72 flex flex-col fixed h-full z-10" data-testid="sidebar">
-      <div className="p-6 border-b border-border">
+      {/* Header fixo - Logo e nome da empresa */}
+      <div className="p-6 border-b border-border flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <Box className="text-primary-foreground text-lg" />
@@ -72,7 +73,8 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-6 space-y-2" data-testid="navigation">
+      {/* Navegação com scroll */}
+      <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2" data-testid="navigation">
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.path || (location === "/" && item.path === "/dashboard");
@@ -95,7 +97,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      {/* Footer fixo - Usuário e logout */}
+      <div className="p-4 border-t border-border flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
             <User className="text-primary-foreground text-sm" />

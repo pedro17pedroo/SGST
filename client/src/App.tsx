@@ -20,6 +20,8 @@ import Settings from "@/pages/settings";
 import Scanner from "@/pages/scanner";
 import ProductLocations from "@/pages/product-locations";
 import InventoryCounts from "@/pages/inventory-counts";
+import PickingPacking from "@/pages/picking-packing";
+import Returns from "@/pages/returns";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -39,6 +41,8 @@ function Router() {
           <Route path="/scanner" component={Scanner} />
           <Route path="/product-locations" component={ProductLocations} />
           <Route path="/inventory-counts" component={InventoryCounts} />
+          <Route path="/picking-packing" component={PickingPacking} />
+          <Route path="/returns" component={Returns} />
           <Route path="/reports" component={Reports} />
           <Route path="/users" component={Users} />
           <Route path="/settings" component={Settings} />

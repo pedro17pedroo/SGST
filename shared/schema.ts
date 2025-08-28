@@ -348,6 +348,90 @@ export const barcodeScansRelations = relations(barcodeScans, ({ one }) => ({
   }),
 }));
 
+// Returns table for managing product returns (RF3.3)
+export const returns = pgTable("returns", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  returnNumber: varchar("return_number", { length: 100 }).notNull().unique(),
+  type: varchar("type", { length: 50 }).notNull(), // 'customer', 'supplier', 'internal'
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected, processed, completed
+  originalOrderId: uuid("original_order_id").references(() => orders.id),
+  customerId: varchar("customer_id", { length: 255 }), // Customer identifier for customer returns
+  supplierId: uuid("supplier_id").references(() => suppliers.id), // For supplier returns
+  reason: varchar("reason", { length: 255 }), // damaged, wrong_item, defective, excess, etc.
+  condition: varchar("condition", { length: 50 }), // new, damaged, used, defective
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }),
+  refundMethod: varchar("refund_method", { length: 50 }), // cash, credit, store_credit, exchange
+  qualityInspection: json("quality_inspection"), // Inspection results
+  notes: text("notes"),
+  approvedBy: uuid("approved_by").references(() => users.id),
+  processedBy: uuid("processed_by").references(() => users.id),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+  processedAt: timestamp("processed_at"),
+});
+
+// Return items table for detailed return information
+export const returnItems = pgTable("return_items", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  returnId: uuid("return_id").notNull().references(() => returns.id),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  originalOrderItemId: uuid("original_order_item_id").references(() => orderItems.id),
+  quantity: integer("quantity").notNull(),
+  reason: varchar("reason", { length: 255 }),
+  condition: varchar("condition", { length: 50 }),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  refundAmount: decimal("refund_amount", { precision: 10, scale: 2 }),
+  restockable: boolean("restockable").notNull().default(true),
+  restocked: boolean("restocked").notNull().default(false),
+  warehouseId: uuid("warehouse_id").references(() => warehouses.id), // Where to restock
+  qualityNotes: text("quality_notes"),
+});
+
+// Return relations
+export const returnsRelations = relations(returns, ({ one, many }) => ({
+  originalOrder: one(orders, {
+    fields: [returns.originalOrderId],
+    references: [orders.id],
+  }),
+  supplier: one(suppliers, {
+    fields: [returns.supplierId],
+    references: [suppliers.id],
+  }),
+  approvedByUser: one(users, {
+    fields: [returns.approvedBy],
+    references: [users.id],
+  }),
+  processedByUser: one(users, {
+    fields: [returns.processedBy],
+    references: [users.id],
+  }),
+  user: one(users, {
+    fields: [returns.userId],
+    references: [users.id],
+  }),
+  returnItems: many(returnItems),
+}));
+
+export const returnItemsRelations = relations(returnItems, ({ one }) => ({
+  return: one(returns, {
+    fields: [returnItems.returnId],
+    references: [returns.id],
+  }),
+  product: one(products, {
+    fields: [returnItems.productId],
+    references: [products.id],
+  }),
+  originalOrderItem: one(orderItems, {
+    fields: [returnItems.originalOrderItemId],
+    references: [orderItems.id],
+  }),
+  warehouse: one(warehouses, {
+    fields: [returnItems.warehouseId],
+    references: [warehouses.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -417,6 +501,17 @@ export const insertBarcodeScanSchema = createInsertSchema(barcodeScans).omit({
   createdAt: true,
 });
 
+export const insertReturnSchema = createInsertSchema(returns).omit({
+  id: true,
+  createdAt: true,
+  approvedAt: true,
+  processedAt: true,
+});
+
+export const insertReturnItemSchema = createInsertSchema(returnItems).omit({
+  id: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -446,3 +541,7 @@ export type InventoryCountItem = typeof inventoryCountItems.$inferSelect;
 export type InsertInventoryCountItem = z.infer<typeof insertInventoryCountItemSchema>;
 export type BarcodeScan = typeof barcodeScans.$inferSelect;
 export type InsertBarcodeScan = z.infer<typeof insertBarcodeScanSchema>;
+export type Return = typeof returns.$inferSelect;
+export type InsertReturn = z.infer<typeof insertReturnSchema>;
+export type ReturnItem = typeof returnItems.$inferSelect;
+export type InsertReturnItem = z.infer<typeof insertReturnItemSchema>;

@@ -188,7 +188,7 @@ export class DatabaseStorage implements IStorage {
           id: '2',
           name: 'Notebook Lenovo IdeaPad 3i',
           sku: 'NBK-002',
-          price: '420000',
+          price: 420000,
           categoryId: 'cat-002',
           supplierId: 'sup-002',
           minStockLevel: 5,

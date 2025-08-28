@@ -8,6 +8,55 @@ import {
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // User routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users", error });
+    }
+  });
+
+  app.post("/api/users", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      const user = await storage.createUser(userData);
+      res.status(201).json(user);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid user data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create user", error });
+      }
+    }
+  });
+
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertUserSchema.partial().parse(req.body);
+      const user = await storage.updateUser(id, updateData);
+      res.json(user);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid user data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update user", error });
+      }
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteUser(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user", error });
+    }
+  });
+
   // Dashboard routes
   app.get("/api/dashboard/stats", async (req, res) => {
     try {
@@ -232,6 +281,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete product", error });
+    }
+  });
+
+  // Order routes
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const orders = await storage.getOrders();
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch orders", error });
+    }
+  });
+
+  app.get("/api/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const order = await storage.getOrder(id);
+      if (!order) {
+        res.status(404).json({ message: "Order not found" });
+        return;
+      }
+      res.json(order);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch order", error });
+    }
+  });
+
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const orderData = insertOrderSchema.parse(req.body);
+      const order = await storage.createOrder(orderData);
+      res.status(201).json(order);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid order data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create order", error });
+      }
+    }
+  });
+
+  app.put("/api/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertOrderSchema.partial().parse(req.body);
+      const order = await storage.updateOrder(id, updateData);
+      res.json(order);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid order data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update order", error });
+      }
+    }
+  });
+
+  app.delete("/api/orders/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteOrder(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete order", error });
+    }
+  });
+
+  // Shipment routes
+  app.get("/api/shipments", async (req, res) => {
+    try {
+      const shipments = await storage.getShipments();
+      res.json(shipments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch shipments", error });
+    }
+  });
+
+  app.post("/api/shipments", async (req, res) => {
+    try {
+      const shipmentData = insertShipmentSchema.parse(req.body);
+      const shipment = await storage.createShipment(shipmentData);
+      res.status(201).json(shipment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid shipment data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create shipment", error });
+      }
+    }
+  });
+
+  app.put("/api/shipments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = insertShipmentSchema.partial().parse(req.body);
+      const shipment = await storage.updateShipment(id, updateData);
+      res.json(shipment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid shipment data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update shipment", error });
+      }
     }
   });
 

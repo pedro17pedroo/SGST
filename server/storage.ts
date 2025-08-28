@@ -10,9 +10,12 @@ import { eq, desc, sql, and, ilike, sum } from "drizzle-orm";
 
 export interface IStorage {
   // Users
+  getUsers(): Promise<User[]>;
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
   
   // Dashboard
   getDashboardStats(): Promise<{
@@ -78,6 +81,163 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async getOrders() {
+    return await db
+      .select({
+        id: orders.id,
+        orderNumber: orders.orderNumber,
+        type: orders.type,
+        status: orders.status,
+        customerName: orders.customerName,
+        customerEmail: orders.customerEmail,
+        customerPhone: orders.customerPhone,
+        customerAddress: orders.customerAddress,
+        supplierId: orders.supplierId,
+        totalAmount: orders.totalAmount,
+        notes: orders.notes,
+        userId: orders.userId,
+        createdAt: orders.createdAt,
+        supplier: {
+          id: suppliers.id,
+          name: suppliers.name,
+          email: suppliers.email,
+          phone: suppliers.phone,
+          address: suppliers.address,
+          createdAt: suppliers.createdAt,
+        }
+      })
+      .from(orders)
+      .leftJoin(suppliers, eq(orders.supplierId, suppliers.id))
+      .orderBy(desc(orders.createdAt));
+  }
+
+  async getOrder(id: string) {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, id));
+    return order || undefined;
+  }
+
+  async createOrder(insertOrder: InsertOrder) {
+    const [order] = await db
+      .insert(orders)
+      .values(insertOrder)
+      .returning();
+    return order;
+  }
+
+  async updateOrder(id: string, updateData: Partial<InsertOrder>) {
+    const [order] = await db
+      .update(orders)
+      .set(updateData)
+      .where(eq(orders.id, id))
+      .returning();
+    return order;
+  }
+
+  async deleteOrder(id: string) {
+    await db.delete(orders).where(eq(orders.id, id));
+  }
+
+  async getOrderItems(orderId: string) {
+    return await db
+      .select({
+        id: orderItems.id,
+        orderId: orderItems.orderId,
+        productId: orderItems.productId,
+        quantity: orderItems.quantity,
+        unitPrice: orderItems.unitPrice,
+        totalPrice: orderItems.totalPrice,
+        product: {
+          id: products.id,
+          name: products.name,
+          sku: products.sku,
+          price: products.price,
+          description: products.description,
+          barcode: products.barcode,
+          weight: products.weight,
+          dimensions: products.dimensions,
+          categoryId: products.categoryId,
+          supplierId: products.supplierId,
+          minStockLevel: products.minStockLevel,
+          isActive: products.isActive,
+          createdAt: products.createdAt,
+        }
+      })
+      .from(orderItems)
+      .innerJoin(products, eq(orderItems.productId, products.id))
+      .where(eq(orderItems.orderId, orderId));
+  }
+
+  async createOrderItem(insertOrderItem: InsertOrderItem) {
+    const [orderItem] = await db
+      .insert(orderItems)
+      .values(insertOrderItem)
+      .returning();
+    return orderItem;
+  }
+
+  async getShipments() {
+    return await db
+      .select({
+        id: shipments.id,
+        shipmentNumber: shipments.shipmentNumber,
+        orderId: shipments.orderId,
+        status: shipments.status,
+        carrier: shipments.carrier,
+        trackingNumber: shipments.trackingNumber,
+        shippingAddress: shipments.shippingAddress,
+        estimatedDelivery: shipments.estimatedDelivery,
+        actualDelivery: shipments.actualDelivery,
+        userId: shipments.userId,
+        createdAt: shipments.createdAt,
+        order: {
+          id: orders.id,
+          orderNumber: orders.orderNumber,
+          type: orders.type,
+          status: orders.status,
+          customerName: orders.customerName,
+          customerEmail: orders.customerEmail,
+          customerPhone: orders.customerPhone,
+          customerAddress: orders.customerAddress,
+          supplierId: orders.supplierId,
+          totalAmount: orders.totalAmount,
+          notes: orders.notes,
+          userId: orders.userId,
+          createdAt: orders.createdAt,
+        },
+        user: {
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          role: users.role,
+          isActive: users.isActive,
+          createdAt: users.createdAt,
+        }
+      })
+      .from(shipments)
+      .leftJoin(orders, eq(shipments.orderId, orders.id))
+      .leftJoin(users, eq(shipments.userId, users.id))
+      .orderBy(desc(shipments.createdAt));
+  }
+
+  async createShipment(insertShipment: InsertShipment) {
+    const [shipment] = await db
+      .insert(shipments)
+      .values(insertShipment)
+      .returning();
+    return shipment;
+  }
+
+  async updateShipment(id: string, updateData: Partial<InsertShipment>) {
+    const [shipment] = await db
+      .update(shipments)
+      .set(updateData)
+      .where(eq(shipments.id, id))
+      .returning();
+    return shipment;
+  }
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
@@ -88,12 +248,29 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async getDashboardStats() {

@@ -15,196 +15,342 @@ async function seedDatabase() {
   console.log('🌱 Starting database seeding...');
 
   try {
-    // 1. Users (base table - no dependencies)
+    // 1. Users (funcionários da empresa petrolífera angolana)
     console.log('👥 Creating users...');
     const users = await db.insert(schema.users).values([
       {
-        username: 'admin',
-        email: 'admin@stocksystem.com',
+        username: 'alberto.mendes',
+        email: 'alberto.mendes@petrolangola.ao',
         password: '$2a$10$hash', // In production, use proper password hashing
         role: 'admin',
         isActive: true
       },
       {
-        username: 'manager',
-        email: 'manager@stocksystem.com',
+        username: 'maria.santos',
+        email: 'maria.santos@petrolangola.ao',
         password: '$2a$10$hash',
         role: 'manager',
         isActive: true
       },
       {
-        username: 'operator1',
-        email: 'operator1@stocksystem.com',
+        username: 'joao.pereira',
+        email: 'joao.pereira@petrolangola.ao',
         password: '$2a$10$hash',
         role: 'operator',
         isActive: true
       },
       {
-        username: 'operator2',
-        email: 'operator2@stocksystem.com',
+        username: 'ana.silva',
+        email: 'ana.silva@petrolangola.ao',
         password: '$2a$10$hash',
         role: 'operator',
+        isActive: true
+      },
+      {
+        username: 'carlos.nunes',
+        email: 'carlos.nunes@petrolangola.ao',
+        password: '$2a$10$hash',
+        role: 'operator',
+        isActive: true
+      },
+      {
+        username: 'fernanda.costa',
+        email: 'fernanda.costa@petrolangola.ao',
+        password: '$2a$10$hash',
+        role: 'manager',
         isActive: true
       }
     ]).returning();
 
-    // 2. Categories (base table - no dependencies)
+    // 2. Categories (categorias de produtos petrolíferos)
     console.log('📦 Creating categories...');
     const categories = await db.insert(schema.categories).values([
       {
-        name: 'Eletrônicos',
-        description: 'Produtos eletrônicos e gadgets'
+        name: 'Produtos Petrolíferos',
+        description: 'Crude oil, gasóleo, gasolina, e outros derivados do petróleo'
       },
       {
-        name: 'Roupas',
-        description: 'Vestuário e acessórios'
+        name: 'Equipamentos de Perfuração',
+        description: 'Brocas, tubagens, válvulas e equipamentos para perfuração'
       },
       {
-        name: 'Casa e Jardim',
-        description: 'Produtos para casa e jardinagem'
+        name: 'Segurança e Proteção',
+        description: 'EPIs, detectores de gás, equipamentos de segurança'
       },
       {
-        name: 'Livros',
-        description: 'Livros e material educativo'
+        name: 'Manutenção Industrial',
+        description: 'Peças sobresselentes, ferramentas e materiais de manutenção'
       },
       {
-        name: 'Esportes',
-        description: 'Equipamentos e roupas esportivas'
+        name: 'Químicos e Aditivos',
+        description: 'Produtos químicos para tratamento e refino'
+      },
+      {
+        name: 'Instrumentação',
+        description: 'Medidores, sensores e equipamentos de controlo'
       }
     ]).returning();
 
-    // 3. Suppliers (base table - no dependencies)
+    // 3. Suppliers (fornecedores para a indústria petrolífera angolana)
     console.log('🏭 Creating suppliers...');
     const suppliers = await db.insert(schema.suppliers).values([
       {
-        name: 'TechSupply Lda',
-        email: 'fornecedor@techsupply.pt',
-        phone: '+351 21 123 4567',
-        address: 'Rua da Tecnologia, 123, Lisboa'
+        name: 'Schlumberger Angola',
+        email: 'comercial@slb.com.ao',
+        phone: '+244 222 334 567',
+        address: 'Rua Rainha Ginga, 387, Luanda'
       },
       {
-        name: 'ModaStyle Portugal',
-        email: 'comercial@modastyle.pt',
-        phone: '+351 22 987 6543',
-        address: 'Avenida da Moda, 456, Porto'
+        name: 'Halliburton Angola Lda',
+        email: 'vendas@halliburton.ao',
+        phone: '+244 222 445 789',
+        address: 'Avenida 4 de Fevereiro, 123, Luanda'
       },
       {
-        name: 'CasaConforto',
-        email: 'vendas@casaconforto.pt',
-        phone: '+351 21 555 7890',
-        address: 'Estrada das Casas, 789, Sintra'
+        name: 'Baker Hughes Angola',
+        email: 'info@bakerhughes.ao',
+        phone: '+244 222 556 890',
+        address: 'Zona Industrial de Viana, Lote 45, Luanda'
       },
       {
-        name: 'LivrosPortugal',
-        email: 'editora@livrosportugal.pt',
-        phone: '+351 21 333 2222',
-        address: 'Rua dos Livros, 321, Coimbra'
+        name: 'Sonangol EP',
+        email: 'fornecedores@sonangol.co.ao',
+        phone: '+244 222 667 901',
+        address: 'Rua 1º de Dezembro, 175, Luanda'
+      },
+      {
+        name: 'Total Energies Angola',
+        email: 'compras@totalenergies.ao',
+        phone: '+244 222 778 012',
+        address: 'Complexo Belas Business Park, Talatona, Luanda'
+      },
+      {
+        name: 'Chevron Angola',
+        email: 'procurement@chevron.ao',
+        phone: '+244 222 889 123',
+        address: 'Edifício Atlantico, Ilha de Luanda'
       }
     ]).returning();
 
-    // 4. Warehouses (base table - no dependencies)
+    // 4. Warehouses (armazéns em diferentes províncias angolanas)
     console.log('🏢 Creating warehouses...');
     const warehouses = await db.insert(schema.warehouses).values([
       {
-        name: 'Armazém Principal Lisboa',
-        address: 'Zona Industrial de Lisboa, Lote 10',
+        name: 'Armazém Central Luanda',
+        address: 'Porto de Luanda, Zona Industrial, Luanda',
         isActive: true
       },
       {
-        name: 'Armazém Norte Porto',
-        address: 'Parque Industrial do Porto, Pavilhão 5',
+        name: 'Armazém Offshore Cabinda',
+        address: 'Terminal Petrolífero de Cabinda, Malongo',
         isActive: true
       },
       {
-        name: 'Armazém Sul Faro',
-        address: 'Zona Logística de Faro, Secção B',
+        name: 'Armazém Soyo',
+        address: 'Terminal GNL Angola, Soyo, Zaire',
+        isActive: true
+      },
+      {
+        name: 'Armazém Lobito',
+        address: 'Porto do Lobito, Terminal de Combustíveis, Benguela',
+        isActive: true
+      },
+      {
+        name: 'Armazém Palanca',
+        address: 'Refinaria de Luanda, Palanca, Luanda',
         isActive: true
       }
     ]).returning();
 
-    // 5. Products (depends on categories and suppliers)
-    console.log('📱 Creating products...');
+    // 5. Products (produtos da indústria petrolífera)
+    console.log('🛢️ Creating products...');
     const products = await db.insert(schema.products).values([
-      // Electronics
+      // Produtos Petrolíferos
       {
-        name: 'Smartphone Samsung Galaxy',
-        description: 'Smartphone Android com 128GB de armazenamento',
-        sku: 'TECH-SM-001',
-        barcode: '1234567890123',
-        price: '699.99',
-        weight: '0.180',
-        dimensions: { length: 15.8, width: 7.4, height: 0.79 },
-        categoryId: categories.find(c => c.name === 'Eletrônicos')?.id,
-        supplierId: suppliers.find(s => s.name === 'TechSupply Lda')?.id,
-        minStockLevel: 10,
+        name: 'Crude Oil Cabinda Light',
+        description: 'Petróleo bruto leve de Cabinda, API 31°',
+        sku: 'OIL-CRU-001',
+        barcode: '7890123456789',
+        price: '65.50',
+        weight: '850.000',
+        dimensions: { length: 200, width: 200, height: 200 },
+        categoryId: categories.find(c => c.name === 'Produtos Petrolíferos')?.id,
+        supplierId: suppliers.find(s => s.name === 'Sonangol EP')?.id,
+        minStockLevel: 1000,
         isActive: true
       },
       {
-        name: 'Laptop Dell Inspiron',
-        description: 'Laptop para uso profissional com 16GB RAM',
-        sku: 'TECH-LAP-002',
-        barcode: '2345678901234',
-        price: '899.99',
-        weight: '2.100',
-        dimensions: { length: 35.6, width: 25.1, height: 2.3 },
-        categoryId: categories.find(c => c.name === 'Eletrônicos')?.id,
-        supplierId: suppliers.find(s => s.name === 'TechSupply Lda')?.id,
+        name: 'Gasóleo Marítimo MGO',
+        description: 'Marine Gas Oil para embarcações offshore',
+        sku: 'OIL-MGO-002',
+        barcode: '8901234567890',
+        price: '1.85',
+        weight: '845.000',
+        dimensions: { length: 100, width: 100, height: 100 },
+        categoryId: categories.find(c => c.name === 'Produtos Petrolíferos')?.id,
+        supplierId: suppliers.find(s => s.name === 'Total Energies Angola')?.id,
+        minStockLevel: 5000,
+        isActive: true
+      },
+      {
+        name: 'Gás Natural Liquefeito',
+        description: 'GNL para exportação, terminal Soyo',
+        sku: 'GAS-GNL-003',
+        barcode: '9012345678901',
+        price: '0.45',
+        weight: '425.000',
+        dimensions: { length: 150, width: 150, height: 150 },
+        categoryId: categories.find(c => c.name === 'Produtos Petrolíferos')?.id,
+        supplierId: suppliers.find(s => s.name === 'Chevron Angola')?.id,
+        minStockLevel: 10000,
+        isActive: true
+      },
+      // Equipamentos de Perfuração
+      {
+        name: 'Broca PDC 8.5"',
+        description: 'Broca de perfuração PDC diamante 8.5 polegadas',
+        sku: 'DRILL-PDC-004',
+        barcode: '0123456789012',
+        price: '15000.00',
+        weight: '45.000',
+        dimensions: { length: 30, width: 30, height: 30 },
+        categoryId: categories.find(c => c.name === 'Equipamentos de Perfuração')?.id,
+        supplierId: suppliers.find(s => s.name === 'Baker Hughes Angola')?.id,
         minStockLevel: 5,
         isActive: true
       },
-      // Clothing
       {
-        name: 'T-Shirt Básica Algodão',
-        description: 'T-shirt 100% algodão, várias cores disponíveis',
-        sku: 'CLOTH-TS-003',
-        barcode: '3456789012345',
-        price: '19.99',
-        weight: '0.200',
-        dimensions: { length: 30, width: 25, height: 2 },
-        categoryId: categories.find(c => c.name === 'Roupas')?.id,
-        supplierId: suppliers.find(s => s.name === 'ModaStyle Portugal')?.id,
+        name: 'Tubagem de Revestimento 9 5/8"',
+        description: 'Casing pipe de aço carbono para poços petrolíferos',
+        sku: 'PIPE-CAS-005',
+        barcode: '1234567890124',
+        price: '850.00',
+        weight: '125.000',
+        dimensions: { length: 1200, width: 25, height: 25 },
+        categoryId: categories.find(c => c.name === 'Equipamentos de Perfuração')?.id,
+        supplierId: suppliers.find(s => s.name === 'Schlumberger Angola')?.id,
         minStockLevel: 50,
         isActive: true
       },
       {
-        name: 'Calças Jeans Clássicas',
-        description: 'Calças jeans azuis, corte regular',
-        sku: 'CLOTH-JE-004',
-        barcode: '4567890123456',
-        price: '59.99',
-        weight: '0.650',
-        dimensions: { length: 40, width: 35, height: 5 },
-        categoryId: categories.find(c => c.name === 'Roupas')?.id,
-        supplierId: suppliers.find(s => s.name === 'ModaStyle Portugal')?.id,
+        name: 'Válvula BOP 13 5/8"',
+        description: 'Blowout Preventer para controlo de pressão',
+        sku: 'VALVE-BOP-006',
+        barcode: '2345678901235',
+        price: '125000.00',
+        weight: '2500.000',
+        dimensions: { length: 150, width: 100, height: 80 },
+        categoryId: categories.find(c => c.name === 'Equipamentos de Perfuração')?.id,
+        supplierId: suppliers.find(s => s.name === 'Halliburton Angola Lda')?.id,
+        minStockLevel: 2,
+        isActive: true
+      },
+      // Segurança e Proteção
+      {
+        name: 'Detector de Gás H2S',
+        description: 'Detector portátil de sulfureto de hidrogénio',
+        sku: 'SAFE-H2S-007',
+        barcode: '3456789012346',
+        price: '1200.00',
+        weight: '0.350',
+        dimensions: { length: 15, width: 8, height: 5 },
+        categoryId: categories.find(c => c.name === 'Segurança e Proteção')?.id,
+        supplierId: suppliers.find(s => s.name === 'Baker Hughes Angola')?.id,
         minStockLevel: 25,
         isActive: true
       },
-      // Home & Garden
       {
-        name: 'Conjunto de Panelas Inox',
-        description: 'Conjunto de 5 panelas em aço inoxidável',
-        sku: 'HOME-PAN-005',
-        barcode: '5678901234567',
-        price: '129.99',
-        weight: '3.500',
-        dimensions: { length: 35, width: 25, height: 20 },
-        categoryId: categories.find(c => c.name === 'Casa e Jardim')?.id,
-        supplierId: suppliers.find(s => s.name === 'CasaConforto')?.id,
+        name: 'Fato de Proteção Química Tyvek',
+        description: 'Fato integral de proteção química categoria III',
+        sku: 'SAFE-TYV-008',
+        barcode: '4567890123457',
+        price: '45.00',
+        weight: '0.650',
+        dimensions: { length: 40, width: 30, height: 5 },
+        categoryId: categories.find(c => c.name === 'Segurança e Proteção')?.id,
+        supplierId: suppliers.find(s => s.name === 'Schlumberger Angola')?.id,
+        minStockLevel: 100,
+        isActive: true
+      },
+      // Manutenção Industrial
+      {
+        name: 'Bomba Centrífuga 500 GPM',
+        description: 'Bomba centrífuga para transferência de crude',
+        sku: 'PUMP-CEN-009',
+        barcode: '5678901234568',
+        price: '8500.00',
+        weight: '185.000',
+        dimensions: { length: 120, width: 60, height: 80 },
+        categoryId: categories.find(c => c.name === 'Manutenção Industrial')?.id,
+        supplierId: suppliers.find(s => s.name === 'Total Energies Angola')?.id,
+        minStockLevel: 3,
+        isActive: true
+      },
+      {
+        name: 'Filtro Coalescente 10 Microns',
+        description: 'Filtro separador água-óleo para refinaria',
+        sku: 'FILT-COA-010',
+        barcode: '6789012345679',
+        price: '2200.00',
+        weight: '25.000',
+        dimensions: { length: 60, width: 30, height: 30 },
+        categoryId: categories.find(c => c.name === 'Manutenção Industrial')?.id,
+        supplierId: suppliers.find(s => s.name === 'Halliburton Angola Lda')?.id,
         minStockLevel: 10,
         isActive: true
       },
-      // Books
+      // Químicos e Aditivos
       {
-        name: 'Livro: História de Portugal',
-        description: 'Livro sobre a história completa de Portugal',
-        sku: 'BOOK-HIS-006',
-        barcode: '6789012345678',
-        price: '24.99',
-        weight: '0.450',
-        dimensions: { length: 23, width: 15, height: 3 },
-        categoryId: categories.find(c => c.name === 'Livros')?.id,
-        supplierId: suppliers.find(s => s.name === 'LivrosPortugal')?.id,
-        minStockLevel: 20,
+        name: 'Aditivo Anti-Espuma AFA-3',
+        description: 'Aditivo anti-espuma para processamento de crude',
+        sku: 'CHEM-AFA-011',
+        barcode: '7890123456780',
+        price: '85.00',
+        weight: '25.000',
+        dimensions: { length: 40, width: 30, height: 50 },
+        categoryId: categories.find(c => c.name === 'Químicos e Aditivos')?.id,
+        supplierId: suppliers.find(s => s.name === 'Baker Hughes Angola')?.id,
+        minStockLevel: 50,
+        isActive: true
+      },
+      {
+        name: 'Inibidor de Corrosão CI-100',
+        description: 'Inibidor de corrosão para tubagens offshore',
+        sku: 'CHEM-CI-012',
+        barcode: '8901234567891',
+        price: '150.00',
+        weight: '20.000',
+        dimensions: { length: 35, width: 25, height: 45 },
+        categoryId: categories.find(c => c.name === 'Químicos e Aditivos')?.id,
+        supplierId: suppliers.find(s => s.name === 'Chevron Angola')?.id,
+        minStockLevel: 30,
+        isActive: true
+      },
+      // Instrumentação
+      {
+        name: 'Transmissor de Pressão 0-5000 PSI',
+        description: 'Transmissor inteligente de pressão HART',
+        sku: 'INST-PT-013',
+        barcode: '9012345678902',
+        price: '1850.00',
+        weight: '2.500',
+        dimensions: { length: 20, width: 15, height: 10 },
+        categoryId: categories.find(c => c.name === 'Instrumentação')?.id,
+        supplierId: suppliers.find(s => s.name === 'Schlumberger Angola')?.id,
+        minStockLevel: 15,
+        isActive: true
+      },
+      {
+        name: 'Medidor de Fluxo Ultrassónico',
+        description: 'Medidor de fluxo clamp-on para crude oil',
+        sku: 'INST-UFM-014',
+        barcode: '0123456789013',
+        price: '12500.00',
+        weight: '8.500',
+        dimensions: { length: 35, width: 25, height: 20 },
+        categoryId: categories.find(c => c.name === 'Instrumentação')?.id,
+        supplierId: suppliers.find(s => s.name === 'Total Energies Angola')?.id,
+        minStockLevel: 5,
         isActive: true
       }
     ]).returning();
@@ -255,12 +401,14 @@ async function seedDatabase() {
     const stockMovements = [];
     const movementTypes = ['in', 'out', 'transfer', 'adjustment'];
     const reasons = [
-      'Receção de fornecedor',
-      'Venda a cliente',
-      'Transferência entre armazéns',
-      'Ajuste de inventário',
-      'Produto danificado',
-      'Devolução de cliente'
+      'Receção de fornecedor offshore',
+      'Transferência para plataforma',
+      'Consumo em operações de perfuração',
+      'Ajuste de inventário após auditoria',
+      'Material danificado em transporte marítimo',
+      'Retorno de equipamento após manutenção',
+      'Abastecimento de embarcação de apoio',
+      'Entrega para refinaria'
     ];
 
     for (let i = 0; i < 50; i++) {
@@ -281,79 +429,112 @@ async function seedDatabase() {
     }
     await db.insert(schema.stockMovements).values(stockMovements);
 
-    // 9. Orders (depends on suppliers and users)
+    // 9. Orders (encomendas da operação petrolífera)
     console.log('📋 Creating orders...');
     const orders = await db.insert(schema.orders).values([
       {
-        orderNumber: 'ORD-2024-001',
-        type: 'sale',
-        status: 'completed',
-        customerName: 'João Silva',
-        customerEmail: 'joao@email.com',
-        customerPhone: '+351 91 123 4567',
-        customerAddress: 'Rua das Flores, 123, Lisboa',
-        totalAmount: '159.98',
-        notes: 'Entrega urgente',
-        userId: users[0].id
-      },
-      {
-        orderNumber: 'ORD-2024-002',
+        orderNumber: 'PET-ORD-2024-001',
         type: 'purchase',
-        status: 'pending',
-        supplierId: suppliers[0].id,
-        totalAmount: '2500.00',
-        notes: 'Encomenda mensal de eletrônicos',
+        status: 'completed',
+        supplierId: suppliers.find(s => s.name === 'Baker Hughes Angola')?.id,
+        totalAmount: '1850000.00',
+        notes: 'Equipamento urgente para plataforma Offshore Block 17',
         userId: users[1].id
       },
       {
-        orderNumber: 'ORD-2024-003',
+        orderNumber: 'PET-ORD-2024-002',
         type: 'sale',
+        status: 'pending',
+        customerName: 'Refinaria de Luanda',
+        customerEmail: 'compras@refinaria.sonangol.co.ao',
+        customerPhone: '+244 222 445 789',
+        customerAddress: 'Complexo de Palanca, Luanda',
+        totalAmount: '2500000.00',
+        notes: 'Fornecimento mensal de crude Cabinda Light',
+        userId: users[0].id
+      },
+      {
+        orderNumber: 'PET-ORD-2024-003',
+        type: 'purchase',
         status: 'processing',
-        customerName: 'Maria Santos',
-        customerEmail: 'maria@email.com',
-        customerPhone: '+351 92 987 6543',
-        customerAddress: 'Avenida Central, 456, Porto',
-        totalAmount: '79.99',
+        supplierId: suppliers.find(s => s.name === 'Schlumberger Angola')?.id,
+        totalAmount: '750000.00',
+        notes: 'Instrumentação para terminal Soyo',
         userId: users[2].id
+      },
+      {
+        orderNumber: 'PET-ORD-2024-004',
+        type: 'sale',
+        status: 'completed',
+        customerName: 'Angola LNG',
+        customerEmail: 'procurement@angolalng.com',
+        customerPhone: '+244 222 667 890',
+        customerAddress: 'Terminal GNL Soyo, Zaire',
+        totalAmount: '12500000.00',
+        notes: 'Fornecimento de GNL para exportação',
+        userId: users[1].id
       }
     ]).returning();
 
-    // 10. Order Items (depends on orders and products)
+    // 10. Order Items (itens das encomendas petrolíferas)
     console.log('🛒 Creating order items...');
     const orderItems = [];
     
-    // Items for order 1
+    // Items for order 1 (Baker Hughes - Purchase)
     orderItems.push({
       orderId: orders[0].id,
-      productId: products.find(p => p.sku === 'CLOTH-TS-003')?.id!,
-      quantity: 2,
-      unitPrice: '19.99',
-      totalPrice: '39.98'
+      productId: products.find(p => p.sku === 'DRILL-PDC-004')?.id!,
+      quantity: 12,
+      unitPrice: '15000.00',
+      totalPrice: '180000.00'
     });
     orderItems.push({
       orderId: orders[0].id,
-      productId: products.find(p => p.sku === 'CLOTH-JE-004')?.id!,
-      quantity: 2,
-      unitPrice: '59.99',
-      totalPrice: '119.98'
+      productId: products.find(p => p.sku === 'VALVE-BOP-006')?.id!,
+      quantity: 1,
+      unitPrice: '125000.00',
+      totalPrice: '125000.00'
+    });
+    orderItems.push({
+      orderId: orders[0].id,
+      productId: products.find(p => p.sku === 'SAFE-H2S-007')?.id!,
+      quantity: 50,
+      unitPrice: '1200.00',
+      totalPrice: '60000.00'
     });
 
-    // Items for order 2
+    // Items for order 2 (Crude Oil Sale)
     orderItems.push({
       orderId: orders[1].id,
-      productId: products.find(p => p.sku === 'TECH-SM-001')?.id!,
-      quantity: 5,
-      unitPrice: '699.99',
-      totalPrice: '3499.95'
+      productId: products.find(p => p.sku === 'OIL-CRU-001')?.id!,
+      quantity: 38168, // aproximadamente 1000 barris
+      unitPrice: '65.50',
+      totalPrice: '2500000.00'
     });
 
-    // Items for order 3
+    // Items for order 3 (Schlumberger Purchase)
     orderItems.push({
       orderId: orders[2].id,
-      productId: products.find(p => p.sku === 'BOOK-HIS-006')?.id!,
-      quantity: 3,
-      unitPrice: '24.99',
-      totalPrice: '74.97'
+      productId: products.find(p => p.sku === 'INST-PT-013')?.id!,
+      quantity: 25,
+      unitPrice: '1850.00',
+      totalPrice: '46250.00'
+    });
+    orderItems.push({
+      orderId: orders[2].id,
+      productId: products.find(p => p.sku === 'PIPE-CAS-005')?.id!,
+      quantity: 100,
+      unitPrice: '850.00',
+      totalPrice: '85000.00'
+    });
+
+    // Items for order 4 (Angola LNG Sale)
+    orderItems.push({
+      orderId: orders[3].id,
+      productId: products.find(p => p.sku === 'GAS-GNL-003')?.id!,
+      quantity: 27777778, // aproximadamente 12.5M USD worth
+      unitPrice: '0.45',
+      totalPrice: '12500000.00'
     });
 
     await db.insert(schema.orderItems).values(orderItems);
@@ -365,9 +546,9 @@ async function seedDatabase() {
         shipmentNumber: 'SHIP-2024-001',
         orderId: orders[0].id,
         status: 'delivered',
-        carrier: 'CTT Expresso',
-        trackingNumber: 'CT123456789PT',
-        shippingAddress: 'Rua das Flores, 123, Lisboa',
+        carrier: 'Maersk Line Angola',
+        trackingNumber: 'MAEU123456789AO',
+        shippingAddress: 'Terminal Offshore Cabinda, Angola',
         estimatedDelivery: new Date('2024-01-15'),
         actualDelivery: new Date('2024-01-14'),
         userId: users[2].id
@@ -376,9 +557,9 @@ async function seedDatabase() {
         shipmentNumber: 'SHIP-2024-002',
         orderId: orders[2].id,
         status: 'in_transit',
-        carrier: 'DPD Portugal',
-        trackingNumber: 'DP987654321PT',
-        shippingAddress: 'Avenida Central, 456, Porto',
+        carrier: 'MSC Angola',
+        trackingNumber: 'MSCU987654321AO',
+        shippingAddress: 'Porto de Luanda, Terminal de Cargas, Angola',
         estimatedDelivery: new Date('2024-01-20'),
         userId: users[3].id
       }
@@ -457,7 +638,7 @@ async function seedDatabase() {
     await db.insert(schema.returnItems).values([
       {
         returnId: returns[0].id,
-        productId: products.find(p => p.sku === 'CLOTH-TS-003')?.id!,
+        productId: products.find(p => p.sku === 'SAFE-TYV-008')?.id!,
         quantity: 1,
         reason: 'wrong_size',
         condition: 'new',

@@ -16,6 +16,7 @@ const navigationItems = [
   { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { path: "/products", label: "Produtos", icon: Box },
   { path: "/inventory", label: "Inventário", icon: Warehouse },
+  { path: "/warehouses", label: "Armazéns", icon: Warehouse },
   { path: "/shipping", label: "Expedição", icon: Truck },
   { path: "/orders", label: "Pedidos", icon: ShoppingCart },
   { path: "/reports", label: "Relatórios", icon: FileText },

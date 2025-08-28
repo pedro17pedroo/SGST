@@ -22,7 +22,7 @@ export interface IStorage {
     monthlySales: string;
   }>;
   getTopProducts(): Promise<Array<Product & { stock: number; sales: number }>>;
-  getRecentActivities(): Promise<Array<StockMovement & { product: Product; user?: User }>>;
+  getRecentActivities(): Promise<Array<StockMovement & { product: Product; user?: User | null }>>;
   
   // Categories
   getCategories(): Promise<Category[]>;

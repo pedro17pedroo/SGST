@@ -133,6 +133,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/warehouses/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertWarehouseSchema.partial().parse(req.body);
+      const result = await storage.updateWarehouse(id, updates);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid warehouse data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update warehouse", error });
+      }
+    }
+  });
+
+  app.delete("/api/warehouses/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteWarehouse(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete warehouse", error });
+    }
+  });
+
   // Products routes
   app.get("/api/products", async (req, res) => {
     try {

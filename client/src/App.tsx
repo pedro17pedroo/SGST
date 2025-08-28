@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import Inventory from "@/pages/inventory";
+import Warehouses from "@/pages/warehouses";
 import Orders from "@/pages/orders";
 import Shipping from "@/pages/shipping";
 import Reports from "@/pages/reports";
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/products" component={Products} />
           <Route path="/inventory" component={Inventory} />
+          <Route path="/warehouses" component={Warehouses} />
           <Route path="/orders" component={Orders} />
           <Route path="/shipping" component={Shipping} />
           <Route path="/reports" component={Reports} />

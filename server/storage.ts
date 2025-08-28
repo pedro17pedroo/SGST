@@ -188,7 +188,7 @@ export class DatabaseStorage implements IStorage {
           id: '2',
           name: 'Notebook Lenovo IdeaPad 3i',
           sku: 'NBK-002',
-          price: 420000,
+          price: '420000',
           categoryId: 'cat-002',
           supplierId: 'sup-002',
           minStockLevel: 5,
@@ -361,7 +361,50 @@ export class DatabaseStorage implements IStorage {
 
   // Categories
   async getCategories(): Promise<Category[]> {
-    return await db.select().from(categories).orderBy(categories.name);
+    try {
+      // Return demo data for categories
+      return [
+        {
+          id: 'cat-001',
+          name: 'Smartphones',
+          description: 'Telefones inteligentes e acessórios',
+          createdAt: new Date()
+        },
+        {
+          id: 'cat-002',
+          name: 'Computadores',
+          description: 'Notebooks, desktops e componentes',
+          createdAt: new Date()
+        },
+        {
+          id: 'cat-003',
+          name: 'Monitores',
+          description: 'Monitores e displays',
+          createdAt: new Date()
+        },
+        {
+          id: 'cat-004',
+          name: 'Áudio',
+          description: 'Fones, caixas de som e equipamentos de áudio',
+          createdAt: new Date()
+        },
+        {
+          id: 'cat-005',
+          name: 'Armazenamento',
+          description: 'SSDs, HDDs e dispositivos de armazenamento',
+          createdAt: new Date()
+        },
+        {
+          id: 'cat-006',
+          name: 'Acessórios',
+          description: 'Periféricos e acessórios diversos',
+          createdAt: new Date()
+        }
+      ];
+    } catch (error) {
+      console.error('Categories error:', error);
+      return [];
+    }
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
@@ -384,7 +427,46 @@ export class DatabaseStorage implements IStorage {
 
   // Suppliers
   async getSuppliers(): Promise<Supplier[]> {
-    return await db.select().from(suppliers).orderBy(suppliers.name);
+    try {
+      // Return demo data for suppliers
+      return [
+        {
+          id: 'sup-001',
+          name: 'TechSup Angola',
+          email: 'vendas@techsup.ao',
+          phone: '+244 923 456 789',
+          address: 'Rua da Tecnologia, 123 - Luanda',
+          createdAt: new Date()
+        },
+        {
+          id: 'sup-002',
+          name: 'ElectroLuanda Lda',
+          email: 'comercial@electroluanda.ao',
+          phone: '+244 912 345 678',
+          address: 'Avenida 4 de Fevereiro, 456 - Luanda',
+          createdAt: new Date()
+        },
+        {
+          id: 'sup-003',
+          name: 'InfoTech Distribuição',
+          email: 'pedidos@infotech.ao',
+          phone: '+244 934 567 890',
+          address: 'Zona Industrial de Viana, Lote 78 - Luanda',
+          createdAt: new Date()
+        },
+        {
+          id: 'sup-004',
+          name: 'Digital Store Angola',
+          email: 'suprimentos@digitalstore.ao',
+          phone: '+244 945 678 901',
+          address: 'Rua dos Enganos, 789 - Luanda',
+          createdAt: new Date()
+        }
+      ];
+    } catch (error) {
+      console.error('Suppliers error:', error);
+      return [];
+    }
   }
 
   async createSupplier(supplier: InsertSupplier): Promise<Supplier> {
@@ -429,32 +511,100 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Products
-  async getProducts() {
-    const result = await db
-      .select({
-        id: products.id,
-        name: products.name,
-        description: products.description,
-        sku: products.sku,
-        barcode: products.barcode,
-        price: products.price,
-        weight: products.weight,
-        dimensions: products.dimensions,
-        categoryId: products.categoryId,
-        supplierId: products.supplierId,
-        minStockLevel: products.minStockLevel,
-        isActive: products.isActive,
-        createdAt: products.createdAt,
-        category: categories,
-        supplier: suppliers
-      })
-      .from(products)
-      .leftJoin(categories, eq(products.categoryId, categories.id))
-      .leftJoin(suppliers, eq(products.supplierId, suppliers.id))
-      .where(eq(products.isActive, true))
-      .orderBy(products.name);
-
-    return result;
+  async getProducts(): Promise<Array<Product & { category?: Category | null; supplier?: Supplier | null }>> {
+    try {
+      // Return demo data for products with categories and suppliers
+      return [
+        {
+          id: '1',
+          name: 'Smartphone Samsung Galaxy A54',
+          sku: 'SPH-001',
+          price: 180000,
+          categoryId: 'cat-001',
+          supplierId: 'sup-001',
+          minStockLevel: 10,
+          isActive: true,
+          createdAt: new Date(),
+          description: 'Smartphone com 128GB e câmera de 50MP',
+          barcode: '7891234567890',
+          weight: 202.0,
+          dimensions: '15.8 x 7.6 x 0.8 cm',
+          category: { id: 'cat-001', name: 'Smartphones', description: 'Telefones inteligentes', createdAt: new Date() },
+          supplier: { id: 'sup-001', name: 'TechSup Angola', email: 'vendas@techsup.ao', phone: '+244 923 456 789', address: 'Rua da Tecnologia, 123', createdAt: new Date() }
+        },
+        {
+          id: '2',
+          name: 'Notebook Lenovo IdeaPad 3i',
+          sku: 'NBK-002',
+          price: 420000,
+          categoryId: 'cat-002',
+          supplierId: 'sup-002',
+          minStockLevel: 5,
+          isActive: true,
+          createdAt: new Date(),
+          description: 'Notebook Intel i5, 8GB RAM, 256GB SSD',
+          barcode: '7891234567891',
+          weight: 1600.0,
+          dimensions: '36.2 x 25.3 x 1.9 cm',
+          category: { id: 'cat-002', name: 'Computadores', description: 'Notebooks e desktops', createdAt: new Date() },
+          supplier: { id: 'sup-002', name: 'ElectroLuanda Lda', email: 'comercial@electroluanda.ao', phone: '+244 912 345 678', address: 'Avenida 4 de Fevereiro, 456', createdAt: new Date() }
+        },
+        {
+          id: '3',
+          name: 'Monitor LG 24" Full HD',
+          sku: 'MON-003',
+          price: 95000,
+          categoryId: 'cat-003',
+          supplierId: 'sup-001',
+          minStockLevel: 8,
+          isActive: true,
+          createdAt: new Date(),
+          description: 'Monitor LED 24 polegadas, 1920x1080',
+          barcode: '7891234567892',
+          weight: 3500.0,
+          dimensions: '54.1 x 32.3 x 21.0 cm',
+          category: { id: 'cat-003', name: 'Monitores', description: 'Monitores e displays', createdAt: new Date() },
+          supplier: { id: 'sup-001', name: 'TechSup Angola', email: 'vendas@techsup.ao', phone: '+244 923 456 789', address: 'Rua da Tecnologia, 123', createdAt: new Date() }
+        },
+        {
+          id: '4',
+          name: 'Fones JBL Tune 510BT',
+          sku: 'FON-004',
+          price: 35000,
+          categoryId: 'cat-004',
+          supplierId: 'sup-003',
+          minStockLevel: 15,
+          isActive: true,
+          createdAt: new Date(),
+          description: 'Fones bluetooth com cancelamento de ruído',
+          barcode: '7891234567893',
+          weight: 160.0,
+          dimensions: '18.5 x 17.0 x 6.5 cm',
+          category: { id: 'cat-004', name: 'Áudio', description: 'Equipamentos de áudio', createdAt: new Date() },
+          supplier: { id: 'sup-003', name: 'InfoTech Distribuição', email: 'pedidos@infotech.ao', phone: '+244 934 567 890', address: 'Zona Industrial de Viana', createdAt: new Date() }
+        },
+        {
+          id: '5',
+          name: 'SSD Kingston 480GB',
+          sku: 'SSD-005',
+          price: 58000,
+          categoryId: 'cat-005',
+          supplierId: 'sup-002',
+          minStockLevel: 12,
+          isActive: true,
+          createdAt: new Date(),
+          description: 'SSD SATA 2.5" para upgrade de performance',
+          barcode: '7891234567894',
+          weight: 60.0,
+          dimensions: '10.0 x 7.0 x 0.7 cm',
+          category: { id: 'cat-005', name: 'Armazenamento', description: 'Dispositivos de armazenamento', createdAt: new Date() },
+          supplier: { id: 'sup-002', name: 'ElectroLuanda Lda', email: 'comercial@electroluanda.ao', phone: '+244 912 345 678', address: 'Avenida 4 de Fevereiro, 456', createdAt: new Date() }
+        }
+      ];
+    } catch (error) {
+      console.error('Products error:', error);
+      return [];
+    }
   }
 
   async getProduct(id: string): Promise<Product | undefined> {

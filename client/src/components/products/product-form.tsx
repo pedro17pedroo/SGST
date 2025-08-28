@@ -138,10 +138,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     const formattedData = {
       ...data,
       price: data.price,
-      weight: data.weight || null,
-      categoryId: data.categoryId || null,
-      supplierId: data.supplierId || null,
-      minStockLevel: data.minStockLevel ? parseInt(data.minStockLevel) : 0,
+      weight: data.weight || undefined,
+      categoryId: data.categoryId === "none" ? undefined : data.categoryId || undefined,
+      supplierId: data.supplierId === "none" ? undefined : data.supplierId || undefined,
+      minStockLevel: data.minStockLevel ? data.minStockLevel.toString() : "0",
     };
 
     if (product) {
@@ -264,7 +264,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sem categoria</SelectItem>
+                        <SelectItem value="none">Sem categoria</SelectItem>
                         {categories.map((category: any) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
@@ -290,7 +290,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sem fornecedor</SelectItem>
+                        <SelectItem value="none">Sem fornecedor</SelectItem>
                         {suppliers.map((supplier: any) => (
                           <SelectItem key={supplier.id} value={supplier.id}>
                             {supplier.name}

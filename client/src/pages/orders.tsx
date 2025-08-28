@@ -95,10 +95,15 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
   });
 
   const onSubmit = (data: OrderFormData) => {
+    const formattedData = {
+      ...data,
+      supplierId: data.supplierId === "none" ? undefined : data.supplierId,
+    };
+    
     if (order) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(formattedData);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(formattedData);
     }
   };
 
@@ -192,7 +197,8 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
                         type="number"
                         step="0.01"
                         placeholder="0.00" 
-                        {...field} 
+                        {...field}
+                        value={field.value || ""}
                         data-testid="input-order-total"
                       />
                     </FormControl>
@@ -295,7 +301,7 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Nenhum fornecedor</SelectItem>
+                      <SelectItem value="none">Nenhum fornecedor</SelectItem>
                       {suppliers.map((supplier) => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}

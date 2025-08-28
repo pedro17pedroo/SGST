@@ -17,8 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 const shipmentFormSchema = insertShipmentSchema.extend({
-  shipmentNumber: z.string().min(1, "Número de envio é obrigatório"),
-  status: z.enum(["preparing", "shipped", "in_transit", "delivered"]).default("preparing"),
+  shipmentNumber: z.string().min(1, "Número do envio é obrigatório"),
+  status: z.enum(["preparing", "shipped", "in_transit", "delivered", "cancelled"]).default("preparing"),
 });
 
 type ShipmentFormData = z.infer<typeof shipmentFormSchema>;
@@ -41,18 +41,12 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
       trackingNumber: shipment?.trackingNumber || "",
       shippingAddress: shipment?.shippingAddress || "",
       estimatedDelivery: shipment?.estimatedDelivery ? new Date(shipment.estimatedDelivery).toISOString().split('T')[0] : "",
-      actualDelivery: shipment?.actualDelivery ? new Date(shipment.actualDelivery).toISOString().split('T')[0] : "",
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: ShipmentFormData) => {
-      const processedData = {
-        ...data,
-        estimatedDelivery: data.estimatedDelivery ? new Date(data.estimatedDelivery) : null,
-        actualDelivery: data.actualDelivery ? new Date(data.actualDelivery) : null,
-      };
-      const response = await apiRequest("POST", "/api/shipments", processedData);
+      const response = await apiRequest("POST", "/api/shipments", data);
       return response.json();
     },
     onSuccess: () => {
@@ -75,12 +69,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
 
   const updateMutation = useMutation({
     mutationFn: async (data: ShipmentFormData) => {
-      const processedData = {
-        ...data,
-        estimatedDelivery: data.estimatedDelivery ? new Date(data.estimatedDelivery) : null,
-        actualDelivery: data.actualDelivery ? new Date(data.actualDelivery) : null,
-      };
-      const response = await apiRequest("PUT", `/api/shipments/${shipment?.id}`, processedData);
+      const response = await apiRequest("PUT", `/api/shipments/${shipment?.id}`, data);
       return response.json();
     },
     onSuccess: () => {
@@ -156,6 +145,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                         <SelectItem value="shipped">Enviado</SelectItem>
                         <SelectItem value="in_transit">Em Trânsito</SelectItem>
                         <SelectItem value="delivered">Entregue</SelectItem>
+                        <SelectItem value="cancelled">Cancelado</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -177,10 +167,9 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Nenhuma encomenda</SelectItem>
                       {orders.map((order) => (
                         <SelectItem key={order.id} value={order.id}>
-                          {order.orderNumber} - {order.customerName || "Cliente não especificado"}
+                          {order.orderNumber} - {order.customerName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -199,7 +188,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                     <FormLabel>Transportadora</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="TAAG, DHL, etc." 
+                        placeholder="Nome da transportadora" 
                         {...field} 
                         value={field.value || ""}
                         data-testid="input-carrier"
@@ -218,7 +207,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                     <FormLabel>Número de Rastreamento</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="TRK123456789" 
+                        placeholder="ABC123456789" 
                         {...field} 
                         value={field.value || ""}
                         data-testid="input-tracking-number"
@@ -250,45 +239,24 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="estimatedDelivery"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data Estimada de Entrega</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date"
-                        {...field} 
-                        value={field.value || ""}
-                        data-testid="input-estimated-delivery"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="actualDelivery"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data Real de Entrega</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date"
-                        {...field} 
-                        value={field.value || ""}
-                        data-testid="input-actual-delivery"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="estimatedDelivery"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data Prevista de Entrega</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="date"
+                      {...field} 
+                      value={field.value || ""}
+                      data-testid="input-estimated-delivery"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end space-x-2">
               <Button 
@@ -315,12 +283,15 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
 }
 
 function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | null } }) {
+  const { toast } = useToast();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "preparing": return "bg-yellow-100 text-yellow-800";
       case "shipped": return "bg-blue-100 text-blue-800";
       case "in_transit": return "bg-purple-100 text-purple-800";
       case "delivered": return "bg-green-100 text-green-800";
+      case "cancelled": return "bg-red-100 text-red-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -330,7 +301,8 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
       preparing: "Preparando",
       shipped: "Enviado",
       in_transit: "Em Trânsito",
-      delivered: "Entregue"
+      delivered: "Entregue",
+      cancelled: "Cancelado"
     };
     return labels[status as keyof typeof labels] || status;
   };
@@ -347,11 +319,9 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
               <CardTitle className="text-lg" data-testid={`text-shipment-number-${shipment.id}`}>
                 {shipment.shipmentNumber}
               </CardTitle>
-              {shipment.carrier && (
-                <p className="text-sm text-muted-foreground">
-                  {shipment.carrier}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground">
+                {shipment.carrier || "Sem transportadora"}
+              </p>
             </div>
           </div>
           <div className="flex gap-1">
@@ -368,11 +338,9 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Badge className={getStatusColor(shipment.status)}>
-              {getStatusLabel(shipment.status)}
-            </Badge>
-          </div>
+          <Badge className={getStatusColor(shipment.status)}>
+            {getStatusLabel(shipment.status)}
+          </Badge>
           
           {shipment.order && (
             <div className="flex items-center gap-2 text-sm">
@@ -385,7 +353,7 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
 
           {shipment.trackingNumber && (
             <div className="flex items-center gap-2 text-sm">
-              <UserIcon className="h-4 w-4 text-muted-foreground" />
+              <Search className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground font-mono" data-testid={`text-tracking-${shipment.id}`}>
                 {shipment.trackingNumber}
               </span>
@@ -393,9 +361,9 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
           )}
 
           {shipment.shippingAddress && (
-            <div className="flex items-start gap-2 text-sm">
-              <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-              <span className="text-muted-foreground" data-testid={`text-address-${shipment.id}`}>
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground text-xs line-clamp-2">
                 {shipment.shippingAddress}
               </span>
             </div>
@@ -405,7 +373,7 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">
-                Estimada: {new Date(shipment.estimatedDelivery).toLocaleDateString('pt-AO')}
+                {new Date(shipment.estimatedDelivery).toLocaleDateString('pt-AO')}
               </span>
             </div>
           )}
@@ -424,7 +392,8 @@ export default function Shipping() {
 
   const filteredShipments = shipments.filter((shipment: Shipment) =>
     shipment.shipmentNumber.toLowerCase().includes(search.toLowerCase()) ||
-    (shipment.trackingNumber && shipment.trackingNumber.toLowerCase().includes(search.toLowerCase()))
+    (shipment.trackingNumber && shipment.trackingNumber.toLowerCase().includes(search.toLowerCase())) ||
+    (shipment.carrier && shipment.carrier.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -435,7 +404,7 @@ export default function Shipping() {
             Gestão de Envios
           </h1>
           <p className="text-muted-foreground">
-            Rastrear e gerir envios e entregas
+            Gerir envios e rastreamento de encomendas
           </p>
         </div>
         <ShipmentDialog

@@ -9,16 +9,21 @@ import {
   Users, 
   Settings, 
   User,
-  LogOut
+  LogOut,
+  Building
 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const navigationItems = [
   { path: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { path: "/products", label: "Produtos", icon: Box },
   { path: "/inventory", label: "Inventário", icon: Warehouse },
   { path: "/warehouses", label: "Armazéns", icon: Warehouse },
-  { path: "/shipping", label: "Expedição", icon: Truck },
+  { path: "/suppliers", label: "Fornecedores", icon: Building },
   { path: "/orders", label: "Pedidos", icon: ShoppingCart },
+  { path: "/shipping", label: "Expedição", icon: Truck },
   { path: "/reports", label: "Relatórios", icon: FileText },
   { path: "/users", label: "Utilizadores", icon: Users },
   { path: "/settings", label: "Configurações", icon: Settings },
@@ -26,6 +31,16 @@ const navigationItems = [
 
 export function Sidebar() {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
+
+  const getRoleBadge = (role: string) => {
+    const roleConfig = {
+      admin: { label: "Administrador", variant: "default" as const },
+      manager: { label: "Gestor", variant: "secondary" as const },
+      operator: { label: "Operador", variant: "outline" as const },
+    };
+    return roleConfig[role as keyof typeof roleConfig] || { label: role, variant: "outline" as const };
+  };
 
   return (
     <aside className="bg-card border-r border-border w-72 flex flex-col fixed h-full z-10" data-testid="sidebar">
@@ -70,15 +85,23 @@ export function Sidebar() {
             <User className="text-primary-foreground text-sm" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground" data-testid="user-name">João Silva</p>
-            <p className="text-xs text-muted-foreground">Administrador</p>
+            <p className="text-sm font-medium text-foreground" data-testid="user-name">
+              {user?.username || "Utilizador"}
+            </p>
+            <Badge variant={getRoleBadge(user?.role || "").variant} className="text-xs mt-1">
+              {getRoleBadge(user?.role || "").label}
+            </Badge>
           </div>
-          <button 
-            className="text-muted-foreground hover:text-foreground"
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className="text-muted-foreground hover:text-foreground p-2"
             data-testid="logout-button"
+            title="Terminar Sessão"
           >
             <LogOut className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </aside>

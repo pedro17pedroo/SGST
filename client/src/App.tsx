@@ -17,6 +17,9 @@ import Shipping from "@/pages/shipping";
 import Reports from "@/pages/reports";
 import Users from "@/pages/users";
 import Settings from "@/pages/settings";
+import Scanner from "@/pages/scanner";
+import ProductLocations from "@/pages/product-locations";
+import InventoryCounts from "@/pages/inventory-counts";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +36,9 @@ function Router() {
           <Route path="/suppliers" component={Suppliers} />
           <Route path="/orders" component={Orders} />
           <Route path="/shipping" component={Shipping} />
+          <Route path="/scanner" component={Scanner} />
+          <Route path="/product-locations" component={ProductLocations} />
+          <Route path="/inventory-counts" component={InventoryCounts} />
           <Route path="/reports" component={Reports} />
           <Route path="/users" component={Users} />
           <Route path="/settings" component={Settings} />

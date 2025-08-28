@@ -124,11 +124,67 @@ export const shipments = pgTable("shipments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Product locations table for warehouse organization (RF1.5)
+export const productLocations = pgTable("product_locations", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  zone: varchar("zone", { length: 50 }), // A, B, C
+  shelf: varchar("shelf", { length: 50 }), // A1, B2, C3
+  bin: varchar("bin", { length: 50 }), // A1-01, B2-15
+  lastScanned: timestamp("last_scanned"),
+  scannedByUserId: uuid("scanned_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Inventory counts table for cycle counting (RF1.4)
+export const inventoryCounts = pgTable("inventory_counts", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  countNumber: varchar("count_number", { length: 100 }).notNull().unique(),
+  type: varchar("type", { length: 50 }).notNull(), // 'cycle', 'full', 'spot'
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, in_progress, completed, cancelled
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  scheduledDate: timestamp("scheduled_date"),
+  completedDate: timestamp("completed_date"),
+  userId: uuid("user_id").references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Inventory count items table
+export const inventoryCountItems = pgTable("inventory_count_items", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  countId: uuid("count_id").notNull().references(() => inventoryCounts.id),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  expectedQuantity: integer("expected_quantity").notNull(),
+  countedQuantity: integer("counted_quantity"),
+  variance: integer("variance"), // countedQuantity - expectedQuantity
+  reconciled: boolean("reconciled").notNull().default(false),
+  countedByUserId: uuid("counted_by_user_id").references(() => users.id),
+  countedAt: timestamp("counted_at"),
+});
+
+// Barcode scans table for tracking (RF2.1)
+export const barcodeScans = pgTable("barcode_scans", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  scannedCode: varchar("scanned_code", { length: 255 }).notNull(),
+  scanType: varchar("scan_type", { length: 50 }).notNull(), // 'barcode', 'qr', 'rfid'
+  productId: uuid("product_id").references(() => products.id),
+  warehouseId: uuid("warehouse_id").references(() => warehouses.id),
+  locationId: uuid("location_id").references(() => productLocations.id),
+  scanPurpose: varchar("scan_purpose", { length: 100 }).notNull(), // 'inventory', 'picking', 'receiving', 'shipping'
+  userId: uuid("user_id").notNull().references(() => users.id),
+  metadata: json("metadata"), // Additional data like GPS coordinates, device info
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
   stockMovements: many(stockMovements),
   shipments: many(shipments),
+  inventoryCounts: many(inventoryCounts),
+  barcodeScans: many(barcodeScans),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -143,6 +199,9 @@ export const suppliersRelations = relations(suppliers, ({ many }) => ({
 export const warehousesRelations = relations(warehouses, ({ many }) => ({
   inventory: many(inventory),
   stockMovements: many(stockMovements),
+  productLocations: many(productLocations),
+  inventoryCounts: many(inventoryCounts),
+  barcodeScans: many(barcodeScans),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -157,6 +216,9 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   inventory: many(inventory),
   stockMovements: many(stockMovements),
   orderItems: many(orderItems),
+  productLocations: many(productLocations),
+  inventoryCountItems: many(inventoryCountItems),
+  barcodeScans: many(barcodeScans),
 }));
 
 export const inventoryRelations = relations(inventory, ({ one }) => ({
@@ -220,6 +282,72 @@ export const shipmentsRelations = relations(shipments, ({ one }) => ({
   }),
 }));
 
+// Product location relations
+export const productLocationsRelations = relations(productLocations, ({ one, many }) => ({
+  product: one(products, {
+    fields: [productLocations.productId],
+    references: [products.id],
+  }),
+  warehouse: one(warehouses, {
+    fields: [productLocations.warehouseId],
+    references: [warehouses.id],
+  }),
+  scannedByUser: one(users, {
+    fields: [productLocations.scannedByUserId],
+    references: [users.id],
+  }),
+  barcodeScans: many(barcodeScans),
+}));
+
+// Inventory count relations
+export const inventoryCountsRelations = relations(inventoryCounts, ({ one, many }) => ({
+  warehouse: one(warehouses, {
+    fields: [inventoryCounts.warehouseId],
+    references: [warehouses.id],
+  }),
+  user: one(users, {
+    fields: [inventoryCounts.userId],
+    references: [users.id],
+  }),
+  countItems: many(inventoryCountItems),
+}));
+
+// Inventory count items relations
+export const inventoryCountItemsRelations = relations(inventoryCountItems, ({ one }) => ({
+  count: one(inventoryCounts, {
+    fields: [inventoryCountItems.countId],
+    references: [inventoryCounts.id],
+  }),
+  product: one(products, {
+    fields: [inventoryCountItems.productId],
+    references: [products.id],
+  }),
+  countedByUser: one(users, {
+    fields: [inventoryCountItems.countedByUserId],
+    references: [users.id],
+  }),
+}));
+
+// Barcode scans relations
+export const barcodeScansRelations = relations(barcodeScans, ({ one }) => ({
+  product: one(products, {
+    fields: [barcodeScans.productId],
+    references: [products.id],
+  }),
+  warehouse: one(warehouses, {
+    fields: [barcodeScans.warehouseId],
+    references: [warehouses.id],
+  }),
+  location: one(productLocations, {
+    fields: [barcodeScans.locationId],
+    references: [productLocations.id],
+  }),
+  user: one(users, {
+    fields: [barcodeScans.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -270,6 +398,25 @@ export const insertShipmentSchema = createInsertSchema(shipments).omit({
   createdAt: true,
 });
 
+export const insertProductLocationSchema = createInsertSchema(productLocations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInventoryCountSchema = createInsertSchema(inventoryCounts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInventoryCountItemSchema = createInsertSchema(inventoryCountItems).omit({
+  id: true,
+});
+
+export const insertBarcodeScanSchema = createInsertSchema(barcodeScans).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -291,3 +438,11 @@ export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 export type Shipment = typeof shipments.$inferSelect;
 export type InsertShipment = z.infer<typeof insertShipmentSchema>;
+export type ProductLocation = typeof productLocations.$inferSelect;
+export type InsertProductLocation = z.infer<typeof insertProductLocationSchema>;
+export type InventoryCount = typeof inventoryCounts.$inferSelect;
+export type InsertInventoryCount = z.infer<typeof insertInventoryCountSchema>;
+export type InventoryCountItem = typeof inventoryCountItems.$inferSelect;
+export type InsertInventoryCountItem = z.infer<typeof insertInventoryCountItemSchema>;
+export type BarcodeScan = typeof barcodeScans.$inferSelect;
+export type InsertBarcodeScan = z.infer<typeof insertBarcodeScanSchema>;

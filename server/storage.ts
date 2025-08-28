@@ -1,9 +1,12 @@
 import {
   users, categories, suppliers, warehouses, products, inventory, stockMovements, orders, orderItems, shipments,
+  productLocations, inventoryCounts, inventoryCountItems, barcodeScans,
   type User, type InsertUser, type Category, type InsertCategory, type Supplier, type InsertSupplier,
   type Warehouse, type InsertWarehouse, type Product, type InsertProduct, type Inventory, type InsertInventory,
   type StockMovement, type InsertStockMovement, type Order, type InsertOrder, type OrderItem, type InsertOrderItem,
-  type Shipment, type InsertShipment
+  type Shipment, type InsertShipment, type ProductLocation, type InsertProductLocation,
+  type InventoryCount, type InsertInventoryCount, type InventoryCountItem, type InsertInventoryCountItem,
+  type BarcodeScan, type InsertBarcodeScan
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, ilike, sum } from "drizzle-orm";
@@ -78,6 +81,28 @@ export interface IStorage {
   getShipments(): Promise<Array<Shipment & { order?: Order | null; user?: User | null }>>;
   createShipment(shipment: InsertShipment): Promise<Shipment>;
   updateShipment(id: string, shipment: Partial<InsertShipment>): Promise<Shipment>;
+
+  // Product Locations (RF1.5)
+  getProductLocations(warehouseId?: string): Promise<Array<ProductLocation & { product: Product; warehouse: Warehouse }>>;
+  getProductLocation(productId: string, warehouseId: string): Promise<ProductLocation | undefined>;
+  createProductLocation(location: InsertProductLocation): Promise<ProductLocation>;
+  updateProductLocation(id: string, location: Partial<InsertProductLocation>): Promise<ProductLocation>;
+  deleteProductLocation(id: string): Promise<void>;
+
+  // Inventory Counts (RF1.4)
+  getInventoryCounts(warehouseId?: string): Promise<Array<InventoryCount & { warehouse: Warehouse; user?: User | null }>>;
+  getInventoryCount(id: string): Promise<InventoryCount | undefined>;
+  createInventoryCount(count: InsertInventoryCount): Promise<InventoryCount>;
+  updateInventoryCount(id: string, count: Partial<InsertInventoryCount>): Promise<InventoryCount>;
+  getInventoryCountItems(countId: string): Promise<Array<InventoryCountItem & { product: Product }>>;
+  createInventoryCountItem(item: InsertInventoryCountItem): Promise<InventoryCountItem>;
+  updateInventoryCountItem(id: string, item: Partial<InsertInventoryCountItem>): Promise<InventoryCountItem>;
+
+  // Barcode Scans (RF2.1)
+  getBarcodeScans(limit?: number): Promise<Array<BarcodeScan & { product?: Product | null; warehouse?: Warehouse | null; user: User }>>;
+  createBarcodeScan(scan: InsertBarcodeScan): Promise<BarcodeScan>;
+  findProductByBarcode(barcode: string): Promise<Product | undefined>;
+  getBarcodeScansByProduct(productId: string): Promise<Array<BarcodeScan & { warehouse?: Warehouse | null; user: User }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -718,6 +743,207 @@ export class DatabaseStorage implements IStorage {
       .where(eq(shipments.id, id))
       .returning();
     return result;
+  }
+
+  // Product Locations (RF1.5)
+  async getProductLocations(warehouseId?: string) {
+    const query = db
+      .select({
+        id: productLocations.id,
+        productId: productLocations.productId,
+        warehouseId: productLocations.warehouseId,
+        zone: productLocations.zone,
+        shelf: productLocations.shelf,
+        bin: productLocations.bin,
+        lastScanned: productLocations.lastScanned,
+        scannedByUserId: productLocations.scannedByUserId,
+        createdAt: productLocations.createdAt,
+        product: products,
+        warehouse: warehouses
+      })
+      .from(productLocations)
+      .innerJoin(products, eq(productLocations.productId, products.id))
+      .innerJoin(warehouses, eq(productLocations.warehouseId, warehouses.id));
+
+    if (warehouseId) {
+      query.where(eq(productLocations.warehouseId, warehouseId));
+    }
+
+    return await query.orderBy(desc(productLocations.createdAt));
+  }
+
+  async getProductLocation(productId: string, warehouseId: string) {
+    const [location] = await db
+      .select()
+      .from(productLocations)
+      .where(and(
+        eq(productLocations.productId, productId),
+        eq(productLocations.warehouseId, warehouseId)
+      ));
+    return location || undefined;
+  }
+
+  async createProductLocation(location: InsertProductLocation): Promise<ProductLocation> {
+    const [result] = await db.insert(productLocations).values(location).returning();
+    return result;
+  }
+
+  async updateProductLocation(id: string, location: Partial<InsertProductLocation>): Promise<ProductLocation> {
+    const [result] = await db
+      .update(productLocations)
+      .set(location)
+      .where(eq(productLocations.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteProductLocation(id: string): Promise<void> {
+    await db.delete(productLocations).where(eq(productLocations.id, id));
+  }
+
+  // Inventory Counts (RF1.4)
+  async getInventoryCounts(warehouseId?: string) {
+    const query = db
+      .select({
+        id: inventoryCounts.id,
+        countNumber: inventoryCounts.countNumber,
+        type: inventoryCounts.type,
+        status: inventoryCounts.status,
+        warehouseId: inventoryCounts.warehouseId,
+        scheduledDate: inventoryCounts.scheduledDate,
+        completedDate: inventoryCounts.completedDate,
+        userId: inventoryCounts.userId,
+        notes: inventoryCounts.notes,
+        createdAt: inventoryCounts.createdAt,
+        warehouse: warehouses,
+        user: users
+      })
+      .from(inventoryCounts)
+      .innerJoin(warehouses, eq(inventoryCounts.warehouseId, warehouses.id))
+      .leftJoin(users, eq(inventoryCounts.userId, users.id));
+
+    if (warehouseId) {
+      query.where(eq(inventoryCounts.warehouseId, warehouseId));
+    }
+
+    return await query.orderBy(desc(inventoryCounts.createdAt));
+  }
+
+  async getInventoryCount(id: string) {
+    const [count] = await db
+      .select()
+      .from(inventoryCounts)
+      .where(eq(inventoryCounts.id, id));
+    return count || undefined;
+  }
+
+  async createInventoryCount(count: InsertInventoryCount): Promise<InventoryCount> {
+    const [result] = await db.insert(inventoryCounts).values(count).returning();
+    return result;
+  }
+
+  async updateInventoryCount(id: string, count: Partial<InsertInventoryCount>): Promise<InventoryCount> {
+    const [result] = await db
+      .update(inventoryCounts)
+      .set(count)
+      .where(eq(inventoryCounts.id, id))
+      .returning();
+    return result;
+  }
+
+  async getInventoryCountItems(countId: string) {
+    return await db
+      .select({
+        id: inventoryCountItems.id,
+        countId: inventoryCountItems.countId,
+        productId: inventoryCountItems.productId,
+        expectedQuantity: inventoryCountItems.expectedQuantity,
+        countedQuantity: inventoryCountItems.countedQuantity,
+        variance: inventoryCountItems.variance,
+        reconciled: inventoryCountItems.reconciled,
+        countedByUserId: inventoryCountItems.countedByUserId,
+        countedAt: inventoryCountItems.countedAt,
+        product: products
+      })
+      .from(inventoryCountItems)
+      .innerJoin(products, eq(inventoryCountItems.productId, products.id))
+      .where(eq(inventoryCountItems.countId, countId));
+  }
+
+  async createInventoryCountItem(item: InsertInventoryCountItem): Promise<InventoryCountItem> {
+    const [result] = await db.insert(inventoryCountItems).values(item).returning();
+    return result;
+  }
+
+  async updateInventoryCountItem(id: string, item: Partial<InsertInventoryCountItem>): Promise<InventoryCountItem> {
+    const [result] = await db
+      .update(inventoryCountItems)
+      .set(item)
+      .where(eq(inventoryCountItems.id, id))
+      .returning();
+    return result;
+  }
+
+  // Barcode Scans (RF2.1)
+  async getBarcodeScans(limit: number = 100) {
+    return await db
+      .select({
+        id: barcodeScans.id,
+        scannedCode: barcodeScans.scannedCode,
+        scanType: barcodeScans.scanType,
+        productId: barcodeScans.productId,
+        warehouseId: barcodeScans.warehouseId,
+        locationId: barcodeScans.locationId,
+        scanPurpose: barcodeScans.scanPurpose,
+        userId: barcodeScans.userId,
+        metadata: barcodeScans.metadata,
+        createdAt: barcodeScans.createdAt,
+        product: products,
+        warehouse: warehouses,
+        user: users
+      })
+      .from(barcodeScans)
+      .leftJoin(products, eq(barcodeScans.productId, products.id))
+      .leftJoin(warehouses, eq(barcodeScans.warehouseId, warehouses.id))
+      .innerJoin(users, eq(barcodeScans.userId, users.id))
+      .orderBy(desc(barcodeScans.createdAt))
+      .limit(limit);
+  }
+
+  async createBarcodeScan(scan: InsertBarcodeScan): Promise<BarcodeScan> {
+    const [result] = await db.insert(barcodeScans).values(scan).returning();
+    return result;
+  }
+
+  async findProductByBarcode(barcode: string) {
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.barcode, barcode));
+    return product || undefined;
+  }
+
+  async getBarcodeScansByProduct(productId: string) {
+    return await db
+      .select({
+        id: barcodeScans.id,
+        scannedCode: barcodeScans.scannedCode,
+        scanType: barcodeScans.scanType,
+        productId: barcodeScans.productId,
+        warehouseId: barcodeScans.warehouseId,
+        locationId: barcodeScans.locationId,
+        scanPurpose: barcodeScans.scanPurpose,
+        userId: barcodeScans.userId,
+        metadata: barcodeScans.metadata,
+        createdAt: barcodeScans.createdAt,
+        warehouse: warehouses,
+        user: users
+      })
+      .from(barcodeScans)
+      .leftJoin(warehouses, eq(barcodeScans.warehouseId, warehouses.id))
+      .innerJoin(users, eq(barcodeScans.userId, users.id))
+      .where(eq(barcodeScans.productId, productId))
+      .orderBy(desc(barcodeScans.createdAt));
   }
 }
 

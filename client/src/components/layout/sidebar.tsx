@@ -10,7 +10,10 @@ import {
   Settings, 
   User,
   LogOut,
-  Building
+  Building,
+  Scan,
+  MapPin,
+  ClipboardList
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
@@ -24,6 +27,9 @@ const navigationItems = [
   { path: "/suppliers", label: "Fornecedores", icon: Building },
   { path: "/orders", label: "Pedidos", icon: ShoppingCart },
   { path: "/shipping", label: "Expedição", icon: Truck },
+  { path: "/scanner", label: "Scanner", icon: Scan },
+  { path: "/product-locations", label: "Localizações", icon: MapPin },
+  { path: "/inventory-counts", label: "Contagens", icon: ClipboardList },
   { path: "/reports", label: "Relatórios", icon: FileText },
   { path: "/users", label: "Utilizadores", icon: Users },
   { path: "/settings", label: "Configurações", icon: Settings },

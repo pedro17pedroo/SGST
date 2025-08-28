@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertUserSchema, insertCategorySchema, insertSupplierSchema, insertWarehouseSchema,
-  insertProductSchema, insertStockMovementSchema, insertOrderSchema, insertShipmentSchema
+  insertProductSchema, insertStockMovementSchema, insertOrderSchema, insertShipmentSchema,
+  insertProductLocationSchema, insertInventoryCountSchema, insertInventoryCountItemSchema,
+  insertBarcodeScanSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -661,6 +663,205 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to update shipment", error });
       }
+    }
+  });
+
+  // Product Locations routes (RF1.5)
+  app.get("/api/product-locations", async (req, res) => {
+    try {
+      const { warehouseId } = req.query;
+      const locations = await storage.getProductLocations(warehouseId as string);
+      res.json(locations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch product locations", error });
+    }
+  });
+
+  app.post("/api/product-locations", async (req, res) => {
+    try {
+      const location = insertProductLocationSchema.parse(req.body);
+      const result = await storage.createProductLocation(location);
+      res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid location data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create location", error });
+      }
+    }
+  });
+
+  app.put("/api/product-locations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertProductLocationSchema.partial().parse(req.body);
+      const result = await storage.updateProductLocation(id, updates);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid location data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update location", error });
+      }
+    }
+  });
+
+  app.delete("/api/product-locations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteProductLocation(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete location", error });
+    }
+  });
+
+  // Inventory Counts routes (RF1.4)
+  app.get("/api/inventory-counts", async (req, res) => {
+    try {
+      const { warehouseId } = req.query;
+      const counts = await storage.getInventoryCounts(warehouseId as string);
+      res.json(counts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch inventory counts", error });
+    }
+  });
+
+  app.get("/api/inventory-counts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const count = await storage.getInventoryCount(id);
+      if (!count) {
+        return res.status(404).json({ message: "Inventory count not found" });
+      }
+      res.json(count);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch inventory count", error });
+    }
+  });
+
+  app.post("/api/inventory-counts", async (req, res) => {
+    try {
+      const count = insertInventoryCountSchema.parse(req.body);
+      const result = await storage.createInventoryCount(count);
+      res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid count data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create inventory count", error });
+      }
+    }
+  });
+
+  app.put("/api/inventory-counts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertInventoryCountSchema.partial().parse(req.body);
+      const result = await storage.updateInventoryCount(id, updates);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid count data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update inventory count", error });
+      }
+    }
+  });
+
+  app.get("/api/inventory-counts/:id/items", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const items = await storage.getInventoryCountItems(id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch count items", error });
+    }
+  });
+
+  app.post("/api/inventory-count-items", async (req, res) => {
+    try {
+      const item = insertInventoryCountItemSchema.parse(req.body);
+      const result = await storage.createInventoryCountItem(item);
+      res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid count item data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create count item", error });
+      }
+    }
+  });
+
+  app.put("/api/inventory-count-items/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertInventoryCountItemSchema.partial().parse(req.body);
+      const result = await storage.updateInventoryCountItem(id, updates);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid count item data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update count item", error });
+      }
+    }
+  });
+
+  // Barcode Scans routes (RF2.1)
+  app.get("/api/barcode-scans", async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const scans = await storage.getBarcodeScans(limit ? parseInt(limit as string) : undefined);
+      res.json(scans);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch barcode scans", error });
+    }
+  });
+
+  app.post("/api/barcode-scans", async (req, res) => {
+    try {
+      const scanData = insertBarcodeScanSchema.parse(req.body);
+      
+      // Try to find product by barcode automatically
+      if (!scanData.productId && scanData.scannedCode) {
+        const product = await storage.findProductByBarcode(scanData.scannedCode);
+        if (product) {
+          scanData.productId = product.id;
+        }
+      }
+      
+      const result = await storage.createBarcodeScan(scanData);
+      res.status(201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid scan data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create barcode scan", error });
+      }
+    }
+  });
+
+  app.get("/api/products/:id/scans", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const scans = await storage.getBarcodeScansByProduct(id);
+      res.json(scans);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch product scans", error });
+    }
+  });
+
+  app.get("/api/products/by-barcode/:barcode", async (req, res) => {
+    try {
+      const { barcode } = req.params;
+      const product = await storage.findProductByBarcode(barcode);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to find product by barcode", error });
     }
   });
 

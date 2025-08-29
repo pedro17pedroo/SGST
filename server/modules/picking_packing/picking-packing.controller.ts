@@ -47,8 +47,81 @@ const packItemsSchema = z.object({
       height: z.number().min(0)
     }),
     packageType: z.string(),
-    trackingNumber: z.string().optional()
+    trackingNumber: z.string().optional(),
+    automaticWeighing: z.boolean().default(false),
+    scaleDeviceId: z.string().optional(),
+    dimensionScanDeviceId: z.string().optional()
   })
+});
+
+const automaticPackagingSchema = z.object({
+  pickingListId: z.string().uuid(),
+  enableAutoWeighing: z.boolean().default(true),
+  enableAutoDimensions: z.boolean().default(true),
+  scaleDeviceId: z.string().optional(),
+  dimensionScannerDeviceId: z.string().optional(),
+  targetCarrier: z.string().optional(),
+  packagePreferences: z.object({
+    preferredPackageType: z.string().optional(),
+    maxWeight: z.number().min(0).optional(),
+    fragile: z.boolean().default(false),
+    expedited: z.boolean().default(false)
+  }).optional()
+});
+
+const shippingLabelSchema = z.object({
+  packageId: z.string().uuid(),
+  carrier: z.string().min(1, "Transportadora é obrigatória"),
+  serviceType: z.enum(["standard", "express", "overnight", "economy"]).default("standard"),
+  recipientAddress: z.object({
+    name: z.string().min(1),
+    addressLine1: z.string().min(1),
+    addressLine2: z.string().optional(),
+    city: z.string().min(1),
+    state: z.string().min(1),
+    postalCode: z.string().min(1),
+    country: z.string().min(1),
+    phone: z.string().optional()
+  }),
+  senderAddress: z.object({
+    name: z.string().min(1),
+    addressLine1: z.string().min(1),
+    addressLine2: z.string().optional(),
+    city: z.string().min(1),
+    state: z.string().min(1),
+    postalCode: z.string().min(1),
+    country: z.string().min(1),
+    phone: z.string().optional()
+  }),
+  insuranceValue: z.number().min(0).optional(),
+  signatureRequired: z.boolean().default(false),
+  labelFormat: z.enum(["PDF", "PNG", "ZPL", "EPL"]).default("PDF")
+});
+
+const freightCalculationSchema = z.object({
+  origin: z.object({
+    city: z.string().min(1),
+    state: z.string().min(1),
+    country: z.string().min(1),
+    postalCode: z.string().min(1)
+  }),
+  destination: z.object({
+    city: z.string().min(1),
+    state: z.string().min(1),
+    country: z.string().min(1),
+    postalCode: z.string().min(1)
+  }),
+  packageDetails: z.object({
+    weight: z.number().min(0.1),
+    dimensions: z.object({
+      length: z.number().min(0.1),
+      width: z.number().min(0.1),
+      height: z.number().min(0.1)
+    }),
+    declaredValue: z.number().min(0).optional()
+  }),
+  carriers: z.array(z.string()).optional(),
+  serviceTypes: z.array(z.enum(["standard", "express", "overnight", "economy"])).optional()
 });
 
 export class PickingPackingController {
@@ -408,6 +481,196 @@ export class PickingPackingController {
       console.error('Error fetching shipping info:', error);
       res.status(500).json({
         message: "Erro ao buscar informações de envio",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  // === NOVAS FUNCIONALIDADES AVANÇADAS ===
+
+  static async startAutomaticPackaging(req: Request, res: Response) {
+    try {
+      const validated = automaticPackagingSchema.parse(req.body);
+      
+      const result = await PickingPackingModel.startAutomaticPackaging({
+        ...validated,
+        startedAt: new Date(),
+        startedByUserId: req.user?.id || 'system'
+      });
+      
+      res.status(201).json({
+        message: "Embalagem automática iniciada com sucesso",
+        session: result
+      });
+    } catch (error) {
+      console.error('Error starting automatic packaging:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Dados inválidos",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({
+          message: "Erro ao iniciar embalagem automática",
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  }
+
+  static async recordAutomaticWeightDimensions(req: Request, res: Response) {
+    try {
+      const { packageId } = req.params;
+      const { weight, dimensions, deviceId, confidence } = req.body;
+      
+      const result = await PickingPackingModel.recordAutomaticMeasurements(packageId, {
+        weight: parseFloat(weight),
+        dimensions: {
+          length: parseFloat(dimensions.length),
+          width: parseFloat(dimensions.width),
+          height: parseFloat(dimensions.height)
+        },
+        deviceId,
+        confidence: confidence || 0.95,
+        recordedAt: new Date(),
+        recordedByUserId: req.user?.id || 'system'
+      });
+      
+      res.json({
+        message: "Medições automáticas registradas com sucesso",
+        measurements: result
+      });
+    } catch (error) {
+      console.error('Error recording automatic measurements:', error);
+      res.status(500).json({
+        message: "Erro ao registrar medições automáticas",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async generateAutomaticShippingLabel(req: Request, res: Response) {
+    try {
+      const validated = shippingLabelSchema.parse(req.body);
+      
+      const label = await PickingPackingModel.generateAutomaticShippingLabel({
+        ...validated,
+        generatedAt: new Date(),
+        generatedByUserId: req.user?.id || 'system'
+      });
+      
+      res.json({
+        message: "Etiqueta de envio gerada automaticamente",
+        label: {
+          id: label.id,
+          trackingNumber: label.trackingNumber,
+          labelUrl: label.labelUrl,
+          carrier: label.carrier,
+          serviceType: label.serviceType,
+          estimatedDelivery: label.estimatedDelivery,
+          cost: label.cost
+        }
+      });
+    } catch (error) {
+      console.error('Error generating automatic shipping label:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Dados inválidos para geração de etiqueta",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({
+          message: "Erro ao gerar etiqueta de envio automática",
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  }
+
+  static async calculateFreightCosts(req: Request, res: Response) {
+    try {
+      const validated = freightCalculationSchema.parse(req.body);
+      
+      const quotes = await PickingPackingModel.calculateFreightCosts({
+        ...validated,
+        requestedAt: new Date()
+      });
+      
+      res.json({
+        message: "Custos de frete calculados com sucesso",
+        quotes: quotes.map(quote => ({
+          carrier: quote.carrier,
+          serviceType: quote.serviceType,
+          cost: quote.cost,
+          currency: quote.currency,
+          estimatedDeliveryDays: quote.estimatedDeliveryDays,
+          estimatedDeliveryDate: quote.estimatedDeliveryDate,
+          features: quote.features,
+          restrictions: quote.restrictions
+        }))
+      });
+    } catch (error) {
+      console.error('Error calculating freight costs:', error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          message: "Dados inválidos para cálculo de frete",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({
+          message: "Erro ao calcular custos de frete",
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  }
+
+  static async getAutomaticPackagingDevices(req: Request, res: Response) {
+    try {
+      const devices = await PickingPackingModel.getAutomaticPackagingDevices();
+      
+      res.json({
+        devices: devices.map(device => ({
+          id: device.id,
+          name: device.name,
+          type: device.type,
+          status: device.status,
+          capabilities: device.capabilities,
+          lastCalibration: device.lastCalibration,
+          location: device.location
+        }))
+      });
+    } catch (error) {
+      console.error('Error getting packaging devices:', error);
+      res.status(500).json({
+        message: "Erro ao buscar dispositivos de embalagem",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async getFreightCarriers(req: Request, res: Response) {
+    try {
+      const region = req.query.region as string;
+      const serviceType = req.query.serviceType as string;
+      
+      const carriers = await PickingPackingModel.getFreightCarriers({ region, serviceType });
+      
+      res.json({
+        carriers: carriers.map(carrier => ({
+          id: carrier.id,
+          name: carrier.name,
+          logo: carrier.logo,
+          supportedServices: carrier.supportedServices,
+          coverage: carrier.coverage,
+          pricing: carrier.pricing,
+          features: carrier.features
+        }))
+      });
+    } catch (error) {
+      console.error('Error getting freight carriers:', error);
+      res.status(500).json({
+        message: "Erro ao buscar transportadoras",
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

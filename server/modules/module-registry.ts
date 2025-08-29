@@ -7,6 +7,12 @@ import usersModule from './users';
 import productsModule from './products';
 import settingsModule from './settings';
 import dashboardModule from './dashboard';
+import suppliersModule from './suppliers';
+import warehousesModule from './warehouses';
+import inventoryModule from './inventory';
+import ordersModule from './orders';
+import shippingModule from './shipping';
+import publicTrackingModule from './public_tracking';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -19,6 +25,12 @@ export class ModuleRegistry {
     this.modules.set('products', productsModule);
     this.modules.set('settings', settingsModule);
     this.modules.set('dashboard', dashboardModule);
+    this.modules.set('suppliers', suppliersModule);
+    this.modules.set('warehouses', warehousesModule);
+    this.modules.set('inventory', inventoryModule);
+    this.modules.set('orders', ordersModule);
+    this.modules.set('shipping', shippingModule);
+    this.modules.set('public_tracking', publicTrackingModule);
   }
 
   async registerEnabledModules(app: Express): Promise<void> {

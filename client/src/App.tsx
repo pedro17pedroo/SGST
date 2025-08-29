@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/contexts/theme-context";
 import { ModuleProvider } from "@/contexts/module-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { ModuleGuard } from "@/components/layout/module-guard";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import Inventory from "@/pages/inventory";
@@ -31,12 +32,17 @@ import PublicTracking from "@/pages/public-tracking";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <main className="flex-1 ml-72 overflow-auto">
-        <Switch>
-          <Route path="/" component={Dashboard} />
+      <main className={`flex-1 overflow-auto ${
+        isMobile ? 'pt-16' : 'ml-72'
+      }`}>
+        <div className="container-responsive py-4">
+          <Switch>
+            <Route path="/" component={Dashboard} />
           <Route path="/dashboard">
             <ModuleGuard moduleId="dashboard" fallback={<NotFound />}>
               <Dashboard />
@@ -128,7 +134,8 @@ function Router() {
             </ModuleGuard>
           </Route>
           <Route component={NotFound} />
-        </Switch>
+          </Switch>
+        </div>
       </main>
     </div>
   );

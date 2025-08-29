@@ -88,14 +88,14 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-md" data-testid="dialog-supplier">
+      <DialogContent className="dialog-mobile" data-testid="dialog-supplier">
         <DialogHeader>
           <DialogTitle>
             {supplier ? "Editar Fornecedor" : "Novo Fornecedor"}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -173,12 +173,13 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
               )}
             />
 
-            <div className="flex justify-end space-x-2">
+            <div className="button-group-mobile">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setOpen(false)}
                 data-testid="button-cancel"
+                className="mobile-full"
               >
                 Cancelar
               </Button>
@@ -186,6 +187,7 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
                 type="submit" 
                 disabled={createMutation.isPending || updateMutation.isPending}
                 data-testid="button-save-supplier"
+                className="mobile-full"
               >
                 {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
               </Button>

@@ -13,13 +13,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background" data-testid="dashboard-page">
       <Header title="Dashboard" breadcrumbs={["Dashboard"]} />
       
-      <div className="p-6 space-y-6">
+      <div className="container-responsive space-y-4 sm:space-y-6">
         <KPICards data={stats} isLoading={isLoadingStats} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
             <ChartsSection />
           </div>
-          <div>
+          <div className="lg:col-span-1">
             <StockAlerts />
           </div>
         </div>

@@ -24,12 +24,16 @@ import {
   Send,
   Calculator,
   CheckSquare,
-  Eye
+  Eye,
+  Menu,
+  X
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useModules } from "@/contexts/module-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState, useEffect } from "react";
 
 // Mapeamento de ícones para usar com os módulos
 const iconMap: Record<string, any> = {
@@ -58,6 +62,20 @@ export function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const { enabledMenuItems, isLoading } = useModules();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Fechar sidebar mobile ao navegar
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
+  
+  // Fechar sidebar mobile ao redimensionar para desktop
+  useEffect(() => {
+    if (!isMobile) {
+      setIsOpen(false);
+    }
+  }, [isMobile]);
 
   const getRoleBadge = (role: string) => {
     const roleConfig = {
@@ -69,7 +87,46 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="bg-card border-r border-border w-72 flex flex-col fixed h-full z-10" data-testid="sidebar">
+    <>
+      {/* Menu hambúrguer mobile */}
+      {isMobile && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border p-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Box className="text-primary-foreground text-sm" />
+            </div>
+            <h1 className="text-lg font-bold text-foreground">SGST</h1>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2"
+          >
+            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </Button>
+        </div>
+      )}
+      
+      {/* Overlay mobile */}
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <aside 
+        className={`bg-card border-r border-border flex flex-col h-full z-40 ${
+          isMobile 
+            ? `fixed w-80 transform transition-transform duration-300 ${
+                isOpen ? 'translate-x-0' : '-translate-x-full'
+              } top-16` 
+            : 'w-72 fixed'
+        }`} 
+        data-testid="sidebar"
+      >
       {/* Header fixo - Logo e nome da empresa */}
       <div className="p-6 border-b border-border flex-shrink-0">
         <div className="flex items-center space-x-3">
@@ -139,6 +196,7 @@ export function Sidebar() {
           </Button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

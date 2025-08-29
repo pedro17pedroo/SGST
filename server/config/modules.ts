@@ -219,6 +219,39 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/analytics'],
     tables: [],
     permissions: ['analytics.read', 'analytics.advanced']
+  },
+
+  offline_sync: {
+    id: 'offline_sync',
+    name: 'Sincronização Offline',
+    description: 'Sistema offline-first com CRDTs e sincronização automática',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/offline-sync'],
+    tables: [],
+    permissions: ['offline_sync.read', 'offline_sync.write']
+  },
+
+  computer_vision: {
+    id: 'computer_vision',
+    name: 'Computer Vision Edge',
+    description: 'Contagem automática, detecção de danos e leitura de etiquetas',
+    enabled: true,
+    dependencies: ['products', 'inventory'],
+    routes: ['/api/cv'],
+    tables: [],
+    permissions: ['computer_vision.read', 'computer_vision.write']
+  },
+
+  rtls_hybrid: {
+    id: 'rtls_hybrid',
+    name: 'RTLS Híbrido',
+    description: 'Sistema de localização em tempo real com RFID + UWB + BLE',
+    enabled: true,
+    dependencies: ['warehouses'],
+    routes: ['/api/rtls'],
+    tables: [],
+    permissions: ['rtls.read', 'rtls.write', 'rtls.devices', 'rtls.analytics']
   }
 };
 

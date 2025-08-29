@@ -19,6 +19,9 @@ import { initializeProductLocationsModule } from './product_locations';
 import { initializePickingPackingModule } from './picking_packing';
 import { initializeBatchManagementModule } from './batch_management';
 import { initializeInventoryAlertsModule } from './inventory_alerts';
+import { initializeOfflineSyncModule } from './offline_sync';
+import { initializeComputerVisionModule } from './computer_vision';
+import { initializeRTLSModule } from './rtls_hybrid';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -134,6 +137,48 @@ export class ModuleRegistry {
         const { default: reportsRoutes } = await import('./reports/reports.routes.js');
         app.use('/api/reports', reportsRoutes);
         console.log('✓ Módulo Relatórios Avançados registrado');
+      }
+    });
+
+    // Offline-First Sync Module
+    this.modules.set('offline_sync', {
+      config: { 
+        id: 'offline_sync', 
+        name: 'Sincronização Offline',
+        description: 'Sistema offline-first com CRDTs e sincronização automática',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeOfflineSyncModule(app);
+        console.log('✓ Módulo Sincronização Offline registrado');
+      }
+    });
+
+    // Computer Vision Edge Module
+    this.modules.set('computer_vision', {
+      config: { 
+        id: 'computer_vision', 
+        name: 'Computer Vision Edge',
+        description: 'Contagem automática, detecção de danos e leitura de etiquetas',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeComputerVisionModule(app);
+        console.log('✓ Módulo Computer Vision Edge registrado');
+      }
+    });
+
+    // RTLS Hybrid Module  
+    this.modules.set('rtls_hybrid', {
+      config: { 
+        id: 'rtls_hybrid', 
+        name: 'RTLS Híbrido',
+        description: 'Sistema de localização em tempo real com RFID + UWB + BLE',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeRTLSModule(app);
+        console.log('✓ Módulo RTLS Híbrido registrado');
       }
     });
 

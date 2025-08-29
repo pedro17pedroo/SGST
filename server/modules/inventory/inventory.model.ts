@@ -144,4 +144,38 @@ export class InventoryModel {
       warehouse: row.warehouse
     }));
   }
+
+  static async getInventorySummary() {
+    try {
+      const [totalProducts] = await db.select({
+        count: sql<number>`count(distinct ${products.id})`
+      }).from(products);
+
+      const [totalStock] = await db.select({
+        total: sql<number>`COALESCE(sum(${inventory.quantity}), 0)`
+      }).from(inventory);
+
+      const [lowStockCount] = await db.select({
+        count: sql<number>`count(distinct ${products.id})`
+      })
+      .from(products)
+      .leftJoin(inventory, eq(products.id, inventory.productId))
+      .where(sql`COALESCE(sum(${inventory.quantity}), 0) < ${products.minStockLevel}`);
+
+      return {
+        totalProducts: totalProducts.count || 0,
+        totalStock: totalStock.total || 0,
+        lowStockProducts: lowStockCount.count || 0,
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error getting inventory summary:', error);
+      return {
+        totalProducts: 0,
+        totalStock: 0,
+        lowStockProducts: 0,
+        lastUpdated: new Date().toISOString()
+      };
+    }
+  }
 }

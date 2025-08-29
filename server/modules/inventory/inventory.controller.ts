@@ -71,4 +71,17 @@ export class InventoryController {
       });
     }
   }
+
+  static async getInventorySummary(req: Request, res: Response) {
+    try {
+      const summary = await InventoryModel.getInventorySummary();
+      res.json(summary);
+    } catch (error) {
+      console.error('Error fetching inventory summary:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar resumo do inventário", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }

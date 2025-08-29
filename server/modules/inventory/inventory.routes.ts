@@ -9,6 +9,7 @@ router.use(moduleGuard('inventory'));
 
 // Rotas do inventário
 router.get('/', InventoryController.getAllInventory);
+router.get('/summary', InventoryController.getInventorySummary);
 router.get('/low-stock', InventoryController.getLowStockProducts);
 router.get('/warehouse/:warehouseId', InventoryController.getInventoryByWarehouse);
 router.get('/product/:productId', InventoryController.getProductInventory);

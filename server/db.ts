@@ -3,7 +3,13 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
+// Configure WebSocket with better error handling
 neonConfig.webSocketConstructor = ws;
+neonConfig.wsProxy = (host) => `${host}`;
+// Disable WebSocket for local development to avoid certificate issues
+if (process.env.NODE_ENV === 'development') {
+  neonConfig.useSecureWebSocket = false;
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error(

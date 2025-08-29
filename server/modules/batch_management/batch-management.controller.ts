@@ -251,7 +251,7 @@ export class BatchManagementController {
         newExpiryDate: new Date(newExpiryDate),
         reason,
         extendedAt: new Date(),
-        extendedByUserId: 'current-user-id' // TODO: Get from auth context
+        extendedByUserId: (req as any).user?.id || 'anonymous-user'
       });
       
       res.json(result);

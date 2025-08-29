@@ -140,7 +140,7 @@ export class GPSTrackingController {
       const device = await GPSTrackingModel.registerDevice({
         ...validated,
         registeredAt: new Date(),
-        registeredByUserId: 'current-user-id' // TODO: Get from auth context
+        registeredByUserId: (req as any).user?.id || 'anonymous-user'
       });
       
       res.status(201).json({
@@ -188,7 +188,7 @@ export class GPSTrackingController {
       const device = await GPSTrackingModel.updateDevice(deviceId, {
         ...validated,
         updatedAt: new Date(),
-        updatedByUserId: 'current-user-id' // TODO: Get from auth context
+        updatedByUserId: (req as any).user?.id || 'anonymous-user'
       });
       
       if (!device) {
@@ -289,7 +289,7 @@ export class GPSTrackingController {
       const geofence = await GPSTrackingModel.updateGeofence(geofenceId, {
         ...validated,
         updatedAt: new Date(),
-        updatedByUserId: 'current-user-id' // TODO: Get from auth context
+        updatedByUserId: (req as any).user?.id || 'anonymous-user'
       });
       
       if (!geofence) {

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 import { Scan, Package, MapPin, Clock, User } from "lucide-react";
 
 interface BarcodeScan {
@@ -34,6 +35,7 @@ export default function ScannerPage() {
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Get recent scans
@@ -60,7 +62,7 @@ export default function ScannerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          userId: 'current-user-id' // TODO: Get from auth context
+          userId: user?.id || 'anonymous-user'
         })
       });
       if (!response.ok) throw new Error('Failed to create scan');

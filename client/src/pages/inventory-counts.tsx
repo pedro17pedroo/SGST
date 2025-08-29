@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 import { Plus, ClipboardList, Calendar, MapPin, CheckCircle, Clock, AlertTriangle, User, Package } from "lucide-react";
 import { z } from "zod";
 
@@ -51,6 +52,7 @@ interface Warehouse {
 export default function InventoryCountsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof inventoryCountSchema>>({
@@ -92,7 +94,7 @@ export default function InventoryCountsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          userId: 'current-user-id' // TODO: Get from auth context
+          userId: user?.id || 'anonymous-user'
         })
       });
       if (!response.ok) throw new Error('Failed to create inventory count');

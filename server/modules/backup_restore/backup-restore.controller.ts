@@ -26,7 +26,7 @@ export class BackupRestoreController {
       
       const backup = await BackupRestoreModel.createBackup({
         ...validated,
-        createdByUserId: 'current-user-id', // TODO: Get from auth context
+        createdByUserId: (req as any).user?.id || 'anonymous-user',
         status: 'pending',
         createdAt: new Date()
       });
@@ -126,7 +126,7 @@ export class BackupRestoreController {
       const { id } = req.params;
       
       const restore = await BackupRestoreModel.restoreBackup(id, {
-        restoredByUserId: 'current-user-id', // TODO: Get from auth context
+        restoredByUserId: (req as any).user?.id || 'anonymous-user',
         startedAt: new Date()
       });
       
@@ -176,7 +176,7 @@ export class BackupRestoreController {
       const schedule = await BackupRestoreModel.updateBackupSchedule({
         ...validated,
         updatedAt: new Date(),
-        updatedByUserId: 'current-user-id' // TODO: Get from auth context
+        updatedByUserId: (req as any).user?.id || 'anonymous-user'
       });
       
       res.json({

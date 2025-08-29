@@ -43,7 +43,7 @@ export class PurchaseApprovalsController {
       
       const approval = await PurchaseApprovalsModel.submitForApproval(orderId, {
         ...validated,
-        submittedByUserId: 'current-user-id', // TODO: Get from auth context
+        submittedByUserId: (req as any).user?.id || 'anonymous-user',
         submittedAt: new Date()
       });
       
@@ -74,7 +74,7 @@ export class PurchaseApprovalsController {
       
       const approval = await PurchaseApprovalsModel.approvePurchaseOrder(orderId, {
         ...validated,
-        approvedByUserId: 'current-user-id', // TODO: Get from auth context
+        approvedByUserId: (req as any).user?.id || 'anonymous-user',
         approvedAt: new Date()
       });
       
@@ -115,7 +115,7 @@ export class PurchaseApprovalsController {
       
       const approval = await PurchaseApprovalsModel.rejectPurchaseOrder(orderId, {
         ...validated,
-        rejectedByUserId: 'current-user-id', // TODO: Get from auth context
+        rejectedByUserId: (req as any).user?.id || 'anonymous-user',
         rejectedAt: new Date()
       });
       

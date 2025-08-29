@@ -24,6 +24,7 @@ import Scanner from "@/pages/scanner";
 import ProductLocations from "@/pages/product-locations";
 import InventoryCounts from "@/pages/inventory-counts";
 import PickingPacking from "@/pages/picking-packing";
+import BatchManagement from "@/pages/batch-management";
 import Returns from "@/pages/returns";
 import Alerts from "@/pages/alerts";
 import AdvancedAnalytics from "@/pages/advanced-analytics";
@@ -96,6 +97,11 @@ function Router() {
           <Route path="/picking-packing">
             <ModuleGuard moduleId="picking_packing" fallback={<NotFound />}>
               <PickingPacking />
+            </ModuleGuard>
+          </Route>
+          <Route path="/batch-management">
+            <ModuleGuard moduleId="batch_management" fallback={<NotFound />}>
+              <BatchManagement />
             </ModuleGuard>
           </Route>
           <Route path="/returns">

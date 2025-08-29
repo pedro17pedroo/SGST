@@ -359,7 +359,7 @@ export class GPSTrackingController {
       
       const alert = await GPSTrackingModel.acknowledgeAlert(alertId, {
         acknowledgedAt: new Date(),
-        acknowledgedByUserId: 'current-user-id' // TODO: Get from auth context
+        acknowledgedByUserId: (req as any).user?.id || 'anonymous-user'
       });
       
       if (!alert) {
@@ -383,7 +383,12 @@ export class GPSTrackingController {
     try {
       const validated = routeOptimizationSchema.parse(req.body);
       
-      const optimizedRoute = await GPSTrackingModel.optimizeRoute(validated);
+      const optimizedRoute = await GPSTrackingModel.optimizeRoute({
+        startLocation: validated.startLocation,
+        destinations: validated.destinations,
+        vehicleType: validated.vehicleType,
+        optimizationType: validated.optimize
+      });
       
       res.json({
         message: "Rota otimizada com sucesso",

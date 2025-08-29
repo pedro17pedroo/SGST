@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
+import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -18,6 +19,22 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configuração de sessões
+const sessionSecret = process.env.SESSION_SECRET || 'sgst-development-secret-key';
+app.use(session({
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  name: 'sgst-session',
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    sameSite: 'lax'
+  },
+  rolling: true // Reset expiry on each request
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

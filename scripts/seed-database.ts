@@ -21,42 +21,42 @@ async function seedDatabase() {
       {
         username: 'alberto.mendes',
         email: 'alberto.mendes@petrolangola.ao',
-        password: '$2a$10$hash', // In production, use proper password hashing
+        password: '$2b$12$6i4oVYj/jDgJfhQ3UoSjEegzV6LXKebGpq3z9m6Y9lBQeWb6BXyNq', // Hash for: admin123
         role: 'admin',
         isActive: true
       },
       {
         username: 'maria.santos',
         email: 'maria.santos@petrolangola.ao',
-        password: '$2a$10$hash',
+        password: '$2b$12$65PV.ZplJKONv8p.MaAuJOlXsjZI4tGoCNfLD5jEhScZruahi2S5O', // Hash for: manager123
         role: 'manager',
         isActive: true
       },
       {
         username: 'joao.pereira',
         email: 'joao.pereira@petrolangola.ao',
-        password: '$2a$10$hash',
+        password: '$2b$12$btjWMPdSDlLTDJ0Yf3XxFeW0Z3vtnqEIEua3iKPNXtEX2Q2GkbhPS', // Hash for: operator123
         role: 'operator',
         isActive: true
       },
       {
         username: 'ana.silva',
         email: 'ana.silva@petrolangola.ao',
-        password: '$2a$10$hash',
+        password: '$2b$12$btjWMPdSDlLTDJ0Yf3XxFeW0Z3vtnqEIEua3iKPNXtEX2Q2GkbhPS', // Hash for: operator123
         role: 'operator',
         isActive: true
       },
       {
         username: 'carlos.nunes',
         email: 'carlos.nunes@petrolangola.ao',
-        password: '$2a$10$hash',
+        password: '$2b$12$btjWMPdSDlLTDJ0Yf3XxFeW0Z3vtnqEIEua3iKPNXtEX2Q2GkbhPS', // Hash for: operator123
         role: 'operator',
         isActive: true
       },
       {
         username: 'fernanda.costa',
         email: 'fernanda.costa@petrolangola.ao',
-        password: '$2a$10$hash',
+        password: '$2b$12$65PV.ZplJKONv8p.MaAuJOlXsjZI4tGoCNfLD5jEhScZruahi2S5O', // Hash for: manager123
         role: 'manager',
         isActive: true
       }

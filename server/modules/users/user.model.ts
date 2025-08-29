@@ -29,14 +29,10 @@ export class UserModel {
   }
 
   static async getByUsername(username: string) {
-    // Esta funcionalidade seria implementada no storage se necessária
-    const users = await storage.getUsers();
-    return users.find(user => user.username === username);
+    return await storage.getUserByUsername(username);
   }
 
   static async getByEmail(email: string) {
-    // Esta funcionalidade seria implementada no storage se necessária
-    const users = await storage.getUsers();
-    return users.find(user => user.email === email);
+    return await storage.getUserByEmail(email);
   }
 }

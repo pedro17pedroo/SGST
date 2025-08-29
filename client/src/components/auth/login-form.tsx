@@ -43,37 +43,41 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     setIsLoading(true);
     
     try {
-      // Simulação de autenticação - em produção seria uma chamada real à API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Credenciais demo
-      const validCredentials = [
-        { username: "admin", password: "admin123", role: "admin" },
-        { username: "manager", password: "manager123", role: "manager" },
-        { username: "operator", password: "operator123", role: "operator" },
-      ];
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for cookies/sessions
+        body: JSON.stringify({
+          username: data.username,
+          password: data.password
+        }),
+      });
 
-      const user = validCredentials.find(
-        cred => cred.username === data.username && cred.password === data.password
-      );
+      const result = await response.json();
 
-      if (user) {
+      if (response.ok) {
         toast({
           title: "Login realizado com sucesso",
-          description: `Bem-vindo, ${user.username}!`,
+          description: `Bem-vindo, ${result.user.username}!`,
         });
-        onLogin({ username: user.username, role: user.role });
+        onLogin({ 
+          username: result.user.username, 
+          role: result.user.role 
+        });
       } else {
         toast({
-          title: "Credenciais inválidas",
-          description: "Nome de utilizador ou palavra-passe incorretos.",
+          title: "Erro de login",
+          description: result.message || "Credenciais inválidas",
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: "Erro de autenticação",
-        description: "Não foi possível realizar o login. Tente novamente.",
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor. Tente novamente.",
         variant: "destructive",
       });
     } finally {

@@ -13,11 +13,22 @@ export interface ModuleConfig {
 // Configuração dos módulos do sistema
 export const MODULE_CONFIG: Record<string, ModuleConfig> = {
   // Módulos Core (sempre ativos)
+  auth: {
+    id: 'auth',
+    name: 'Autenticação',
+    description: 'Sistema de autenticação e gestão de sessões',
+    enabled: true,
+    routes: ['/api/auth'],
+    tables: ['users'],
+    permissions: ['auth.login', 'auth.logout']
+  },
+  
   users: {
     id: 'users',
     name: 'Gestão de Utilizadores',
     description: 'Gestão de utilizadores, autenticação e permissões',
     enabled: true,
+    dependencies: ['auth'],
     routes: ['/api/users'],
     tables: ['users', 'notification_preferences'],
     permissions: ['users.read', 'users.write', 'users.delete']

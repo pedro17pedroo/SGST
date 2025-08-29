@@ -192,7 +192,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'quality_control',
     name: 'Controlo de Qualidade',
     description: 'Gestão de qualidade e inspeções',
-    enabled: false,
+    enabled: true,
     dependencies: ['products', 'inventory'],
     routes: ['/api/quality-control'],
     tables: [],

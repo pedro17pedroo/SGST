@@ -266,6 +266,22 @@ export class ModuleRegistry {
       }
     });
 
+    // Quality Control Module
+    this.modules.set('quality_control', {
+      config: { 
+        id: 'quality_control', 
+        name: 'Controlo de Qualidade',
+        description: 'Gestão de qualidade, inspeções e auditorias',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        // Use existing compliance module which includes quality controls
+        const { complianceRoutes } = await import('./compliance/compliance.routes.js');
+        app.use('/api/quality-control', complianceRoutes);
+        console.log('✓ Módulo Controlo de Qualidade registrado');
+      }
+    });
+
     // AI Analytics Advanced Module
     this.modules.set('ai_analytics_advanced', {
       config: { 
@@ -275,7 +291,7 @@ export class ModuleRegistry {
         enabled: true
       },
       register: async (app: Express) => {
-        const { default: aiAnalyticsRoutes } = await import('./ai_analytics/ai-analytics.routes.js');
+        const { aiAnalyticsRoutes } = await import('./ai_analytics/ai-analytics.routes.js');
         app.use('/api/ai-analytics', aiAnalyticsRoutes);
         console.log('✓ Módulo IA Analytics Avançada registrado');
       }

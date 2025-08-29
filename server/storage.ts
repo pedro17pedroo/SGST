@@ -116,6 +116,22 @@ export interface IStorage {
   generateShippingLabel(data: any): Promise<any>;
   getShippingInfo(id: string): Promise<any>;
 
+  // Batch Management (RF1.3)
+  getBatches(filters: any): Promise<any[]>;
+  getBatchById(id: string): Promise<any>;
+  getBatchByNumber(batchNumber: string): Promise<any>;
+  createBatch(data: any): Promise<any>;
+  updateBatch(id: string, data: any): Promise<any>;
+  deleteBatch(id: string): Promise<void>;
+  addProductsToBatch(batchId: string, data: any): Promise<any>;
+  removeProductFromBatch(batchId: string, productId: string): Promise<void>;
+  getBatchExpiryAlerts(batchId: string): Promise<any[]>;
+  getExpiringProducts(daysAhead: number, warehouseId?: string): Promise<any[]>;
+  getExpiredProducts(warehouseId?: string): Promise<any[]>;
+  extendBatchExpiry(batchIds: string[], data: any): Promise<any>;
+  getBatchHistory(batchNumber: string): Promise<any[]>;
+  getBatchLocation(batchNumber: string): Promise<any>;
+
   // Inventory Counts (RF1.4)
   getInventoryCounts(warehouseId?: string): Promise<Array<InventoryCount & { warehouse: Warehouse; user?: User | null }>>;
   getInventoryCount(id: string): Promise<InventoryCount | undefined>;
@@ -984,6 +1000,172 @@ export class DatabaseStorage implements IStorage {
       carrier: 'DHL',
       estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
       status: 'ready_to_ship'
+    };
+  }
+
+  // Batch Management Implementation
+  async getBatches(filters: any): Promise<any[]> {
+    const now = new Date();
+    const sampleBatches = [
+      {
+        id: '1',
+        batchNumber: 'BATCH-2025-001',
+        productId: 'prod-1',
+        warehouseId: filters.warehouseId || 'wh-1',
+        manufacturingDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+        expiryDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000),
+        quantity: 100,
+        qualityStatus: 'approved',
+        isExpiring: false
+      },
+      {
+        id: '2',
+        batchNumber: 'BATCH-2025-002',
+        productId: 'prod-2',
+        warehouseId: filters.warehouseId || 'wh-1',
+        manufacturingDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
+        expiryDate: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000),
+        quantity: 50,
+        qualityStatus: 'approved',
+        isExpiring: true
+      }
+    ];
+    
+    return filters.expiryAlert ? sampleBatches.filter(b => b.isExpiring) : sampleBatches;
+  }
+
+  async getBatchById(id: string): Promise<any> {
+    return {
+      id,
+      batchNumber: `BATCH-2025-${id.padStart(3, '0')}`,
+      productId: 'prod-1',
+      warehouseId: 'wh-1',
+      manufacturingDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      expiryDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+      quantity: 100,
+      qualityStatus: 'approved',
+      supplierBatchRef: 'SUP-BATCH-001',
+      notes: 'Lote em boas condições'
+    };
+  }
+
+  async getBatchByNumber(batchNumber: string): Promise<any> {
+    return {
+      id: '1',
+      batchNumber,
+      productId: 'prod-1',
+      warehouseId: 'wh-1',
+      manufacturingDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      expiryDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+      quantity: 100,
+      qualityStatus: 'approved'
+    };
+  }
+
+  async createBatch(data: any): Promise<any> {
+    return {
+      id: `batch-${Math.random().toString(36).substr(2, 9)}`,
+      ...data,
+      createdAt: new Date()
+    };
+  }
+
+  async updateBatch(id: string, data: any): Promise<any> {
+    return {
+      id,
+      ...data,
+      updatedAt: new Date()
+    };
+  }
+
+  async deleteBatch(id: string): Promise<void> {
+    // Mock deletion
+  }
+
+  async addProductsToBatch(batchId: string, data: any): Promise<any> {
+    return {
+      batchId,
+      productsAdded: data.productIds.length,
+      totalQuantity: data.quantity
+    };
+  }
+
+  async removeProductFromBatch(batchId: string, productId: string): Promise<void> {
+    // Mock removal
+  }
+
+  async getBatchExpiryAlerts(batchId: string): Promise<any[]> {
+    return [
+      {
+        type: 'warning',
+        message: 'Lote expira em 15 dias',
+        daysUntilExpiry: 15,
+        severity: 'medium'
+      }
+    ];
+  }
+
+  async getExpiringProducts(daysAhead: number, warehouseId?: string): Promise<any[]> {
+    return [
+      {
+        productId: 'prod-1',
+        productName: 'Produto A',
+        batchNumber: 'BATCH-2025-002',
+        expiryDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+        quantity: 50,
+        daysUntilExpiry: 15
+      }
+    ];
+  }
+
+  async getExpiredProducts(warehouseId?: string): Promise<any[]> {
+    return [
+      {
+        productId: 'prod-2',
+        productName: 'Produto B',
+        batchNumber: 'BATCH-2025-003',
+        expiryDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        quantity: 25,
+        daysExpired: 5
+      }
+    ];
+  }
+
+  async extendBatchExpiry(batchIds: string[], data: any): Promise<any> {
+    return {
+      batchesUpdated: batchIds.length,
+      newExpiryDate: data.newExpiryDate,
+      reason: data.reason,
+      extendedBy: data.extendedByUserId
+    };
+  }
+
+  async getBatchHistory(batchNumber: string): Promise<any[]> {
+    return [
+      {
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        action: 'created',
+        description: 'Lote criado',
+        userId: 'user-1'
+      },
+      {
+        date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        action: 'quality_check',
+        description: 'Controlo de qualidade aprovado',
+        userId: 'user-2'
+      }
+    ];
+  }
+
+  async getBatchLocation(batchNumber: string): Promise<any> {
+    return {
+      batchNumber,
+      warehouseId: 'wh-1',
+      warehouseName: 'Armazém Principal',
+      zone: 'A',
+      shelf: 'A-01',
+      bin: 'A-01-001',
+      quantity: 100
     };
   }
 

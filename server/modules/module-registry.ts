@@ -17,6 +17,8 @@ import { initializeBarcodeScanningModule } from './barcode_scanning';
 import { initializeInventoryCountsModule } from './inventory_counts';
 import { initializeProductLocationsModule } from './product_locations';
 import { initializePickingPackingModule } from './picking_packing';
+import { initializeBatchManagementModule } from './batch_management';
+import { initializeInventoryAlertsModule } from './inventory_alerts';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -89,6 +91,34 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         initializePickingPackingModule(app);
         console.log('✓ Módulo Picking & Packing registrado');
+      }
+    });
+
+    // Temporary direct registration for batch management
+    this.modules.set('batch_management', {
+      config: { 
+        id: 'batch_management', 
+        name: 'Gestão de Lotes',
+        description: 'Rastreamento de lotes e datas de validade',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeBatchManagementModule(app);
+        console.log('✓ Módulo Gestão de Lotes registrado');
+      }
+    });
+
+    // Temporary direct registration for inventory alerts
+    this.modules.set('inventory_alerts', {
+      config: { 
+        id: 'inventory_alerts', 
+        name: 'Alertas de Inventário',
+        description: 'Sistema avançado de alertas para gestão de inventário',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeInventoryAlertsModule(app);
+        console.log('✓ Módulo Alertas de Inventário registrado');
       }
     });
   }

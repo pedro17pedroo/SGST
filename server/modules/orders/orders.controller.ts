@@ -103,4 +103,17 @@ export class OrdersController {
       });
     }
   }
+
+  static async getRecentOrders(req: Request, res: Response) {
+    try {
+      const orders = await OrdersModel.getRecentOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching recent orders:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar pedidos recentes", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }

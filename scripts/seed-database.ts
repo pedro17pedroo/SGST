@@ -1,15 +1,15 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from 'ws';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from '../shared/schema';
 import { eq } from 'drizzle-orm';
 
-// Configure WebSocket for Neon
-neonConfig.webSocketConstructor = ws;
-
 // Initialize database connection
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle({ client: pool, schema });
+const client = postgres(process.env.DATABASE_URL!, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
+const db = drizzle(client, { schema });
 
 async function seedDatabase() {
   console.log('🌱 Starting database seeding...');
@@ -762,7 +762,7 @@ async function seedDatabase() {
     console.error('❌ Error seeding database:', error);
     throw error;
   } finally {
-    await pool.end();
+    await client.end();
   }
 }
 

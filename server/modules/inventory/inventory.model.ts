@@ -160,7 +160,8 @@ export class InventoryModel {
       })
       .from(products)
       .leftJoin(inventory, eq(products.id, inventory.productId))
-      .where(sql`COALESCE(sum(${inventory.quantity}), 0) < ${products.minStockLevel}`);
+      .groupBy(products.id, products.minStockLevel)
+      .having(sql`COALESCE(sum(${inventory.quantity}), 0) < ${products.minStockLevel}`);
 
       return {
         totalProducts: totalProducts.count || 0,

@@ -9,6 +9,7 @@ router.use(moduleGuard('orders'));
 
 // Rotas dos pedidos
 router.get('/', OrdersController.getOrders);
+router.get('/recent', OrdersController.getRecentOrders);
 router.get('/:id', OrdersController.getOrder);
 router.post('/', OrdersController.createOrder);
 router.put('/:id', OrdersController.updateOrder);

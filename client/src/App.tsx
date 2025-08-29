@@ -1,6 +1,8 @@
+import React from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { PerformanceOptimizer } from "./lib/performance-optimizer";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -31,6 +33,9 @@ import AdvancedAnalytics from "@/pages/advanced-analytics";
 import QualityControl from "@/pages/quality-control";
 import PublicTracking from "@/pages/public-tracking";
 import WarehouseAutomation from "@/pages/WarehouseAutomation";
+import WarehouseTwin from "@/pages/WarehouseTwin";
+import GreenETA from "@/pages/GreenETA";
+import Performance from "@/pages/Performance";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -143,6 +148,19 @@ function Router() {
           <Route path="/warehouse-automation">
             <WarehouseAutomation />
           </Route>
+          <Route path="/digital-twin">
+            <ModuleGuard moduleId="digital_twin" fallback={<NotFound />}>
+              <WarehouseTwin />
+            </ModuleGuard>
+          </Route>
+          <Route path="/green-eta">
+            <ModuleGuard moduleId="green_eta" fallback={<NotFound />}>
+              <GreenETA />
+            </ModuleGuard>
+          </Route>
+          <Route path="/performance">
+            <Performance />
+          </Route>
           <Route component={NotFound} />
           </Switch>
         </div>
@@ -152,6 +170,11 @@ function Router() {
 }
 
 function App() {
+  // Initialize UX Hiper-Rápida
+  React.useEffect(() => {
+    PerformanceOptimizer.initialize(queryClient);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

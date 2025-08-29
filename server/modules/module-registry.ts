@@ -27,6 +27,8 @@ import computerVisionModule from './computer-vision';
 import smartReceivingModule from './smart-receiving';
 import putawayManagementModule from './putaway-management';
 import intelligentReplenishmentModule from './intelligent-replenishment';
+import { digitalTwinModule } from './digital-twin';
+import { greenETAModule } from './green-eta';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -50,6 +52,8 @@ export class ModuleRegistry {
     this.modules.set('smart_receiving', smartReceivingModule);
     this.modules.set('putaway_management', putawayManagementModule);
     this.modules.set('intelligent_replenishment', intelligentReplenishmentModule);
+    this.modules.set('digital_twin', digitalTwinModule);
+    this.modules.set('green_eta', greenETAModule);
     
     // Temporary direct registration for barcode scanning
     this.modules.set('barcode_scanning', {

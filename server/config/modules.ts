@@ -296,6 +296,28 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/rtls'],
     tables: [],
     permissions: ['rtls.read', 'rtls.write', 'rtls.devices', 'rtls.analytics']
+  },
+
+  digital_twin: {
+    id: 'digital_twin',
+    name: 'Digital Twin Operacional',
+    description: 'Sistema de visualização 3D/2D do armazém com simulação e análise em tempo real',
+    enabled: true,
+    dependencies: ['warehouses', 'rtls_hybrid'],
+    routes: ['/api/digital-twin'],
+    tables: ['warehouse_zones', 'warehouse_layout', 'digital_twin_simulations', 'real_time_visualization'],
+    permissions: ['digital_twin.read', 'digital_twin.write', 'digital_twin.simulate']
+  },
+
+  green_eta: {
+    id: 'green_eta',
+    name: 'Green ETA',
+    description: 'Sistema de otimização sustentável com redução de pegada de carbono',
+    enabled: true,
+    dependencies: ['shipping', 'warehouses', 'orders'],
+    routes: ['/api/green-eta'],
+    tables: ['carbon_metrics', 'eco_routes', 'sustainability_reports'],
+    permissions: ['green_eta.read', 'green_eta.optimize', 'green_eta.report']
   }
 };
 

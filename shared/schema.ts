@@ -1097,3 +1097,68 @@ export type ReplenishmentTask = typeof replenishmentTasks.$inferSelect;
 export type InsertReplenishmentTask = z.infer<typeof insertReplenishmentTaskSchema>;
 export type PickingVelocity = typeof pickingVelocity.$inferSelect;
 export type InsertPickingVelocity = z.infer<typeof insertPickingVelocitySchema>;
+
+// Digital Twin Operacional - Visualização 3D/2D
+export const warehouseZones = pgTable("warehouse_zones", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'picking', 'storage', 'receiving', 'shipping', 'staging'
+  coordinates: json("coordinates"), // {x, y, width, height, z, floor}
+  capacity: json("capacity"), // {maxItems, maxWeight, maxVolume}
+  currentUtilization: json("current_utilization"), // {items, weight, volume, percentage}
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const warehouseLayout = pgTable("warehouse_layout", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  version: varchar("version", { length: 50 }).notNull().default("1.0"),
+  layoutData: json("layout_data"), // Complete 3D/2D layout structure
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const digitalTwinSimulations = pgTable("digital_twin_simulations", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'picking_optimization', 'putaway_simulation', 'capacity_planning'
+  parameters: json("parameters"), // Simulation input parameters
+  results: json("results"), // Simulation output results
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // 'pending', 'running', 'completed', 'failed'
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const realTimeVisualization = pgTable("real_time_visualization", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  entityType: varchar("entity_type", { length: 50 }).notNull(), // 'worker', 'equipment', 'product', 'order'
+  entityId: varchar("entity_id", { length: 255 }).notNull(),
+  position: json("position"), // {x, y, z, floor, zone}
+  status: varchar("status", { length: 50 }).notNull(),
+  metadata: json("metadata"), // Additional context data
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Insert schemas for Digital Twin
+export const insertWarehouseZoneSchema = createInsertSchema(warehouseZones);
+export const insertWarehouseLayoutSchema = createInsertSchema(warehouseLayout);
+export const insertDigitalTwinSimulationSchema = createInsertSchema(digitalTwinSimulations);
+export const insertRealTimeVisualizationSchema = createInsertSchema(realTimeVisualization);
+
+// Export types for Digital Twin
+export type WarehouseZone = typeof warehouseZones.$inferSelect;
+export type InsertWarehouseZone = z.infer<typeof insertWarehouseZoneSchema>;
+export type WarehouseLayout = typeof warehouseLayout.$inferSelect;
+export type InsertWarehouseLayout = z.infer<typeof insertWarehouseLayoutSchema>;
+export type DigitalTwinSimulation = typeof digitalTwinSimulations.$inferSelect;
+export type InsertDigitalTwinSimulation = z.infer<typeof insertDigitalTwinSimulationSchema>;
+export type RealTimeVisualization = typeof realTimeVisualization.$inferSelect;
+export type InsertRealTimeVisualization = z.infer<typeof insertRealTimeVisualizationSchema>;

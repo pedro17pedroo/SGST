@@ -30,6 +30,7 @@ import Alerts from "@/pages/alerts";
 import AdvancedAnalytics from "@/pages/advanced-analytics";
 import QualityControl from "@/pages/quality-control";
 import PublicTracking from "@/pages/public-tracking";
+import WarehouseAutomation from "@/pages/WarehouseAutomation";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -138,6 +139,9 @@ function Router() {
             <ModuleGuard moduleId="settings" fallback={<NotFound />}>
               <Settings />
             </ModuleGuard>
+          </Route>
+          <Route path="/warehouse-automation">
+            <WarehouseAutomation />
           </Route>
           <Route component={NotFound} />
           </Switch>

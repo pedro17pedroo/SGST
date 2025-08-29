@@ -250,8 +250,41 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     enabled: true,
     dependencies: ['products', 'inventory'],
     routes: ['/api/cv'],
-    tables: [],
-    permissions: ['computer_vision.read', 'computer_vision.write']
+    tables: ['cv_counting_results'],
+    permissions: ['computer_vision.read', 'computer_vision.write', 'computer_vision.verify']
+  },
+
+  smart_receiving: {
+    id: 'smart_receiving',
+    name: 'Recebimento Inteligente',
+    description: 'ASN/EDI, identificação multi-modal e recebimento automatizado',
+    enabled: true,
+    dependencies: ['products', 'warehouses', 'suppliers'],
+    routes: ['/api/asn', '/api/receiving'],
+    tables: ['asn', 'asn_line_items', 'receiving_receipts', 'receiving_receipt_items'],
+    permissions: ['smart_receiving.read', 'smart_receiving.write', 'smart_receiving.approve']
+  },
+
+  putaway_management: {
+    id: 'putaway_management',
+    name: 'Putaway Otimizado',
+    description: 'Putaway guiado por regras, cross-dock e geração automática de paletes SSCC',
+    enabled: true,
+    dependencies: ['smart_receiving', 'warehouses'],
+    routes: ['/api/putaway', '/api/pallets'],
+    tables: ['putaway_rules', 'putaway_tasks', 'sscc_pallets', 'pallet_items'],
+    permissions: ['putaway.read', 'putaway.write', 'putaway.rules', 'pallets.manage']
+  },
+
+  intelligent_replenishment: {
+    id: 'intelligent_replenishment',
+    name: 'Reabastecimento Inteligente',
+    description: 'IA para previsão de demanda, reabastecimento automático e alertas preditivos',
+    enabled: true,
+    dependencies: ['products', 'warehouses', 'suppliers'],
+    routes: ['/api/replenishment'],
+    tables: ['replenishment_rules', 'demand_forecasts'],
+    permissions: ['replenishment.read', 'replenishment.write', 'replenishment.forecast', 'replenishment.automate']
   },
 
   rtls_hybrid: {

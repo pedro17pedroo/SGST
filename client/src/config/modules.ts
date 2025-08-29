@@ -319,6 +319,22 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
       order: 85
     }],
     permissions: ['analytics.read']
+  },
+
+  // Demonstração de Automação Avançada
+  warehouse_automation: {
+    id: 'warehouse_automation',
+    name: 'Automação de Armazéns',
+    description: 'Demonstração das capacidades avançadas de automação IA',
+    enabled: true,
+    routes: ['/warehouse-automation'],
+    menuItems: [{
+      label: 'Automação IA',
+      icon: 'Brain',
+      path: '/warehouse-automation',
+      order: 5
+    }],
+    permissions: []
   }
 };
 

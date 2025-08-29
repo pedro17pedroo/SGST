@@ -23,6 +23,10 @@ import { initializeInventoryAlertsModule } from './inventory_alerts';
 import { initializeOfflineSyncModule } from './offline_sync';
 import { initializeComputerVisionModule } from './computer_vision';
 import { initializeRTLSModule } from './rtls_hybrid';
+import computerVisionModule from './computer-vision';
+import smartReceivingModule from './smart-receiving';
+import putawayManagementModule from './putaway-management';
+import intelligentReplenishmentModule from './intelligent-replenishment';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -42,6 +46,10 @@ export class ModuleRegistry {
     this.modules.set('orders', ordersModule);
     this.modules.set('shipping', shippingModule);
     this.modules.set('public_tracking', publicTrackingModule);
+    this.modules.set('computer_vision', computerVisionModule);
+    this.modules.set('smart_receiving', smartReceivingModule);
+    this.modules.set('putaway_management', putawayManagementModule);
+    this.modules.set('intelligent_replenishment', intelligentReplenishmentModule);
     
     // Temporary direct registration for barcode scanning
     this.modules.set('barcode_scanning', {

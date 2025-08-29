@@ -26,7 +26,8 @@ import {
   CheckSquare,
   Eye,
   Menu,
-  X
+  X,
+  Brain
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useModules } from "@/contexts/module-context";
@@ -55,7 +56,8 @@ const iconMap: Record<string, any> = {
   FileText,
   TrendingUp,
   Users,
-  Settings
+  Settings,
+  Brain
 };
 
 export function Sidebar() {

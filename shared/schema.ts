@@ -568,6 +568,286 @@ export const notificationPreferencesRelations = relations(notificationPreference
   }),
 }));
 
+// ===== ADVANCED WAREHOUSE MANAGEMENT FEATURES =====
+// RF2.1 - Advanced Shipment Notice (ASN) for Smart Receiving
+export const asn = pgTable("asn", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  asnNumber: varchar("asn_number", { length: 100 }).notNull().unique(),
+  supplierId: uuid("supplier_id").notNull().references(() => suppliers.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  poNumber: varchar("po_number", { length: 100 }), // Purchase Order reference
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, in_transit, arrived, receiving, completed, cancelled
+  transportMode: varchar("transport_mode", { length: 50 }), // truck, rail, air, sea
+  carrier: varchar("carrier", { length: 255 }),
+  trackingNumber: varchar("tracking_number", { length: 255 }),
+  estimatedArrival: timestamp("estimated_arrival"),
+  actualArrival: timestamp("actual_arrival"),
+  ediData: json("edi_data"), // Raw EDI/API data
+  containerNumbers: json("container_numbers"), // Array of container/trailer numbers
+  sealNumbers: json("seal_numbers"), // Array of seal numbers
+  totalWeight: decimal("total_weight", { precision: 10, scale: 3 }),
+  totalVolume: decimal("total_volume", { precision: 10, scale: 3 }),
+  documentUrl: varchar("document_url", { length: 500 }), // Link to shipping documents
+  notes: text("notes"),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ASN Line Items for detailed shipment contents
+export const asnLineItems = pgTable("asn_line_items", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  asnId: uuid("asn_id").notNull().references(() => asn.id),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  expectedQuantity: integer("expected_quantity").notNull(),
+  unitOfMeasure: varchar("unit_of_measure", { length: 20 }).notNull().default("EA"), // EA, CS, PLT, etc.
+  lotNumber: varchar("lot_number", { length: 100 }),
+  expiryDate: timestamp("expiry_date"),
+  serialNumbers: json("serial_numbers"), // Array of serial numbers if tracked
+  palletId: varchar("pallet_id", { length: 100 }), // SSCC or internal pallet ID
+  packaging: varchar("packaging", { length: 50 }), // box, case, pallet, loose
+  expectedWeight: decimal("expected_weight", { precision: 8, scale: 3 }),
+  expectedDimensions: json("expected_dimensions"), // {length, width, height}
+  notes: text("notes"),
+});
+
+// RF2.1 - Receiving Receipts for tracking actual received items
+export const receivingReceipts = pgTable("receiving_receipts", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  receiptNumber: varchar("receipt_number", { length: 100 }).notNull().unique(),
+  asnId: uuid("asn_id").references(() => asn.id),
+  orderId: uuid("order_id").references(() => orders.id), // For non-ASN receipts
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  status: varchar("status", { length: 50 }).notNull().default("receiving"), // receiving, completed, discrepancy, rejected
+  receivingMethod: varchar("receiving_method", { length: 50 }).notNull(), // manual, barcode, rfid, computer_vision
+  totalExpected: integer("total_expected"),
+  totalReceived: integer("total_received").notNull().default(0),
+  discrepancies: integer("discrepancies").notNull().default(0),
+  damageReported: boolean("damage_reported").notNull().default(false),
+  qualityInspection: json("quality_inspection"), // Inspection results
+  receivedBy: uuid("received_by").notNull().references(() => users.id),
+  supervisorApproval: uuid("supervisor_approval").references(() => users.id),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+});
+
+// Receiving Receipt Line Items for detailed receiving records
+export const receivingReceiptItems = pgTable("receiving_receipt_items", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  receiptId: uuid("receipt_id").notNull().references(() => receivingReceipts.id),
+  asnLineItemId: uuid("asn_line_item_id").references(() => asnLineItems.id),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  expectedQuantity: integer("expected_quantity").notNull(),
+  receivedQuantity: integer("received_quantity").notNull(),
+  variance: integer("variance"), // receivedQuantity - expectedQuantity
+  varianceReason: varchar("variance_reason", { length: 255 }), // short, overage, damage, wrong_item
+  condition: varchar("condition", { length: 50 }).notNull().default("good"), // good, damaged, expired, defective
+  lotNumber: varchar("lot_number", { length: 100 }),
+  expiryDate: timestamp("expiry_date"),
+  serialNumbers: json("serial_numbers"),
+  actualWeight: decimal("actual_weight", { precision: 8, scale: 3 }),
+  actualDimensions: json("actual_dimensions"),
+  locationId: uuid("location_id").references(() => productLocations.id), // Where item was placed
+  cvCountingId: uuid("cv_counting_id"), // Reference to computer vision count
+  scannedCodes: json("scanned_codes"), // Barcodes/RFID tags scanned
+  qualityNotes: text("quality_notes"),
+  receivedAt: timestamp("received_at").defaultNow(),
+});
+
+// RF2.1 - Computer Vision Counting Results
+export const cvCountingResults = pgTable("cv_counting_results", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id", { length: 100 }).notNull(), // Grouping multiple counts in one session
+  imageUrl: varchar("image_url", { length: 500 }), // Path to captured image
+  videoUrl: varchar("video_url", { length: 500 }), // Path to captured video
+  productId: uuid("product_id").references(() => products.id),
+  detectedCount: integer("detected_count").notNull(),
+  confidence: decimal("confidence", { precision: 5, scale: 4 }), // 0.0 to 1.0
+  algorithm: varchar("algorithm", { length: 50 }), // yolo_v8, detectron2, custom
+  boundingBoxes: json("bounding_boxes"), // Array of detection coordinates
+  dimensions: json("dimensions"), // Measured dimensions from CV
+  weight: decimal("weight", { precision: 8, scale: 3 }), // Estimated weight
+  damage: json("damage"), // Damage detection results
+  manualVerification: boolean("manual_verification").notNull().default(false),
+  manualCount: integer("manual_count"),
+  verifiedBy: uuid("verified_by").references(() => users.id),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, verified, rejected
+  metadata: json("metadata"), // Camera settings, lighting conditions, etc.
+  processingTime: integer("processing_time"), // Milliseconds
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RF2.3 - Putaway Rules for Dynamic Slotting
+export const putawayRules = pgTable("putaway_rules", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  priority: integer("priority").notNull().default(1), // 1 = highest priority
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  productCriteria: json("product_criteria"), // {categoryId, supplierId, weight, dimensions, abc_class}
+  locationCriteria: json("location_criteria"), // {zone, shelf_type, height_range, accessibility}
+  strategy: varchar("strategy", { length: 50 }).notNull(), // fixed, random, closest_empty, abc_velocity, fifo, lifo
+  crossDockEligible: boolean("cross_dock_eligible").notNull().default(false),
+  crossDockCriteria: json("cross_dock_criteria"), // Rules for automatic cross-docking
+  maxCapacityUtilization: decimal("max_capacity_utilization", { precision: 5, scale: 4 }).default('0.8500'), // 85% max
+  isActive: boolean("is_active").notNull().default(true),
+  effectiveFrom: timestamp("effective_from").defaultNow(),
+  effectiveTo: timestamp("effective_to"),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RF2.3 - Putaway Tasks for guided putaway
+export const putawayTasks = pgTable("putaway_tasks", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskNumber: varchar("task_number", { length: 100 }).notNull().unique(),
+  receiptItemId: uuid("receipt_item_id").notNull().references(() => receivingReceiptItems.id),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  quantity: integer("quantity").notNull(),
+  suggestedLocationId: uuid("suggested_location_id").references(() => productLocations.id),
+  actualLocationId: uuid("actual_location_id").references(() => productLocations.id),
+  ruleApplied: uuid("rule_applied").references(() => putawayRules.id),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, in_progress, completed, cancelled
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"),
+  assignedTo: uuid("assigned_to").references(() => users.id),
+  isCrossDock: boolean("is_cross_dock").notNull().default(false),
+  crossDockOrder: uuid("cross_dock_order").references(() => orders.id),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  travelDistance: decimal("travel_distance", { precision: 8, scale: 2 }), // Meters
+  estimatedTime: integer("estimated_time"), // Minutes
+  actualTime: integer("actual_time"), // Minutes
+  notes: text("notes"),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RF2.3 - SSCC Pallets for automatic pallet generation
+export const ssccPallets = pgTable("sscc_pallets", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  ssccCode: varchar("sscc_code", { length: 18 }).notNull().unique(), // 18-digit SSCC
+  palletType: varchar("pallet_type", { length: 50 }).notNull(), // euro, standard, custom
+  status: varchar("status", { length: 50 }).notNull().default("building"), // building, completed, shipped, received
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  locationId: uuid("location_id").references(() => productLocations.id),
+  maxWeight: decimal("max_weight", { precision: 10, scale: 3 }).notNull().default('1000.000'),
+  maxHeight: decimal("max_height", { precision: 8, scale: 2 }).notNull().default('200.00'), // cm
+  currentWeight: decimal("current_weight", { precision: 10, scale: 3 }).notNull().default('0.000'),
+  currentHeight: decimal("current_height", { precision: 8, scale: 2 }).notNull().default('0.00'),
+  itemCount: integer("item_count").notNull().default(0),
+  mixedProducts: boolean("mixed_products").notNull().default(false),
+  palletLabel: json("pallet_label"), // Label generation data
+  shipmentId: uuid("shipment_id").references(() => shipments.id),
+  buildStartedAt: timestamp("build_started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Pallet Items for tracking what's on each pallet
+export const palletItems = pgTable("pallet_items", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  palletId: uuid("pallet_id").notNull().references(() => ssccPallets.id),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  quantity: integer("quantity").notNull(),
+  lotNumber: varchar("lot_number", { length: 100 }),
+  expiryDate: timestamp("expiry_date"),
+  serialNumbers: json("serial_numbers"),
+  weight: decimal("weight", { precision: 8, scale: 3 }),
+  dimensions: json("dimensions"),
+  position: json("position"), // {x, y, z} coordinates on pallet
+  addedAt: timestamp("added_at").defaultNow(),
+  addedBy: uuid("added_by").references(() => users.id),
+});
+
+// RF3.2 - Replenishment Rules for Intelligent Replenishment
+export const replenishmentRules = pgTable("replenishment_rules", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  locationId: uuid("location_id").references(() => productLocations.id), // Specific pick location
+  strategy: varchar("strategy", { length: 50 }).notNull(), // min_max, demand_based, velocity_based, time_based
+  minLevel: integer("min_level").notNull(),
+  maxLevel: integer("max_level").notNull(),
+  reorderPoint: integer("reorder_point").notNull(),
+  replenishQuantity: integer("replenish_quantity").notNull(),
+  leadTimeDays: integer("lead_time_days").notNull().default(1),
+  safetyStock: integer("safety_stock").notNull().default(0),
+  abcClassification: varchar("abc_classification", { length: 1 }), // A, B, C
+  velocityCategory: varchar("velocity_category", { length: 20 }), // fast, medium, slow
+  seasonalFactor: decimal("seasonal_factor", { precision: 5, scale: 4 }).default('1.0000'),
+  mlModelId: varchar("ml_model_id", { length: 100 }), // Reference to ML model used
+  isActive: boolean("is_active").notNull().default(true),
+  lastCalculated: timestamp("last_calculated"),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// RF3.2 - Demand Forecasting for ML predictions
+export const demandForecasts = pgTable("demand_forecasts", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  forecastDate: timestamp("forecast_date").notNull(),
+  forecastPeriod: varchar("forecast_period", { length: 20 }).notNull(), // daily, weekly, monthly
+  predictedDemand: decimal("predicted_demand", { precision: 10, scale: 2 }).notNull(),
+  confidence: decimal("confidence", { precision: 5, scale: 4 }), // 0.0 to 1.0
+  actualDemand: decimal("actual_demand", { precision: 10, scale: 2 }),
+  accuracy: decimal("accuracy", { precision: 5, scale: 4 }), // Calculated after actual data is available
+  modelVersion: varchar("model_version", { length: 50 }),
+  algorithm: varchar("algorithm", { length: 50 }), // arima, lstm, prophet, linear_regression
+  features: json("features"), // Features used in prediction
+  metadata: json("metadata"), // Model parameters and other data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RF3.2 - Replenishment Tasks for automatic replenishment
+export const replenishmentTasks = pgTable("replenishment_tasks", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskNumber: varchar("task_number", { length: 100 }).notNull().unique(),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  fromLocationId: uuid("from_location_id").notNull().references(() => productLocations.id), // Source location
+  toLocationId: uuid("to_location_id").notNull().references(() => productLocations.id), // Destination (pick) location
+  ruleId: uuid("rule_id").notNull().references(() => replenishmentRules.id),
+  triggerReason: varchar("trigger_reason", { length: 100 }).notNull(), // min_level, reorder_point, prediction, manual
+  quantityRequired: integer("quantity_required").notNull(),
+  quantityAvailable: integer("quantity_available").notNull(),
+  quantityToMove: integer("quantity_to_move").notNull(),
+  quantityMoved: integer("quantity_moved").notNull().default(0),
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, urgent
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, assigned, in_progress, completed, cancelled
+  assignedTo: uuid("assigned_to").references(() => users.id),
+  urgencyScore: decimal("urgency_score", { precision: 5, scale: 2 }), // Calculated urgency based on velocity
+  estimatedStockout: timestamp("estimated_stockout"), // When stock will run out
+  scheduledFor: timestamp("scheduled_for"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Picking velocity tracking for replenishment optimization
+export const pickingVelocity = pgTable("picking_velocity", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  locationId: uuid("location_id").references(() => productLocations.id),
+  date: timestamp("date").notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // hourly, daily, weekly
+  totalPicked: integer("total_picked").notNull().default(0),
+  pickingEvents: integer("picking_events").notNull().default(0),
+  averagePickTime: decimal("average_pick_time", { precision: 8, scale: 2 }), // Seconds
+  peakHour: integer("peak_hour"), // Hour of day with most picks (0-23)
+  velocityScore: decimal("velocity_score", { precision: 8, scale: 4 }), // Calculated velocity metric
+  abcClass: varchar("abc_class", { length: 1 }), // A, B, C classification
+  trendDirection: varchar("trend_direction", { length: 10 }), // up, down, stable
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -673,6 +953,81 @@ export const insertNotificationPreferenceSchema = createInsertSchema(notificatio
   updatedAt: true,
 });
 
+// Advanced warehouse management insert schemas
+export const insertAsnSchema = createInsertSchema(asn).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAsnLineItemSchema = createInsertSchema(asnLineItems).omit({
+  id: true,
+});
+
+export const insertReceivingReceiptSchema = createInsertSchema(receivingReceipts).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export const insertReceivingReceiptItemSchema = createInsertSchema(receivingReceiptItems).omit({
+  id: true,
+  receivedAt: true,
+});
+
+export const insertCvCountingResultSchema = createInsertSchema(cvCountingResults).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPutawayRuleSchema = createInsertSchema(putawayRules).omit({
+  id: true,
+  createdAt: true,
+  effectiveFrom: true,
+});
+
+export const insertPutawayTaskSchema = createInsertSchema(putawayTasks).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export const insertSsccPalletSchema = createInsertSchema(ssccPallets).omit({
+  id: true,
+  createdAt: true,
+  buildStartedAt: true,
+  completedAt: true,
+});
+
+export const insertPalletItemSchema = createInsertSchema(palletItems).omit({
+  id: true,
+  addedAt: true,
+});
+
+export const insertReplenishmentRuleSchema = createInsertSchema(replenishmentRules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastCalculated: true,
+});
+
+export const insertDemandForecastSchema = createInsertSchema(demandForecasts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertReplenishmentTaskSchema = createInsertSchema(replenishmentTasks).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export const insertPickingVelocitySchema = createInsertSchema(pickingVelocity).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -714,3 +1069,31 @@ export type PickingListItem = typeof pickingListItems.$inferSelect;
 export type InsertPickingListItem = z.infer<typeof insertPickingListItemSchema>;
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;
+
+// Advanced warehouse management types
+export type Asn = typeof asn.$inferSelect;
+export type InsertAsn = z.infer<typeof insertAsnSchema>;
+export type AsnLineItem = typeof asnLineItems.$inferSelect;
+export type InsertAsnLineItem = z.infer<typeof insertAsnLineItemSchema>;
+export type ReceivingReceipt = typeof receivingReceipts.$inferSelect;
+export type InsertReceivingReceipt = z.infer<typeof insertReceivingReceiptSchema>;
+export type ReceivingReceiptItem = typeof receivingReceiptItems.$inferSelect;
+export type InsertReceivingReceiptItem = z.infer<typeof insertReceivingReceiptItemSchema>;
+export type CvCountingResult = typeof cvCountingResults.$inferSelect;
+export type InsertCvCountingResult = z.infer<typeof insertCvCountingResultSchema>;
+export type PutawayRule = typeof putawayRules.$inferSelect;
+export type InsertPutawayRule = z.infer<typeof insertPutawayRuleSchema>;
+export type PutawayTask = typeof putawayTasks.$inferSelect;
+export type InsertPutawayTask = z.infer<typeof insertPutawayTaskSchema>;
+export type SsccPallet = typeof ssccPallets.$inferSelect;
+export type InsertSsccPallet = z.infer<typeof insertSsccPalletSchema>;
+export type PalletItem = typeof palletItems.$inferSelect;
+export type InsertPalletItem = z.infer<typeof insertPalletItemSchema>;
+export type ReplenishmentRule = typeof replenishmentRules.$inferSelect;
+export type InsertReplenishmentRule = z.infer<typeof insertReplenishmentRuleSchema>;
+export type DemandForecast = typeof demandForecasts.$inferSelect;
+export type InsertDemandForecast = z.infer<typeof insertDemandForecastSchema>;
+export type ReplenishmentTask = typeof replenishmentTasks.$inferSelect;
+export type InsertReplenishmentTask = z.infer<typeof insertReplenishmentTaskSchema>;
+export type PickingVelocity = typeof pickingVelocity.$inferSelect;
+export type InsertPickingVelocity = z.infer<typeof insertPickingVelocitySchema>;

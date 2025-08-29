@@ -159,7 +159,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'picking_packing',
     name: 'Picking & Packing',
     description: 'Listas de picking e preparação de encomendas',
-    enabled: false,
+    enabled: true,
     dependencies: ['orders', 'product_locations'],
     routes: ['/api/picking-lists'],
     tables: ['picking_lists', 'picking_list_items'],

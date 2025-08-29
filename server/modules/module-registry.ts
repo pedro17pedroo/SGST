@@ -16,6 +16,7 @@ import publicTrackingModule from './public_tracking';
 import { initializeBarcodeScanningModule } from './barcode_scanning';
 import { initializeInventoryCountsModule } from './inventory_counts';
 import { initializeProductLocationsModule } from './product_locations';
+import { initializePickingPackingModule } from './picking_packing';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -74,6 +75,20 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         initializeProductLocationsModule(app);
         console.log('✓ Módulo Localizações de Produtos registrado');
+      }
+    });
+
+    // Temporary direct registration for picking packing
+    this.modules.set('picking_packing', {
+      config: { 
+        id: 'picking_packing', 
+        name: 'Picking & Packing',
+        description: 'Listas de picking e preparação de encomendas',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializePickingPackingModule(app);
+        console.log('✓ Módulo Picking & Packing registrado');
       }
     });
   }

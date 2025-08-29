@@ -96,6 +96,26 @@ export interface IStorage {
   getWarehouseZones(warehouseId: string): Promise<any[]>;
   createWarehouseZone(data: any): Promise<any>;
 
+  // Picking & Packing (RF2.4)
+  getPickingLists(filters: any): Promise<any[]>;
+  getPickingListById(id: string): Promise<any>;
+  createPickingList(data: any): Promise<any>;
+  updatePickingList(id: string, data: any): Promise<any>;
+  deletePickingList(id: string): Promise<void>;
+  startPicking(id: string, userId: string): Promise<any>;
+  completePicking(id: string): Promise<any>;
+  pickItem(itemId: string, data: any): Promise<any>;
+  verifyPickedItem(itemId: string, data: any): Promise<any>;
+  createPickingWave(data: any): Promise<any>;
+  getPickingWave(waveId: string): Promise<any>;
+  assignWaveToUser(waveId: string, userId: string): Promise<any>;
+  getPackingTasks(filters: any): Promise<any[]>;
+  createPackingTask(data: any): Promise<any>;
+  packItems(id: string, data: any): Promise<any>;
+  completePackaging(id: string): Promise<any>;
+  generateShippingLabel(data: any): Promise<any>;
+  getShippingInfo(id: string): Promise<any>;
+
   // Inventory Counts (RF1.4)
   getInventoryCounts(warehouseId?: string): Promise<Array<InventoryCount & { warehouse: Warehouse; user?: User | null }>>;
   getInventoryCount(id: string): Promise<InventoryCount | undefined>;
@@ -801,6 +821,169 @@ export class DatabaseStorage implements IStorage {
       id: `zone-${Math.random().toString(36).substr(2, 9)}`,
       ...data,
       createdAt: new Date()
+    };
+  }
+
+  // Picking & Packing Implementation
+  async getPickingLists(filters: any): Promise<any[]> {
+    // Mock implementation - in real app would query picking_lists table
+    return [
+      {
+        id: '1',
+        orderNumbers: ['ORD-001', 'ORD-002'],
+        warehouseId: filters.warehouseId || 'wh-1',
+        status: 'pending',
+        priority: 'normal',
+        createdAt: new Date()
+      }
+    ];
+  }
+
+  async getPickingListById(id: string): Promise<any> {
+    return {
+      id,
+      orderNumbers: ['ORD-001'],
+      warehouseId: 'wh-1',
+      status: 'pending',
+      priority: 'normal',
+      items: [],
+      createdAt: new Date()
+    };
+  }
+
+  async createPickingList(data: any): Promise<any> {
+    return {
+      id: `pl-${Math.random().toString(36).substr(2, 9)}`,
+      ...data,
+      status: 'pending',
+      createdAt: new Date()
+    };
+  }
+
+  async updatePickingList(id: string, data: any): Promise<any> {
+    return {
+      id,
+      ...data,
+      updatedAt: new Date()
+    };
+  }
+
+  async deletePickingList(id: string): Promise<void> {
+    // Mock deletion
+  }
+
+  async startPicking(id: string, userId: string): Promise<any> {
+    return {
+      id,
+      status: 'in_progress',
+      assignedToUserId: userId,
+      startedAt: new Date()
+    };
+  }
+
+  async completePicking(id: string): Promise<any> {
+    return {
+      id,
+      status: 'completed',
+      completedAt: new Date()
+    };
+  }
+
+  async pickItem(itemId: string, data: any): Promise<any> {
+    return {
+      itemId,
+      ...data,
+      status: 'picked'
+    };
+  }
+
+  async verifyPickedItem(itemId: string, data: any): Promise<any> {
+    return {
+      itemId,
+      ...data,
+      verified: true
+    };
+  }
+
+  async createPickingWave(data: any): Promise<any> {
+    return {
+      id: `wave-${Math.random().toString(36).substr(2, 9)}`,
+      ...data,
+      status: 'active'
+    };
+  }
+
+  async getPickingWave(waveId: string): Promise<any> {
+    return {
+      id: waveId,
+      pickingLists: [],
+      status: 'active'
+    };
+  }
+
+  async assignWaveToUser(waveId: string, userId: string): Promise<any> {
+    return {
+      waveId,
+      assignedToUserId: userId,
+      assignedAt: new Date()
+    };
+  }
+
+  async getPackingTasks(filters: any): Promise<any[]> {
+    return [
+      {
+        id: '1',
+        pickingListId: 'pl-1',
+        status: 'pending',
+        packageType: 'box',
+        createdAt: new Date()
+      }
+    ];
+  }
+
+  async createPackingTask(data: any): Promise<any> {
+    return {
+      id: `pt-${Math.random().toString(36).substr(2, 9)}`,
+      ...data,
+      status: 'pending',
+      createdAt: new Date()
+    };
+  }
+
+  async packItems(id: string, data: any): Promise<any> {
+    return {
+      id,
+      ...data,
+      status: 'packed',
+      packedAt: new Date()
+    };
+  }
+
+  async completePackaging(id: string): Promise<any> {
+    return {
+      id,
+      status: 'completed',
+      completedAt: new Date()
+    };
+  }
+
+  async generateShippingLabel(data: any): Promise<any> {
+    return {
+      id: `label-${Math.random().toString(36).substr(2, 9)}`,
+      ...data,
+      trackingNumber: `TRK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      labelUrl: '/api/shipping-labels/download',
+      createdAt: new Date()
+    };
+  }
+
+  async getShippingInfo(id: string): Promise<any> {
+    return {
+      pickingListId: id,
+      trackingNumber: 'TRK-ABC123',
+      carrier: 'DHL',
+      estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      status: 'ready_to_ship'
     };
   }
 

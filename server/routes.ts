@@ -5,7 +5,8 @@ import {
   insertUserSchema, insertCategorySchema, insertSupplierSchema, insertWarehouseSchema,
   insertProductSchema, insertStockMovementSchema, insertOrderSchema, insertShipmentSchema,
   insertProductLocationSchema, insertInventoryCountSchema, insertInventoryCountItemSchema,
-  insertBarcodeScanSchema, insertReturnSchema, insertReturnItemSchema
+  insertBarcodeScanSchema, insertReturnSchema, insertReturnItemSchema,
+  insertPickingListSchema, insertPickingListItemSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -1192,50 +1193,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Picking Lists routes (RF2.4 - Picking & Packing)
   app.get("/api/picking-lists", async (req, res) => {
     try {
-      // Demo data for now - replace with actual database calls
-      const pickingLists = [
-        {
-          id: 'pick-001',
-          orderNumber: 'ORD-2025-001',
-          warehouse: { id: 'wh-001', name: 'Armazém Principal' },
-          status: 'pending',
-          priority: 'high',
-          items: [
-            {
-              id: 'item-001',
-              product: {
-                id: '1',
-                name: 'Smartphone Samsung Galaxy A54',
-                sku: 'SPH-001',
-                barcode: '7891234567890'
-              },
-              quantity: 2,
-              location: { zone: 'A', shelf: 'A1', bin: 'A1-01' }
-            }
-          ],
-          createdAt: new Date().toISOString(),
-          notes: 'Prioridade alta - cliente VIP'
-        }
-      ];
+      const { warehouseId } = req.query;
+      const pickingLists = await storage.getPickingLists(warehouseId as string);
       res.json(pickingLists);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch picking lists", error });
     }
   });
 
+  app.get("/api/picking-lists/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const pickingList = await storage.getPickingList(id);
+      if (!pickingList) {
+        res.status(404).json({ message: "Picking list not found" });
+        return;
+      }
+      res.json(pickingList);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch picking list", error });
+    }
+  });
+
   app.post("/api/picking-lists", async (req, res) => {
     try {
-      // Demo implementation - would create actual picking list
-      const pickingData = req.body;
-      const result = {
-        id: 'pick-' + Date.now(),
-        ...pickingData,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
+      const pickingData = insertPickingListSchema.parse(req.body);
+      const result = await storage.createPickingList(pickingData);
       res.status(201).json(result);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create picking list", error });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid picking list data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create picking list", error });
+      }
+    }
+  });
+
+  app.put("/api/picking-lists/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertPickingListSchema.partial().parse(req.body);
+      const result = await storage.updatePickingList(id, updates);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid picking list data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update picking list", error });
+      }
+    }
+  });
+
+  app.delete("/api/picking-lists/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deletePickingList(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete picking list", error });
+    }
+  });
+
+  // Picking List Items routes
+  app.get("/api/picking-lists/:id/items", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const items = await storage.getPickingListItems(id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch picking list items", error });
+    }
+  });
+
+  app.post("/api/picking-lists/:id/items", async (req, res) => {
+    try {
+      const itemData = insertPickingListItemSchema.parse(req.body);
+      const item = await storage.createPickingListItem(itemData);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid picking list item data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create picking list item", error });
+      }
+    }
+  });
+
+  app.put("/api/picking-lists/items/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertPickingListItemSchema.partial().parse(req.body);
+      const item = await storage.updatePickingListItem(id, updates);
+      res.json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid picking list item data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update picking list item", error });
+      }
     }
   });
 

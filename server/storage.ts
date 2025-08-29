@@ -1,12 +1,14 @@
 import {
   users, categories, suppliers, warehouses, products, inventory, stockMovements, orders, orderItems, shipments,
   productLocations, inventoryCounts, inventoryCountItems, barcodeScans, returns, returnItems,
+  pickingLists, pickingListItems,
   type User, type InsertUser, type Category, type InsertCategory, type Supplier, type InsertSupplier,
   type Warehouse, type InsertWarehouse, type Product, type InsertProduct, type Inventory, type InsertInventory,
   type StockMovement, type InsertStockMovement, type Order, type InsertOrder, type OrderItem, type InsertOrderItem,
   type Shipment, type InsertShipment, type ProductLocation, type InsertProductLocation,
   type InventoryCount, type InsertInventoryCount, type InventoryCountItem, type InsertInventoryCountItem,
-  type BarcodeScan, type InsertBarcodeScan, type Return, type InsertReturn, type ReturnItem, type InsertReturnItem
+  type BarcodeScan, type InsertBarcodeScan, type Return, type InsertReturn, type ReturnItem, type InsertReturnItem,
+  type PickingList, type InsertPickingList, type PickingListItem, type InsertPickingListItem
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, ilike, sum } from "drizzle-orm";
@@ -104,6 +106,16 @@ export interface IStorage {
   createBarcodeScan(scan: InsertBarcodeScan): Promise<BarcodeScan>;
   findProductByBarcode(barcode: string): Promise<Product | undefined>;
   getBarcodeScansByProduct(productId: string): Promise<Array<BarcodeScan & { warehouse?: Warehouse | null; user: User }>>;
+
+  // Picking Lists (RF2.4)
+  getPickingLists(warehouseId?: string): Promise<Array<PickingList & { warehouse: Warehouse; order?: Order | null; assignedUser?: User | null; user?: User | null }>>;
+  getPickingList(id: string): Promise<(PickingList & { warehouse: Warehouse; order?: Order | null; items: Array<PickingListItem & { product: Product; location?: ProductLocation | null }> }) | undefined>;
+  createPickingList(pickingList: InsertPickingList): Promise<PickingList>;
+  updatePickingList(id: string, pickingList: Partial<InsertPickingList>): Promise<PickingList>;
+  deletePickingList(id: string): Promise<void>;
+  getPickingListItems(pickingListId: string): Promise<Array<PickingListItem & { product: Product; location?: ProductLocation | null }>>;
+  createPickingListItem(item: InsertPickingListItem): Promise<PickingListItem>;
+  updatePickingListItem(id: string, item: Partial<InsertPickingListItem>): Promise<PickingListItem>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -189,7 +201,19 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get products with highest sales from order items
       return await db.select({
-        ...products,
+        id: products.id,
+        name: products.name,
+        description: products.description,
+        sku: products.sku,
+        barcode: products.barcode,
+        price: products.price,
+        weight: products.weight,
+        dimensions: products.dimensions,
+        categoryId: products.categoryId,
+        supplierId: products.supplierId,
+        minStockLevel: products.minStockLevel,
+        isActive: products.isActive,
+        createdAt: products.createdAt,
         stock: sql<number>`COALESCE(sum(${inventory.quantity}), 0)`,
         sales: sql<number>`COALESCE(sum(${orderItems.quantity}), 0)`
       })
@@ -207,19 +231,41 @@ export class DatabaseStorage implements IStorage {
 
   async getRecentActivities() {
     try {
-      return await db.select()
+      const results = await db.select({
+        id: stockMovements.id,
+        productId: stockMovements.productId,
+        warehouseId: stockMovements.warehouseId,
+        userId: stockMovements.userId,
+        type: stockMovements.type,
+        quantity: stockMovements.quantity,
+        reference: stockMovements.reference,
+        reason: stockMovements.reason,
+        createdAt: stockMovements.createdAt,
+        product: products,
+        warehouse: warehouses,
+        user: users
+      })
         .from(stockMovements)
         .leftJoin(products, eq(stockMovements.productId, products.id))
+        .leftJoin(warehouses, eq(stockMovements.warehouseId, warehouses.id))
         .leftJoin(users, eq(stockMovements.userId, users.id))
         .orderBy(desc(stockMovements.createdAt))
-        .limit(10)
-        .then(results => 
-          results.map(row => ({
-            ...row.stock_movements,
-            product: row.products,
-            user: row.users
-          }))
-        );
+        .limit(10);
+      
+      return results.map(row => ({
+        id: row.id,
+        productId: row.productId,
+        warehouseId: row.warehouseId,
+        userId: row.userId,
+        type: row.type,
+        quantity: row.quantity,
+        reference: row.reference,
+        reason: row.reason,
+        createdAt: row.createdAt,
+        product: row.product!,
+        warehouse: row.warehouse!,
+        user: row.user
+      }));
     } catch (error) {
       console.error('Recent activities error:', error);
       return [];
@@ -366,7 +412,19 @@ export class DatabaseStorage implements IStorage {
   async getLowStockProducts() {
     try {
       return await db.select({
-        ...products,
+        id: products.id,
+        name: products.name,
+        description: products.description,
+        sku: products.sku,
+        barcode: products.barcode,
+        price: products.price,
+        weight: products.weight,
+        dimensions: products.dimensions,
+        categoryId: products.categoryId,
+        supplierId: products.supplierId,
+        minStockLevel: products.minStockLevel,
+        isActive: products.isActive,
+        createdAt: products.createdAt,
         stock: sql<number>`COALESCE(sum(${inventory.quantity}), 0)`,
         category: categories
       })
@@ -810,6 +868,139 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(barcodeScans.userId, users.id))
       .where(eq(barcodeScans.productId, productId))
       .orderBy(desc(barcodeScans.createdAt));
+  }
+
+  // Picking Lists Management (RF2.4)
+  async getPickingLists(warehouseId?: string) {
+    const query = db
+      .select({
+        id: pickingLists.id,
+        pickNumber: pickingLists.pickNumber,
+        orderId: pickingLists.orderId,
+        warehouseId: pickingLists.warehouseId,
+        status: pickingLists.status,
+        priority: pickingLists.priority,
+        assignedTo: pickingLists.assignedTo,
+        type: pickingLists.type,
+        scheduledDate: pickingLists.scheduledDate,
+        startedAt: pickingLists.startedAt,
+        completedAt: pickingLists.completedAt,
+        estimatedTime: pickingLists.estimatedTime,
+        actualTime: pickingLists.actualTime,
+        notes: pickingLists.notes,
+        userId: pickingLists.userId,
+        createdAt: pickingLists.createdAt,
+        warehouse: warehouses,
+        order: orders,
+        assignedUser: users,
+        user: users
+      })
+      .from(pickingLists)
+      .innerJoin(warehouses, eq(pickingLists.warehouseId, warehouses.id))
+      .leftJoin(orders, eq(pickingLists.orderId, orders.id))
+      .leftJoin(users, eq(pickingLists.assignedTo, users.id));
+
+    if (warehouseId) {
+      query.where(eq(pickingLists.warehouseId, warehouseId));
+    }
+
+    return await query.orderBy(desc(pickingLists.createdAt));
+  }
+
+  async getPickingList(id: string) {
+    const [pickingListData] = await db
+      .select({
+        id: pickingLists.id,
+        pickNumber: pickingLists.pickNumber,
+        orderId: pickingLists.orderId,
+        warehouseId: pickingLists.warehouseId,
+        status: pickingLists.status,
+        priority: pickingLists.priority,
+        assignedTo: pickingLists.assignedTo,
+        type: pickingLists.type,
+        scheduledDate: pickingLists.scheduledDate,
+        startedAt: pickingLists.startedAt,
+        completedAt: pickingLists.completedAt,
+        estimatedTime: pickingLists.estimatedTime,
+        actualTime: pickingLists.actualTime,
+        notes: pickingLists.notes,
+        userId: pickingLists.userId,
+        createdAt: pickingLists.createdAt,
+        warehouse: warehouses,
+        order: orders
+      })
+      .from(pickingLists)
+      .innerJoin(warehouses, eq(pickingLists.warehouseId, warehouses.id))
+      .leftJoin(orders, eq(pickingLists.orderId, orders.id))
+      .where(eq(pickingLists.id, id));
+
+    if (!pickingListData) {
+      return undefined;
+    }
+
+    // Get picking list items
+    const items = await this.getPickingListItems(id);
+
+    return {
+      ...pickingListData,
+      items
+    };
+  }
+
+  async createPickingList(pickingList: InsertPickingList): Promise<PickingList> {
+    const [result] = await db.insert(pickingLists).values(pickingList).returning();
+    return result;
+  }
+
+  async updatePickingList(id: string, pickingList: Partial<InsertPickingList>): Promise<PickingList> {
+    const [result] = await db
+      .update(pickingLists)
+      .set(pickingList)
+      .where(eq(pickingLists.id, id))
+      .returning();
+    return result;
+  }
+
+  async deletePickingList(id: string): Promise<void> {
+    await db.delete(pickingLists).where(eq(pickingLists.id, id));
+  }
+
+  async getPickingListItems(pickingListId: string) {
+    return await db
+      .select({
+        id: pickingListItems.id,
+        pickingListId: pickingListItems.pickingListId,
+        productId: pickingListItems.productId,
+        locationId: pickingListItems.locationId,
+        quantityToPick: pickingListItems.quantityToPick,
+        quantityPicked: pickingListItems.quantityPicked,
+        status: pickingListItems.status,
+        pickedBy: pickingListItems.pickedBy,
+        pickedAt: pickingListItems.pickedAt,
+        notes: pickingListItems.notes,
+        substitutedWith: pickingListItems.substitutedWith,
+        product: products,
+        location: productLocations
+      })
+      .from(pickingListItems)
+      .innerJoin(products, eq(pickingListItems.productId, products.id))
+      .leftJoin(productLocations, eq(pickingListItems.locationId, productLocations.id))
+      .where(eq(pickingListItems.pickingListId, pickingListId))
+      .orderBy(pickingListItems.id);
+  }
+
+  async createPickingListItem(item: InsertPickingListItem): Promise<PickingListItem> {
+    const [result] = await db.insert(pickingListItems).values(item).returning();
+    return result;
+  }
+
+  async updatePickingListItem(id: string, item: Partial<InsertPickingListItem>): Promise<PickingListItem> {
+    const [result] = await db
+      .update(pickingListItems)
+      .set(item)
+      .where(eq(pickingListItems.id, id))
+      .returning();
+    return result;
   }
 
   // Returns Management (RF3.3)

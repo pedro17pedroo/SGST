@@ -388,6 +388,41 @@ export const returnItems = pgTable("return_items", {
   qualityNotes: text("quality_notes"),
 });
 
+// Picking Lists table for RF2.4 - Picking & Packing
+export const pickingLists = pgTable("picking_lists", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  pickNumber: varchar("pick_number", { length: 100 }).notNull().unique(),
+  orderId: uuid("order_id").references(() => orders.id),
+  warehouseId: uuid("warehouse_id").notNull().references(() => warehouses.id),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, in_progress, completed, cancelled
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, urgent
+  assignedTo: uuid("assigned_to").references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull().default("order"), // order, transfer, replenishment
+  scheduledDate: timestamp("scheduled_date"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  estimatedTime: integer("estimated_time"), // in minutes
+  actualTime: integer("actual_time"), // in minutes
+  notes: text("notes"),
+  userId: uuid("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Picking List Items table
+export const pickingListItems = pgTable("picking_list_items", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  pickingListId: uuid("picking_list_id").notNull().references(() => pickingLists.id),
+  productId: uuid("product_id").notNull().references(() => products.id),
+  locationId: uuid("location_id").references(() => productLocations.id),
+  quantityToPick: integer("quantity_to_pick").notNull(),
+  quantityPicked: integer("quantity_picked").notNull().default(0),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, picked, partial, not_found, substituted
+  pickedBy: uuid("picked_by").references(() => users.id),
+  pickedAt: timestamp("picked_at"),
+  notes: text("notes"),
+  substitutedWith: uuid("substituted_with").references(() => products.id), // If substituted with another product
+});
+
 // Alerts and Notifications table (RF4.2)
 export const alerts = pgTable("alerts", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -420,6 +455,51 @@ export const notificationPreferences = pgTable("notification_preferences", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Picking Lists relations
+export const pickingListsRelations = relations(pickingLists, ({ one, many }) => ({
+  order: one(orders, {
+    fields: [pickingLists.orderId],
+    references: [orders.id],
+  }),
+  warehouse: one(warehouses, {
+    fields: [pickingLists.warehouseId],
+    references: [warehouses.id],
+  }),
+  assignedUser: one(users, {
+    fields: [pickingLists.assignedTo],
+    references: [users.id],
+  }),
+  user: one(users, {
+    fields: [pickingLists.userId],
+    references: [users.id],
+  }),
+  items: many(pickingListItems),
+}));
+
+// Picking List Items relations
+export const pickingListItemsRelations = relations(pickingListItems, ({ one }) => ({
+  pickingList: one(pickingLists, {
+    fields: [pickingListItems.pickingListId],
+    references: [pickingLists.id],
+  }),
+  product: one(products, {
+    fields: [pickingListItems.productId],
+    references: [products.id],
+  }),
+  location: one(productLocations, {
+    fields: [pickingListItems.locationId],
+    references: [productLocations.id],
+  }),
+  pickedByUser: one(users, {
+    fields: [pickingListItems.pickedBy],
+    references: [users.id],
+  }),
+  substitutedProduct: one(products, {
+    fields: [pickingListItems.substitutedWith],
+    references: [products.id],
+  }),
+}));
 
 // Return relations
 export const returnsRelations = relations(returns, ({ one, many }) => ({
@@ -575,6 +655,18 @@ export const insertAlertSchema = createInsertSchema(alerts).omit({
   resolvedAt: true,
 });
 
+export const insertPickingListSchema = createInsertSchema(pickingLists).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export const insertPickingListItemSchema = createInsertSchema(pickingListItems).omit({
+  id: true,
+  pickedAt: true,
+});
+
 export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
   id: true,
   createdAt: true,
@@ -616,5 +708,9 @@ export type ReturnItem = typeof returnItems.$inferSelect;
 export type InsertReturnItem = z.infer<typeof insertReturnItemSchema>;
 export type Alert = typeof alerts.$inferSelect;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
+export type PickingList = typeof pickingLists.$inferSelect;
+export type InsertPickingList = z.infer<typeof insertPickingListSchema>;
+export type PickingListItem = typeof pickingListItems.$inferSelect;
+export type InsertPickingListItem = z.infer<typeof insertPickingListItemSchema>;
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;

@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Settings as SettingsIcon, Database, Bell, Shield, User, Building } from "lucide-react";
+import { Settings as SettingsIcon, Database, Bell, Shield, User, Building, Package2 } from "lucide-react";
+import { ModuleManagement } from "@/components/settings/module-management";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState(true);
@@ -29,13 +30,18 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="general">Geral</TabsTrigger>
+            <TabsTrigger value="modules">Módulos</TabsTrigger>
             <TabsTrigger value="company">Empresa</TabsTrigger>
             <TabsTrigger value="notifications">Notificações</TabsTrigger>
             <TabsTrigger value="security">Segurança</TabsTrigger>
             <TabsTrigger value="database">Base de Dados</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="modules" className="space-y-6">
+            <ModuleManagement />
+          </TabsContent>
 
           <TabsContent value="general" className="space-y-6">
             <Card>

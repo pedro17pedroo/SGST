@@ -6,7 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/layout/sidebar";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/contexts/theme-context";
+import { ModuleProvider } from "@/contexts/module-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ModuleGuard } from "@/components/layout/module-guard";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import Inventory from "@/pages/inventory";
@@ -35,24 +37,96 @@ function Router() {
       <main className="flex-1 ml-72 overflow-auto">
         <Switch>
           <Route path="/" component={Dashboard} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/products" component={Products} />
-          <Route path="/inventory" component={Inventory} />
-          <Route path="/warehouses" component={Warehouses} />
-          <Route path="/suppliers" component={Suppliers} />
-          <Route path="/orders" component={Orders} />
-          <Route path="/shipping" component={Shipping} />
-          <Route path="/scanner" component={Scanner} />
-          <Route path="/product-locations" component={ProductLocations} />
-          <Route path="/inventory-counts" component={InventoryCounts} />
-          <Route path="/picking-packing" component={PickingPacking} />
-          <Route path="/returns" component={Returns} />
-          <Route path="/alerts" component={Alerts} />
-          <Route path="/advanced-analytics" component={AdvancedAnalytics} />
-          <Route path="/quality-control" component={QualityControl} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/users" component={Users} />
-          <Route path="/settings" component={Settings} />
+          <Route path="/dashboard">
+            <ModuleGuard moduleId="dashboard" fallback={<NotFound />}>
+              <Dashboard />
+            </ModuleGuard>
+          </Route>
+          <Route path="/products">
+            <ModuleGuard moduleId="products" fallback={<NotFound />}>
+              <Products />
+            </ModuleGuard>
+          </Route>
+          <Route path="/inventory">
+            <ModuleGuard moduleId="inventory" fallback={<NotFound />}>
+              <Inventory />
+            </ModuleGuard>
+          </Route>
+          <Route path="/warehouses">
+            <ModuleGuard moduleId="warehouses" fallback={<NotFound />}>
+              <Warehouses />
+            </ModuleGuard>
+          </Route>
+          <Route path="/suppliers">
+            <ModuleGuard moduleId="suppliers" fallback={<NotFound />}>
+              <Suppliers />
+            </ModuleGuard>
+          </Route>
+          <Route path="/orders">
+            <ModuleGuard moduleId="orders" fallback={<NotFound />}>
+              <Orders />
+            </ModuleGuard>
+          </Route>
+          <Route path="/shipping">
+            <ModuleGuard moduleId="shipping" fallback={<NotFound />}>
+              <Shipping />
+            </ModuleGuard>
+          </Route>
+          <Route path="/scanner">
+            <ModuleGuard moduleId="barcode_scanning" fallback={<NotFound />}>
+              <Scanner />
+            </ModuleGuard>
+          </Route>
+          <Route path="/product-locations">
+            <ModuleGuard moduleId="product_locations" fallback={<NotFound />}>
+              <ProductLocations />
+            </ModuleGuard>
+          </Route>
+          <Route path="/inventory-counts">
+            <ModuleGuard moduleId="inventory_counts" fallback={<NotFound />}>
+              <InventoryCounts />
+            </ModuleGuard>
+          </Route>
+          <Route path="/picking-packing">
+            <ModuleGuard moduleId="picking_packing" fallback={<NotFound />}>
+              <PickingPacking />
+            </ModuleGuard>
+          </Route>
+          <Route path="/returns">
+            <ModuleGuard moduleId="returns" fallback={<NotFound />}>
+              <Returns />
+            </ModuleGuard>
+          </Route>
+          <Route path="/alerts">
+            <ModuleGuard moduleId="alerts" fallback={<NotFound />}>
+              <Alerts />
+            </ModuleGuard>
+          </Route>
+          <Route path="/advanced-analytics">
+            <ModuleGuard moduleId="advanced_analytics" fallback={<NotFound />}>
+              <AdvancedAnalytics />
+            </ModuleGuard>
+          </Route>
+          <Route path="/quality-control">
+            <ModuleGuard moduleId="quality_control" fallback={<NotFound />}>
+              <QualityControl />
+            </ModuleGuard>
+          </Route>
+          <Route path="/reports">
+            <ModuleGuard moduleId="reports" fallback={<NotFound />}>
+              <Reports />
+            </ModuleGuard>
+          </Route>
+          <Route path="/users">
+            <ModuleGuard moduleId="users" fallback={<NotFound />}>
+              <Users />
+            </ModuleGuard>
+          </Route>
+          <Route path="/settings">
+            <ModuleGuard moduleId="settings" fallback={<NotFound />}>
+              <Settings />
+            </ModuleGuard>
+          </Route>
           <Route component={NotFound} />
         </Switch>
       </main>
@@ -66,19 +140,29 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <AuthProvider>
-            <Switch>
-              {/* Public route - no authentication required */}
-              <Route path="/track" component={PublicTracking} />
-              <Route path="/tracking" component={PublicTracking} />
-              
-              {/* Protected routes - authentication required */}
-              <Route>
-                <ProtectedRoute>
-                  <Router />
-                </ProtectedRoute>
-              </Route>
-            </Switch>
-            <Toaster />
+            <ModuleProvider>
+              <Switch>
+                {/* Public route - no authentication required */}
+                <Route path="/track">
+                  <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
+                    <PublicTracking />
+                  </ModuleGuard>
+                </Route>
+                <Route path="/tracking">
+                  <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
+                    <PublicTracking />
+                  </ModuleGuard>
+                </Route>
+                
+                {/* Protected routes - authentication required */}
+                <Route>
+                  <ProtectedRoute>
+                    <Router />
+                  </ProtectedRoute>
+                </Route>
+              </Switch>
+              <Toaster />
+            </ModuleProvider>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>

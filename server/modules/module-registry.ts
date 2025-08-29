@@ -235,6 +235,51 @@ export class ModuleRegistry {
         console.log('✓ Módulo Análises Preditivas com IA registrado');
       }
     });
+
+    // External Integrations Module
+    this.modules.set('external_integrations', {
+      config: { 
+        id: 'external_integrations', 
+        name: 'Integrações Externas Enterprise',
+        description: 'Integrações avançadas com ERP/CRM/E-commerce (SAP, Salesforce, Shopify)',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { default: externalIntegrationsRoutes } = await import('./external_integrations/external-integrations.routes.js');
+        app.use('/api/integrations', externalIntegrationsRoutes);
+        console.log('✓ Módulo Integrações Externas Enterprise registrado');
+      }
+    });
+
+    // Custom Dashboards Module
+    this.modules.set('custom_dashboards', {
+      config: { 
+        id: 'custom_dashboards', 
+        name: 'Dashboards Personalizáveis',
+        description: 'Criação e gestão de dashboards personalizados com 15+ tipos de widgets',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { default: customDashboardsRoutes } = await import('./custom_dashboards/custom-dashboards.routes.js');
+        app.use('/api/dashboards', customDashboardsRoutes);
+        console.log('✓ Módulo Dashboards Personalizáveis registrado');
+      }
+    });
+
+    // AI Analytics Advanced Module
+    this.modules.set('ai_analytics_advanced', {
+      config: { 
+        id: 'ai_analytics_advanced', 
+        name: 'IA Analytics Avançada',
+        description: 'Previsão demanda, otimização preços, detecção anomalias e segmentação clientes',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { default: aiAnalyticsRoutes } = await import('./ai_analytics/ai-analytics.routes.js');
+        app.use('/api/ai-analytics', aiAnalyticsRoutes);
+        console.log('✓ Módulo IA Analytics Avançada registrado');
+      }
+    });
   }
 
   async registerEnabledModules(app: Express): Promise<void> {

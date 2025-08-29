@@ -88,9 +88,13 @@ export interface IStorage {
   // Product Locations (RF1.5)
   getProductLocations(warehouseId?: string): Promise<Array<ProductLocation & { product: Product; warehouse: Warehouse }>>;
   getProductLocation(productId: string, warehouseId: string): Promise<ProductLocation | undefined>;
+  getProductLocationById(id: string): Promise<ProductLocation | undefined>;
   createProductLocation(location: InsertProductLocation): Promise<ProductLocation>;
   updateProductLocation(id: string, location: Partial<InsertProductLocation>): Promise<ProductLocation>;
   deleteProductLocation(id: string): Promise<void>;
+  bulkAssignProductLocations(data: any): Promise<{ assigned: number; failed: number }>;
+  getWarehouseZones(warehouseId: string): Promise<any[]>;
+  createWarehouseZone(data: any): Promise<any>;
 
   // Inventory Counts (RF1.4)
   getInventoryCounts(warehouseId?: string): Promise<Array<InventoryCount & { warehouse: Warehouse; user?: User | null }>>;
@@ -98,14 +102,22 @@ export interface IStorage {
   createInventoryCount(count: InsertInventoryCount): Promise<InventoryCount>;
   updateInventoryCount(id: string, count: Partial<InsertInventoryCount>): Promise<InventoryCount>;
   getInventoryCountItems(countId: string): Promise<Array<InventoryCountItem & { product: Product }>>;
+  getInventoryCountItem(id: string): Promise<InventoryCountItem | undefined>;
   createInventoryCountItem(item: InsertInventoryCountItem): Promise<InventoryCountItem>;
   updateInventoryCountItem(id: string, item: Partial<InsertInventoryCountItem>): Promise<InventoryCountItem>;
+  deleteInventoryCount(id: string): Promise<void>;
+  generateInventoryCountList(countId: string, filters: any): Promise<InventoryCountItem[]>;
+  reconcileInventoryCount(countId: string): Promise<{ reconciled: number; adjustments: any[] }>;
+  completeInventoryCount(countId: string): Promise<InventoryCount>;
 
   // Barcode Scans (RF2.1)
   getBarcodeScans(limit?: number): Promise<Array<BarcodeScan & { product?: Product | null; warehouse?: Warehouse | null; user: User }>>;
   createBarcodeScan(scan: InsertBarcodeScan): Promise<BarcodeScan>;
   findProductByBarcode(barcode: string): Promise<Product | undefined>;
   getBarcodeScansByProduct(productId: string): Promise<Array<BarcodeScan & { warehouse?: Warehouse | null; user: User }>>;
+  updateProductLastScanned(productId: string, userId: string): Promise<void>;
+  updateBarcodeScanLocation(scanId: string, locationData: any): Promise<BarcodeScan>;
+  getLastProductLocation(productId: string): Promise<any>;
 
   // Picking Lists (RF2.4)
   getPickingLists(warehouseId?: string): Promise<Array<PickingList & { warehouse: Warehouse; order?: Order | null; assignedUser?: User | null; user?: User | null }>>;
@@ -725,6 +737,73 @@ export class DatabaseStorage implements IStorage {
     await db.delete(productLocations).where(eq(productLocations.id, id));
   }
 
+  async getProductLocationById(id: string): Promise<ProductLocation | undefined> {
+    const [location] = await db
+      .select()
+      .from(productLocations)
+      .where(eq(productLocations.id, id));
+    return location || undefined;
+  }
+
+  async bulkAssignProductLocations(data: {
+    productIds: string[];
+    warehouseId: string;
+    zone: string;
+    autoAssignBins: boolean;
+  }): Promise<{ assigned: number; failed: number }> {
+    let assigned = 0;
+    let failed = 0;
+    
+    for (const productId of data.productIds) {
+      try {
+        const bin = data.autoAssignBins ? `BIN-${Math.random().toString(36).substr(2, 9)}` : undefined;
+        
+        await db.insert(productLocations).values({
+          productId,
+          warehouseId: data.warehouseId,
+          zone: data.zone,
+          bin,
+          pickingPriority: 5
+        });
+        assigned++;
+      } catch (error) {
+        console.error(`Failed to assign location for product ${productId}:`, error);
+        failed++;
+      }
+    }
+    
+    return { assigned, failed };
+  }
+
+  async getWarehouseZones(warehouseId: string): Promise<any[]> {
+    // Get unique zones from product locations
+    const zones = await db
+      .selectDistinct({ zone: productLocations.zone })
+      .from(productLocations)
+      .where(eq(productLocations.warehouseId, warehouseId));
+    
+    return zones.map(z => ({ 
+      zoneName: z.zone,
+      warehouseId,
+      productCount: 0 // TODO: Count products in each zone
+    }));
+  }
+
+  async createWarehouseZone(data: {
+    warehouseId: string;
+    zoneName: string;
+    description?: string;
+    maxCapacity?: number;
+  }): Promise<any> {
+    // For now, just return the zone data
+    // In a full implementation, we'd create a separate warehouse_zones table
+    return {
+      id: `zone-${Math.random().toString(36).substr(2, 9)}`,
+      ...data,
+      createdAt: new Date()
+    };
+  }
+
   // Inventory Counts (RF1.4)
   async getInventoryCounts(warehouseId?: string) {
     const query = db
@@ -808,6 +887,121 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
+  async getInventoryCountItem(id: string): Promise<InventoryCountItem | undefined> {
+    const [item] = await db
+      .select()
+      .from(inventoryCountItems)
+      .where(eq(inventoryCountItems.id, id));
+    return item || undefined;
+  }
+
+  async deleteInventoryCount(id: string): Promise<void> {
+    // First delete all count items
+    await db.delete(inventoryCountItems).where(eq(inventoryCountItems.countId, id));
+    // Then delete the count
+    await db.delete(inventoryCounts).where(eq(inventoryCounts.id, id));
+  }
+
+  async generateInventoryCountList(countId: string, filters: {
+    warehouseId?: string;
+    categoryId?: string;
+    supplierIds?: string[];
+  }): Promise<InventoryCountItem[]> {
+    // Get inventory items based on filters
+    const conditions = [];
+    if (filters.warehouseId) {
+      conditions.push(eq(inventory.warehouseId, filters.warehouseId));
+    }
+    if (filters.categoryId) {
+      conditions.push(eq(products.categoryId, filters.categoryId));
+    }
+    
+    const query = db
+      .select({
+        productId: inventory.productId,
+        quantity: inventory.quantity,
+        product: products
+      })
+      .from(inventory)
+      .innerJoin(products, eq(inventory.productId, products.id))
+      .where(conditions.length > 0 ? and(...conditions) : sql`1=1`);
+
+    const inventoryItems = await query;
+    
+    // Create count items for each inventory item
+    const countItems: InsertInventoryCountItem[] = inventoryItems.map(item => ({
+      countId,
+      productId: item.productId,
+      expectedQuantity: item.quantity
+    }));
+
+    if (countItems.length > 0) {
+      return await db.insert(inventoryCountItems).values(countItems).returning();
+    }
+    return [];
+  }
+
+  async reconcileInventoryCount(countId: string): Promise<{ reconciled: number; adjustments: any[] }> {
+    // Get all count items with variances
+    const countItems = await db
+      .select()
+      .from(inventoryCountItems)
+      .where(eq(inventoryCountItems.countId, countId));
+
+    const adjustments = [];
+    let reconciled = 0;
+
+    for (const item of countItems) {
+      if (item.variance && item.variance !== 0 && item.countedQuantity !== null) {
+        // Update inventory with counted quantity
+        const [count] = await db
+          .select({ warehouseId: inventoryCounts.warehouseId })
+          .from(inventoryCounts)
+          .where(eq(inventoryCounts.id, countId));
+
+        if (count) {
+          await db
+            .update(inventory)
+            .set({ quantity: item.countedQuantity })
+            .where(
+              and(
+                eq(inventory.productId, item.productId),
+                eq(inventory.warehouseId, count.warehouseId)
+              )
+            );
+
+          // Mark as reconciled
+          await db
+            .update(inventoryCountItems)
+            .set({ reconciled: true })
+            .where(eq(inventoryCountItems.id, item.id));
+
+          adjustments.push({
+            productId: item.productId,
+            expectedQuantity: item.expectedQuantity,
+            countedQuantity: item.countedQuantity,
+            variance: item.variance
+          });
+          reconciled++;
+        }
+      }
+    }
+
+    return { reconciled, adjustments };
+  }
+
+  async completeInventoryCount(countId: string): Promise<InventoryCount> {
+    const [result] = await db
+      .update(inventoryCounts)
+      .set({ 
+        status: 'completed',
+        completedDate: new Date()
+      })
+      .where(eq(inventoryCounts.id, countId))
+      .returning();
+    return result;
+  }
+
   // Barcode Scans (RF2.1)
   async getBarcodeScans(limit: number = 100) {
     return await db
@@ -868,6 +1062,46 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(barcodeScans.userId, users.id))
       .where(eq(barcodeScans.productId, productId))
       .orderBy(desc(barcodeScans.createdAt));
+  }
+
+  async updateProductLastScanned(productId: string, userId: string): Promise<void> {
+    // Note: The products table doesn't have lastScanned fields yet
+    // For now, we'll just track this via barcode scans
+    // In a future migration, we could add lastScanned and scannedByUserId to products table
+    console.log(`Product ${productId} scanned by user ${userId}`);
+  }
+
+  async updateBarcodeScanLocation(scanId: string, locationData: any): Promise<BarcodeScan> {
+    const [result] = await db
+      .update(barcodeScans)
+      .set({ 
+        locationId: locationData.locationId,
+        metadata: sql`${barcodeScans.metadata} || ${JSON.stringify(locationData)}`
+      })
+      .where(eq(barcodeScans.id, scanId))
+      .returning();
+    return result;
+  }
+
+  async getLastProductLocation(productId: string) {
+    const [lastScan] = await db
+      .select({
+        id: barcodeScans.id,
+        scannedCode: barcodeScans.scannedCode,
+        locationId: barcodeScans.locationId,
+        warehouseId: barcodeScans.warehouseId,
+        metadata: barcodeScans.metadata,
+        createdAt: barcodeScans.createdAt,
+        location: productLocations,
+        warehouse: warehouses
+      })
+      .from(barcodeScans)
+      .leftJoin(productLocations, eq(barcodeScans.locationId, productLocations.id))
+      .leftJoin(warehouses, eq(barcodeScans.warehouseId, warehouses.id))
+      .where(eq(barcodeScans.productId, productId))
+      .orderBy(desc(barcodeScans.createdAt))
+      .limit(1);
+    return lastScan || undefined;
   }
 
   // Picking Lists Management (RF2.4)

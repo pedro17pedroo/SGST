@@ -13,6 +13,9 @@ import inventoryModule from './inventory';
 import ordersModule from './orders';
 import shippingModule from './shipping';
 import publicTrackingModule from './public_tracking';
+import { initializeBarcodeScanningModule } from './barcode_scanning';
+import { initializeInventoryCountsModule } from './inventory_counts';
+import { initializeProductLocationsModule } from './product_locations';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -31,6 +34,48 @@ export class ModuleRegistry {
     this.modules.set('orders', ordersModule);
     this.modules.set('shipping', shippingModule);
     this.modules.set('public_tracking', publicTrackingModule);
+    
+    // Temporary direct registration for barcode scanning
+    this.modules.set('barcode_scanning', {
+      config: { 
+        id: 'barcode_scanning', 
+        name: 'Leitura de Códigos',
+        description: 'Leitura de códigos de barras e QR',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeBarcodeScanningModule(app);
+        console.log('✓ Módulo Leitura de Códigos registrado');
+      }
+    });
+
+    // Temporary direct registration for inventory counts
+    this.modules.set('inventory_counts', {
+      config: { 
+        id: 'inventory_counts', 
+        name: 'Contagens de Inventário',
+        description: 'Contagens cíclicas e reconciliação de stock',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeInventoryCountsModule(app);
+        console.log('✓ Módulo Contagens de Inventário registrado');
+      }
+    });
+
+    // Temporary direct registration for product locations
+    this.modules.set('product_locations', {
+      config: { 
+        id: 'product_locations', 
+        name: 'Localizações de Produtos',
+        description: 'Organização e localização de produtos nos armazéns',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeProductLocationsModule(app);
+        console.log('✓ Módulo Localizações de Produtos registrado');
+      }
+    });
   }
 
   async registerEnabledModules(app: Express): Promise<void> {

@@ -136,6 +136,105 @@ export class ModuleRegistry {
         console.log('✓ Módulo Relatórios Avançados registrado');
       }
     });
+
+    // Advanced enterprise modules
+    this.modules.set('backup_restore', {
+      config: { 
+        id: 'backup_restore', 
+        name: 'Backup e Restore',
+        description: 'Sistema de backup e restore de dados',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { initializeBackupRestoreModule } = await import('./backup_restore/index.js');
+        await initializeBackupRestoreModule(app);
+        console.log('✓ Módulo Backup e Restore registrado');
+      }
+    });
+
+    this.modules.set('gps_tracking', {
+      config: { 
+        id: 'gps_tracking', 
+        name: 'GPS Tracking',
+        description: 'Sistema de rastreamento GPS em tempo real',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { initializeGPSTrackingModule } = await import('./gps_tracking/index.js');
+        await initializeGPSTrackingModule(app);
+        console.log('✓ Módulo GPS Tracking registrado');
+      }
+    });
+
+    this.modules.set('purchase_approvals', {
+      config: { 
+        id: 'purchase_approvals', 
+        name: 'Aprovações de Compras',
+        description: 'Sistema de aprovações para ordens de compra',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { initializePurchaseApprovalsModule } = await import('./purchase_approvals/index.js');
+        await initializePurchaseApprovalsModule(app);
+        console.log('✓ Módulo Aprovações de Compras registrado');
+      }
+    });
+
+    this.modules.set('rma_returns', {
+      config: { 
+        id: 'rma_returns', 
+        name: 'Gestão de Devoluções (RMA)',
+        description: 'Sistema completo de gestão de devoluções e RMA',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { initializeRMAReturnsModule } = await import('./rma_returns/index.js');
+        await initializeRMAReturnsModule(app);
+        console.log('✓ Módulo Gestão de Devoluções (RMA) registrado');
+      }
+    });
+
+    this.modules.set('erp_integrations', {
+      config: { 
+        id: 'erp_integrations', 
+        name: 'Integrações ERP/CRM',
+        description: 'Integrações com SAP, Salesforce e e-commerce',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { initializeERPIntegrationsModule } = await import('./erp_integrations/index.js');
+        await initializeERPIntegrationsModule(app);
+        console.log('✓ Módulo Integrações ERP/CRM registrado');
+      }
+    });
+
+    this.modules.set('compliance', {
+      config: { 
+        id: 'compliance', 
+        name: 'Conformidade Regulamentar',
+        description: 'Conformidade com IVA Angola e GDPR',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { initializeComplianceModule } = await import('./compliance/index.js');
+        await initializeComplianceModule(app);
+        console.log('✓ Módulo Conformidade Regulamentar registrado');
+      }
+    });
+
+    this.modules.set('ai_analytics', {
+      config: { 
+        id: 'ai_analytics', 
+        name: 'Análises Preditivas com IA',
+        description: 'Análises preditivas e otimização com inteligência artificial',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { initializeAIAnalyticsModule } = await import('./ai_analytics/index.js');
+        await initializeAIAnalyticsModule(app);
+        console.log('✓ Módulo Análises Preditivas com IA registrado');
+      }
+    });
   }
 
   async registerEnabledModules(app: Express): Promise<void> {

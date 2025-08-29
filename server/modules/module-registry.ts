@@ -121,6 +121,21 @@ export class ModuleRegistry {
         console.log('✓ Módulo Alertas de Inventário registrado');
       }
     });
+
+    // Temporary direct registration for reports
+    this.modules.set('reports', {
+      config: { 
+        id: 'reports', 
+        name: 'Relatórios Avançados',
+        description: 'Relatórios e análises avançadas de inventário',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        const { default: reportsRoutes } = await import('./reports/reports.routes.js');
+        app.use('/api/reports', reportsRoutes);
+        console.log('✓ Módulo Relatórios Avançados registrado');
+      }
+    });
   }
 
   async registerEnabledModules(app: Express): Promise<void> {

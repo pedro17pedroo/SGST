@@ -164,6 +164,31 @@ export interface IStorage {
   getPickingListItems(pickingListId: string): Promise<Array<PickingListItem & { product: Product; location?: ProductLocation | null }>>;
   createPickingListItem(item: InsertPickingListItem): Promise<PickingListItem>;
   updatePickingListItem(id: string, item: Partial<InsertPickingListItem>): Promise<PickingListItem>;
+
+  // Advanced Reports
+  getInventoryTurnoverReport(filters: {
+    startDate: Date;
+    endDate: Date;
+    warehouseId?: string;
+    categoryId?: string;
+  }): Promise<any[]>;
+  getObsoleteInventoryReport(filters: {
+    daysWithoutMovement: number;
+    warehouseId?: string;
+    minValue: number;
+  }): Promise<any[]>;
+  getProductPerformanceReport(filters: {
+    startDate: Date;
+    endDate: Date;
+    limit?: number;
+  }): Promise<any[]>;
+  getWarehouseEfficiencyReport(warehouseId?: string): Promise<any>;
+  getStockValuationReport(warehouseId?: string): Promise<any>;
+  getSupplierPerformanceReport(filters: {
+    startDate: Date;
+    endDate: Date;
+    supplierId?: string;
+  }): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1700,6 +1725,237 @@ export class DatabaseStorage implements IStorage {
       .where(eq(returnItems.id, id))
       .returning();
     return result;
+  }
+
+  // Advanced Reports
+  async getInventoryTurnoverReport(filters: {
+    startDate: Date;
+    endDate: Date;
+    warehouseId?: string;
+    categoryId?: string;
+  }) {
+    try {
+      let query = db
+        .select({
+          productId: products.id,
+          productName: products.name,
+          sku: products.sku,
+          categoryName: categories.name,
+          warehouseName: warehouses.name,
+          avgStock: sql<number>`AVG(${inventory.quantity})`,
+          totalSold: sql<number>`SUM(CASE WHEN ${stockMovements.type} = 'saída' THEN ${stockMovements.quantity} ELSE 0 END)`,
+          turnoverRatio: sql<number>`CASE WHEN AVG(${inventory.quantity}) > 0 THEN SUM(CASE WHEN ${stockMovements.type} = 'saída' THEN ${stockMovements.quantity} ELSE 0 END) / AVG(${inventory.quantity}) ELSE 0 END`
+        })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(inventory, eq(products.id, inventory.productId))
+        .leftJoin(warehouses, eq(inventory.warehouseId, warehouses.id))
+        .leftJoin(stockMovements, and(
+          eq(stockMovements.productId, products.id),
+          sql`${stockMovements.createdAt} >= ${filters.startDate}`,
+          sql`${stockMovements.createdAt} <= ${filters.endDate}`
+        ))
+        .groupBy(products.id, products.name, products.sku, categories.name, warehouses.name);
+
+      let conditions = [];
+      if (filters.warehouseId) {
+        conditions.push(eq(inventory.warehouseId, filters.warehouseId));
+      }
+      if (filters.categoryId) {
+        conditions.push(eq(products.categoryId, filters.categoryId));
+      }
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      return await query.orderBy(sql`turnoverRatio DESC`);
+    } catch (error) {
+      console.error('Error generating inventory turnover report:', error);
+      return [];
+    }
+  }
+
+  async getObsoleteInventoryReport(filters: {
+    daysWithoutMovement: number;
+    warehouseId?: string;
+    minValue: number;
+  }) {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - filters.daysWithoutMovement);
+
+      let query = db
+        .select({
+          productId: products.id,
+          productName: products.name,
+          sku: products.sku,
+          warehouseName: warehouses.name,
+          currentStock: inventory.quantity,
+          unitPrice: products.price,
+          totalValue: sql<number>`${inventory.quantity} * ${products.price}`,
+          daysWithoutMovement: sql<number>`EXTRACT(DAY FROM NOW() - COALESCE((SELECT MAX(created_at) FROM stock_movements WHERE product_id = ${products.id}), ${products.createdAt}))`
+        })
+        .from(products)
+        .leftJoin(inventory, eq(products.id, inventory.productId))
+        .leftJoin(warehouses, eq(inventory.warehouseId, warehouses.id))
+        .where(and(
+          sql`${inventory.quantity} > 0`,
+          sql`COALESCE((SELECT MAX(created_at) FROM stock_movements WHERE product_id = ${products.id}), ${products.createdAt}) < ${cutoffDate}`
+        ))
+        .having(sql`${inventory.quantity} * ${products.price} >= ${filters.minValue}`);
+
+      if (filters.warehouseId) {
+        query = query.where(eq(inventory.warehouseId, filters.warehouseId));
+      }
+
+      return await query.orderBy(sql`totalValue DESC`);
+    } catch (error) {
+      console.error('Error generating obsolete inventory report:', error);
+      return [];
+    }
+  }
+
+  async getProductPerformanceReport(filters: {
+    startDate: Date;
+    endDate: Date;
+    limit?: number;
+  }) {
+    try {
+      const result = await db
+        .select({
+          productId: products.id,
+          productName: products.name,
+          sku: products.sku,
+          categoryName: categories.name,
+          totalSales: sql<number>`SUM(CASE WHEN ${stockMovements.type} = 'saída' THEN ${stockMovements.quantity} ELSE 0 END)`,
+          totalRevenue: sql<number>`SUM(CASE WHEN ${stockMovements.type} = 'saída' THEN ${stockMovements.quantity} * ${products.price} ELSE 0 END)`
+        })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .leftJoin(stockMovements, and(
+          eq(stockMovements.productId, products.id),
+          sql`${stockMovements.createdAt} >= ${filters.startDate}`,
+          sql`${stockMovements.createdAt} <= ${filters.endDate}`
+        ))
+        .groupBy(products.id, products.name, products.sku, categories.name, products.price)
+        .orderBy(sql`totalRevenue DESC`)
+        .limit(filters.limit || 50);
+
+      return result;
+    } catch (error) {
+      console.error('Error generating product performance report:', error);
+      return [];
+    }
+  }
+
+  async getWarehouseEfficiencyReport(warehouseId?: string) {
+    try {
+      let query = db
+        .select({
+          warehouseId: warehouses.id,
+          warehouseName: warehouses.name,
+          totalProducts: sql<number>`COUNT(DISTINCT ${products.id})`,
+          totalStock: sql<number>`SUM(${inventory.quantity})`,
+          utilizationRate: sql<number>`0`
+        })
+        .from(warehouses)
+        .leftJoin(inventory, eq(inventory.warehouseId, warehouses.id))
+        .leftJoin(products, eq(products.id, inventory.productId))
+        .groupBy(warehouses.id, warehouses.name);
+
+      if (warehouseId) {
+        const [result] = await query.where(eq(warehouses.id, warehouseId));
+        return result;
+      }
+
+      return await query;
+    } catch (error) {
+      console.error('Error generating warehouse efficiency report:', error);
+      return warehouseId ? null : [];
+    }
+  }
+
+  async getStockValuationReport(warehouseId?: string) {
+    try {
+      let query = db
+        .select({
+          warehouseId: warehouses.id,
+          warehouseName: warehouses.name,
+          productId: products.id,
+          productName: products.name,
+          sku: products.sku,
+          categoryName: categories.name,
+          currentStock: inventory.quantity,
+          unitCost: sql<number>`0`,
+          unitPrice: products.price,
+          totalCostValue: sql<number>`0`,
+          totalRetailValue: sql<number>`${inventory.quantity} * ${products.price}`,
+          potentialProfit: sql<number>`${inventory.quantity} * ${products.price}`
+        })
+        .from(inventory)
+        .leftJoin(products, eq(inventory.productId, products.id))
+        .leftJoin(warehouses, eq(inventory.warehouseId, warehouses.id))
+        .leftJoin(categories, eq(products.categoryId, categories.id))
+        .where(sql`${inventory.quantity} > 0`);
+
+      if (warehouseId) {
+        query = query.where(eq(inventory.warehouseId, warehouseId));
+      }
+
+      const results = await query.orderBy(sql`totalRetailValue DESC`);
+      
+      return {
+        items: results,
+        summary: {
+          totalProducts: results.length,
+          totalUnits: results.reduce((sum, item) => sum + (item.currentStock || 0), 0),
+          totalCostValue: results.reduce((sum, item) => sum + (item.totalCostValue || 0), 0),
+          totalRetailValue: results.reduce((sum, item) => sum + (item.totalRetailValue || 0), 0),
+          totalPotentialProfit: results.reduce((sum, item) => sum + (item.potentialProfit || 0), 0)
+        }
+      };
+    } catch (error) {
+      console.error('Error generating stock valuation report:', error);
+      return { items: [], summary: { totalProducts: 0, totalUnits: 0, totalCostValue: 0, totalRetailValue: 0, totalPotentialProfit: 0 } };
+    }
+  }
+
+  async getSupplierPerformanceReport(filters: {
+    startDate: Date;
+    endDate: Date;
+    supplierId?: string;
+  }) {
+    try {
+      let query = db
+        .select({
+          supplierId: suppliers.id,
+          supplierName: suppliers.name,
+          totalOrders: sql<number>`COUNT(DISTINCT ${orders.id})`,
+          totalAmount: sql<number>`SUM(${orders.totalAmount})`,
+          avgOrderAmount: sql<number>`AVG(${orders.totalAmount})`,
+          completedOrders: sql<number>`COUNT(CASE WHEN ${orders.status} = 'completed' THEN 1 END)`,
+          pendingOrders: sql<number>`COUNT(CASE WHEN ${orders.status} = 'pending' THEN 1 END)`,
+          deliveryRate: sql<number>`CASE WHEN COUNT(*) > 0 THEN COUNT(CASE WHEN ${orders.status} = 'completed' THEN 1 END) * 100.0 / COUNT(*) ELSE 0 END`,
+          productVariety: sql<number>`COUNT(DISTINCT ${products.id})`
+        })
+        .from(suppliers)
+        .leftJoin(orders, and(
+          eq(orders.supplierId, suppliers.id),
+          sql`${orders.createdAt} >= ${filters.startDate}`,
+          sql`${orders.createdAt} <= ${filters.endDate}`
+        ))
+        .leftJoin(products, eq(products.supplierId, suppliers.id))
+        .groupBy(suppliers.id, suppliers.name);
+
+      if (filters.supplierId) {
+        query = query.where(eq(suppliers.id, filters.supplierId));
+      }
+
+      return await query.orderBy(sql`totalAmount DESC`);
+    } catch (error) {
+      console.error('Error generating supplier performance report:', error);
+      return [];
+    }
   }
 }
 

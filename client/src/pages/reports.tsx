@@ -1,47 +1,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, TrendingUp, Package, DollarSign, Calendar, Download, Filter } from "lucide-react";
+import { FileText, TrendingUp, Package, DollarSign, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
-// Mock data for demonstration - in real app this would come from API
-const salesData = [
-  { month: "Jan", vendas: 45000, compras: 32000 },
-  { month: "Fev", vendas: 52000, compras: 28000 },
-  { month: "Mar", vendas: 48000, compras: 35000 },
-  { month: "Abr", vendas: 61000, compras: 42000 },
-  { month: "Mai", vendas: 55000, compras: 38000 },
-  { month: "Jun", vendas: 67000, compras: 45000 },
-];
-
-const categoryData = [
-  { name: "Eletrónicos", value: 35, color: "#8884d8" },
-  { name: "Roupas", value: 25, color: "#82ca9d" },
-  { name: "Casa", value: 20, color: "#ffc658" },
-  { name: "Desporto", value: 15, color: "#ff7300" },
-  { name: "Outros", value: 5, color: "#00ff88" },
-];
-
-const topProducts = [
-  { name: "Smartphone XYZ", sales: 245, revenue: "122.500 AOA" },
-  { name: "Laptop ABC", sales: 189, revenue: "378.000 AOA" },
-  { name: "Headphones DEF", sales: 156, revenue: "78.000 AOA" },
-  { name: "Tablet GHI", sales: 134, revenue: "67.000 AOA" },
-  { name: "Camera JKL", sales: 98, revenue: "196.000 AOA" },
-];
-
-const stockMovements = [
-  { date: "2024-01-15", product: "Smartphone XYZ", type: "entrada", quantity: 50, warehouse: "Armazém A" },
-  { date: "2024-01-14", product: "Laptop ABC", type: "saída", quantity: 12, warehouse: "Armazém B" },
-  { date: "2024-01-13", product: "Headphones DEF", type: "entrada", quantity: 100, warehouse: "Armazém A" },
-  { date: "2024-01-12", product: "Tablet GHI", type: "saída", quantity: 8, warehouse: "Armazém C" },
-  { date: "2024-01-11", product: "Camera JKL", type: "transferência", quantity: 5, warehouse: "Armazém A → B" },
-];
+// Helper function to format currency
+const formatCurrency = (value: number) => {
+  return `${value.toLocaleString('pt-AO')} AOA`;
+};
 
 function ReportCard({ title, value, change, icon: Icon, color }: {
   title: string;
@@ -68,11 +37,79 @@ function ReportCard({ title, value, change, icon: Icon, color }: {
 
 export default function Reports() {
   const [dateRange, setDateRange] = useState("30");
-  const [reportType, setReportType] = useState("all");
 
-  // In real app, these would use actual API endpoints
+  // Real API queries for reports
   const { data: dashboardStats } = useQuery({
     queryKey: ["/api/dashboard/stats"],
+  });
+
+  const { data: inventoryTurnover, isLoading: isLoadingTurnover } = useQuery({
+    queryKey: ["/api/reports/inventory-turnover", dateRange],
+    queryFn: () => {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - parseInt(dateRange));
+      
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
+      });
+      
+      return fetch(`/api/reports/inventory-turnover?${params}`).then(res => res.json());
+    },
+  });
+
+  const { data: obsoleteInventory, isLoading: isLoadingObsolete } = useQuery({
+    queryKey: ["/api/reports/obsolete-inventory", dateRange],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        daysWithoutMovement: dateRange,
+        minValue: "1000"
+      });
+      
+      return fetch(`/api/reports/obsolete-inventory?${params}`).then(res => res.json());
+    },
+  });
+
+  const { data: productPerformance, isLoading: isLoadingPerformance } = useQuery({
+    queryKey: ["/api/reports/product-performance", dateRange],
+    queryFn: () => {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - parseInt(dateRange));
+      
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        limit: "10"
+      });
+      
+      return fetch(`/api/reports/product-performance?${params}`).then(res => res.json());
+    },
+  });
+
+  const { data: stockValuation, isLoading: isLoadingValuation } = useQuery({
+    queryKey: ["/api/reports/stock-valuation"],
+  });
+
+  const { data: supplierPerformance, isLoading: isLoadingSuppliers } = useQuery({
+    queryKey: ["/api/reports/supplier-performance", dateRange],
+    queryFn: () => {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - parseInt(dateRange));
+      
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
+      });
+      
+      return fetch(`/api/reports/supplier-performance?${params}`).then(res => res.json());
+    },
+  });
+
+  const { data: warehouseEfficiency, isLoading: isLoadingWarehouse } = useQuery({
+    queryKey: ["/api/reports/warehouse-efficiency"],
   });
 
   return (
@@ -108,184 +145,394 @@ export default function Reports() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ReportCard
-          title="Total de Vendas"
-          value="348.000 AOA"
-          change="+12.5% vs mês anterior"
+          title="Valor Total do Stock"
+          value={stockValuation?.summary ? formatCurrency(stockValuation.summary.totalRetailValue) : "Carregando..."}
+          change={`${stockValuation?.summary?.totalProducts || 0} produtos`}
           icon={DollarSign}
           color="green"
         />
         <ReportCard
-          title="Produtos Vendidos"
-          value="1.234"
-          change="+8.2% vs mês anterior"
+          title="Produtos em Stock"
+          value={stockValuation?.summary?.totalUnits?.toString() || "Carregando..."}
+          change="Total de unidades"
           icon={Package}
           color="blue"
         />
         <ReportCard
-          title="Encomendas Processadas"
-          value="156"
-          change="+15.3% vs mês anterior"
-          icon={FileText}
+          title="Potencial de Lucro"
+          value={stockValuation?.summary ? formatCurrency(stockValuation.summary.totalPotentialProfit) : "Carregando..."}
+          change="Margem estimada"
+          icon={TrendingUp}
           color="purple"
         />
         <ReportCard
-          title="Taxa de Crescimento"
-          value="12.5%"
-          change="Tendência positiva"
-          icon={TrendingUp}
-          color="green"
+          title="Fornecedores Ativos"
+          value={supplierPerformance?.length?.toString() || "Carregando..."}
+          change="Total de fornecedores"
+          icon={FileText}
+          color="orange"
         />
       </div>
 
-      <Tabs defaultValue="sales" className="space-y-4">
+      {/* Main Content - Tabs for different report types */}
+      <Tabs defaultValue="turnover" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="sales" data-testid="tab-sales">Vendas</TabsTrigger>
-          <TabsTrigger value="inventory" data-testid="tab-inventory">Inventário</TabsTrigger>
-          <TabsTrigger value="products" data-testid="tab-products">Produtos</TabsTrigger>
-          <TabsTrigger value="movements" data-testid="tab-movements">Movimentos</TabsTrigger>
+          <TabsTrigger value="turnover" data-testid="tab-turnover">Rotatividade</TabsTrigger>
+          <TabsTrigger value="obsolete" data-testid="tab-obsolete">Stock Obsoleto</TabsTrigger>
+          <TabsTrigger value="performance" data-testid="tab-performance">Desempenho</TabsTrigger>
+          <TabsTrigger value="valuation" data-testid="tab-valuation">Avaliação</TabsTrigger>
+          <TabsTrigger value="suppliers" data-testid="tab-suppliers">Fornecedores</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="sales" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tendência de Vendas vs Compras</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={salesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `${Number(value).toLocaleString()} AOA`} />
-                    <Legend />
-                    <Line type="monotone" dataKey="vendas" stroke="#8884d8" name="Vendas" />
-                    <Line type="monotone" dataKey="compras" stroke="#82ca9d" name="Compras" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Vendas por Categoria</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="inventory" className="space-y-4">
+        <TabsContent value="turnover" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Níveis de Stock por Mês</CardTitle>
+              <CardTitle>Relatório de Rotatividade do Inventário</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Análise da taxa de rotatividade por produto e categoria
+              </p>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="vendas" fill="#8884d8" name="Stock Entrada" />
-                  <Bar dataKey="compras" fill="#82ca9d" name="Stock Saída" />
-                </BarChart>
-              </ResponsiveContainer>
+              {isLoadingTurnover ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-muted-foreground">Carregando dados...</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-blue-600">Produtos Analisados</div>
+                      <div className="text-2xl font-bold text-blue-900">{inventoryTurnover?.length || 0}</div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-green-600">Alta Rotatividade</div>
+                      <div className="text-2xl font-bold text-green-900">
+                        {inventoryTurnover?.filter(item => item.turnoverRatio > 2).length || 0}
+                      </div>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-yellow-600">Média Rotatividade</div>
+                      <div className="text-2xl font-bold text-yellow-900">
+                        {inventoryTurnover?.filter(item => item.turnoverRatio >= 1 && item.turnoverRatio <= 2).length || 0}
+                      </div>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-red-600">Baixa Rotatividade</div>
+                      <div className="text-2xl font-bold text-red-900">
+                        {inventoryTurnover?.filter(item => item.turnoverRatio < 1).length || 0}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Produto</th>
+                          <th className="text-left p-2">SKU</th>
+                          <th className="text-left p-2">Categoria</th>
+                          <th className="text-right p-2">Stock Médio</th>
+                          <th className="text-right p-2">Vendas Totais</th>
+                          <th className="text-right p-2">Taxa de Rotatividade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inventoryTurnover?.slice(0, 10).map((item, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50">
+                            <td className="p-2">{item.productName}</td>
+                            <td className="p-2 text-sm text-gray-600">{item.sku}</td>
+                            <td className="p-2">{item.categoryName || 'Sem categoria'}</td>
+                            <td className="p-2 text-right">{item.avgStock || 0}</td>
+                            <td className="p-2 text-right">{item.totalSold || 0}</td>
+                            <td className="p-2 text-right">
+                              <Badge variant={item.turnoverRatio > 2 ? "default" : item.turnoverRatio >= 1 ? "secondary" : "destructive"}>
+                                {item.turnoverRatio?.toFixed(2) || "0.00"}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="products" className="space-y-4">
+        <TabsContent value="obsolete" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Top 5 Produtos Mais Vendidos</CardTitle>
+              <CardTitle>Relatório de Stock Obsoleto</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Produtos sem movimento há mais de {dateRange} dias
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {topProducts.map((product, index) => (
-                  <div
-                    key={product.name}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                    data-testid={`product-${index}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">{product.sales} unidades vendidas</p>
+              {isLoadingObsolete ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-muted-foreground">Carregando dados...</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-red-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-red-600">Produtos Obsoletos</div>
+                      <div className="text-2xl font-bold text-red-900">{obsoleteInventory?.length || 0}</div>
+                    </div>
+                    <div className="bg-orange-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-orange-600">Valor Total</div>
+                      <div className="text-2xl font-bold text-orange-900">
+                        {formatCurrency(obsoleteInventory?.reduce((sum, item) => sum + (item.totalValue || 0), 0) || 0)}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{product.revenue}</p>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-yellow-600">Unidades</div>
+                      <div className="text-2xl font-bold text-yellow-900">
+                        {obsoleteInventory?.reduce((sum, item) => sum + (item.currentStock || 0), 0) || 0}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Produto</th>
+                          <th className="text-left p-2">SKU</th>
+                          <th className="text-left p-2">Armazém</th>
+                          <th className="text-right p-2">Stock Atual</th>
+                          <th className="text-right p-2">Preço Unitário</th>
+                          <th className="text-right p-2">Valor Total</th>
+                          <th className="text-right p-2">Dias sem Movimento</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {obsoleteInventory?.map((item, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50">
+                            <td className="p-2">{item.productName}</td>
+                            <td className="p-2 text-sm text-gray-600">{item.sku}</td>
+                            <td className="p-2">{item.warehouseName}</td>
+                            <td className="p-2 text-right">{item.currentStock}</td>
+                            <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
+                            <td className="p-2 text-right font-semibold">{formatCurrency(item.totalValue)}</td>
+                            <td className="p-2 text-right">
+                              <Badge variant="destructive">
+                                {item.daysWithoutMovement} dias
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="movements" className="space-y-4">
+        <TabsContent value="performance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Movimentos de Stock Recentes</CardTitle>
+              <CardTitle>Relatório de Desempenho de Produtos</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Top produtos por receita nos últimos {dateRange} dias
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {stockMovements.map((movement, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                    data-testid={`movement-${index}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col">
-                        <p className="font-medium">{movement.product}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(movement.date).toLocaleDateString('pt-AO')}
-                        </p>
+              {isLoadingPerformance ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-muted-foreground">Carregando dados...</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-green-600">Receita Total</div>
+                      <div className="text-2xl font-bold text-green-900">
+                        {formatCurrency(productPerformance?.reduce((sum, item) => sum + (item.totalRevenue || 0), 0) || 0)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Badge
-                        variant={
-                          movement.type === "entrada" ? "default" :
-                          movement.type === "saída" ? "destructive" : "secondary"
-                        }
-                      >
-                        {movement.type}
-                      </Badge>
-                      <div className="text-right">
-                        <p className="font-medium">{movement.quantity} unidades</p>
-                        <p className="text-sm text-muted-foreground">{movement.warehouse}</p>
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-blue-600">Unidades Vendidas</div>
+                      <div className="text-2xl font-bold text-blue-900">
+                        {productPerformance?.reduce((sum, item) => sum + (item.totalSales || 0), 0) || 0}
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-purple-600">Produtos Ativos</div>
+                      <div className="text-2xl font-bold text-purple-900">{productPerformance?.length || 0}</div>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Produto</th>
+                          <th className="text-left p-2">SKU</th>
+                          <th className="text-left p-2">Categoria</th>
+                          <th className="text-right p-2">Vendas</th>
+                          <th className="text-right p-2">Receita</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {productPerformance?.map((item, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50">
+                            <td className="p-2">{item.productName}</td>
+                            <td className="p-2 text-sm text-gray-600">{item.sku}</td>
+                            <td className="p-2">{item.categoryName || 'Sem categoria'}</td>
+                            <td className="p-2 text-right">{item.totalSales || 0}</td>
+                            <td className="p-2 text-right font-semibold">{formatCurrency(item.totalRevenue || 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="valuation" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Relatório de Avaliação de Stock</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Valor total do inventário por categoria e armazém
+              </p>
+            </CardHeader>
+            <CardContent>
+              {isLoadingValuation ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-muted-foreground">Carregando dados...</div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-blue-600">Produtos em Stock</div>
+                      <div className="text-2xl font-bold text-blue-900">{stockValuation?.summary?.totalProducts || 0}</div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-green-600">Unidades Totais</div>
+                      <div className="text-2xl font-bold text-green-900">{stockValuation?.summary?.totalUnits || 0}</div>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-yellow-600">Valor de Venda</div>
+                      <div className="text-2xl font-bold text-yellow-900">
+                        {formatCurrency(stockValuation?.summary?.totalRetailValue || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-purple-600">Potencial de Lucro</div>
+                      <div className="text-2xl font-bold text-purple-900">
+                        {formatCurrency(stockValuation?.summary?.totalPotentialProfit || 0)}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Produto</th>
+                          <th className="text-left p-2">Categoria</th>
+                          <th className="text-left p-2">Armazém</th>
+                          <th className="text-right p-2">Stock</th>
+                          <th className="text-right p-2">Preço Unit.</th>
+                          <th className="text-right p-2">Valor Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stockValuation?.items?.slice(0, 15).map((item, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50">
+                            <td className="p-2">{item.productName}</td>
+                            <td className="p-2">{item.categoryName || 'Sem categoria'}</td>
+                            <td className="p-2">{item.warehouseName}</td>
+                            <td className="p-2 text-right">{item.currentStock}</td>
+                            <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
+                            <td className="p-2 text-right font-semibold">{formatCurrency(item.totalRetailValue)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="suppliers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Relatório de Desempenho de Fornecedores</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Análise de desempenho dos fornecedores nos últimos {dateRange} dias
+              </p>
+            </CardHeader>
+            <CardContent>
+              {isLoadingSuppliers ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-muted-foreground">Carregando dados...</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-blue-600">Fornecedores Ativos</div>
+                      <div className="text-2xl font-bold text-blue-900">{supplierPerformance?.length || 0}</div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-green-600">Total de Encomendas</div>
+                      <div className="text-2xl font-bold text-green-900">
+                        {supplierPerformance?.reduce((sum, item) => sum + (item.totalOrders || 0), 0) || 0}
+                      </div>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-yellow-600">Valor Total</div>
+                      <div className="text-2xl font-bold text-yellow-900">
+                        {formatCurrency(supplierPerformance?.reduce((sum, item) => sum + (item.totalAmount || 0), 0) || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-purple-600">Taxa Média de Entrega</div>
+                      <div className="text-2xl font-bold text-purple-900">
+                        {(supplierPerformance?.reduce((sum, item) => sum + (item.deliveryRate || 0), 0) / (supplierPerformance?.length || 1) || 0).toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Fornecedor</th>
+                          <th className="text-right p-2">Encomendas</th>
+                          <th className="text-right p-2">Valor Total</th>
+                          <th className="text-right p-2">Valor Médio</th>
+                          <th className="text-right p-2">Taxa de Entrega</th>
+                          <th className="text-right p-2">Variedade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {supplierPerformance?.map((item, index) => (
+                          <tr key={index} className="border-b hover:bg-gray-50">
+                            <td className="p-2">{item.supplierName}</td>
+                            <td className="p-2 text-right">{item.totalOrders || 0}</td>
+                            <td className="p-2 text-right">{formatCurrency(item.totalAmount || 0)}</td>
+                            <td className="p-2 text-right">{formatCurrency(item.avgOrderAmount || 0)}</td>
+                            <td className="p-2 text-right">
+                              <Badge variant={item.deliveryRate >= 80 ? "default" : item.deliveryRate >= 60 ? "secondary" : "destructive"}>
+                                {item.deliveryRate?.toFixed(1) || "0.0"}%
+                              </Badge>
+                            </td>
+                            <td className="p-2 text-right">{item.productVariety || 0} produtos</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

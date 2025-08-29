@@ -203,7 +203,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'reports',
     name: 'Relatórios',
     description: 'Geração de relatórios do sistema',
-    enabled: false,
+    enabled: true,
     dependencies: ['inventory', 'orders'],
     routes: ['/api/reports'],
     tables: [],

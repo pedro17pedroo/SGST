@@ -48,7 +48,7 @@ function Router() {
       <main className={`flex-1 overflow-auto ${
         isMobile ? 'pt-0' : 'ml-72'
       }`}>
-        <div className="container-responsive">
+        <div className="w-full">
           <Switch>
             <Route path="/" component={Dashboard} />
           <Route path="/dashboard">

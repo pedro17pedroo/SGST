@@ -327,7 +327,7 @@ export default function AngolaOperationsPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {offlineMaps?.map((map) => (
+                {(offlineMaps || []).map((map) => (
                   <div 
                     key={map.id} 
                     className="border rounded-lg p-4 space-y-3"

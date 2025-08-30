@@ -371,6 +371,28 @@ export class AngolaOperationsModel {
   }
 
   // Network Status & Monitoring
+  static async getNetworkStatus(deviceId: string): Promise<AngolaNetworkStatus> {
+    const status = this.networkStatus.get(deviceId);
+    
+    if (!status) {
+      // Retornar status padrão se dispositivo não existe
+      const defaultStatus: AngolaNetworkStatus = {
+        isOnline: false,
+        connectionType: 'none',
+        signalStrength: 0,
+        latency: 0,
+        bandwidth: 0,
+        provider: 'other',
+        lastCheck: Date.now()
+      };
+      
+      this.networkStatus.set(deviceId, defaultStatus);
+      return defaultStatus;
+    }
+    
+    return status;
+  }
+
   static async updateNetworkStatus(deviceId: string, status: Partial<AngolaNetworkStatus>): Promise<AngolaNetworkStatus & { recommendations: string[] }> {
     const currentStatus = this.networkStatus.get(deviceId) || {
       isOnline: false,

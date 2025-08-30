@@ -155,7 +155,7 @@ export class InventoryModel {
         total: sql<number>`COALESCE(sum(${inventory.quantity}), 0)`
       }).from(inventory);
 
-      const [lowStockCount] = await db.select({
+      const lowStockResults = await db.select({
         count: sql<number>`count(distinct ${products.id})`
       })
       .from(products)
@@ -166,7 +166,7 @@ export class InventoryModel {
       return {
         totalProducts: totalProducts.count || 0,
         totalStock: totalStock.total || 0,
-        lowStockProducts: lowStockCount.count || 0,
+        lowStockProducts: lowStockResults.length > 0 ? lowStockResults[0].count || 0 : 0,
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {

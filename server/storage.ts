@@ -256,7 +256,7 @@ export class DatabaseStorage implements IStorage {
       currentMonth.setDate(1);
       const [salesResult] = await db.select({ total: sql<string>`sum(${orders.totalAmount})` })
         .from(orders)
-        .where(and(eq(orders.status, 'completed'), sql`${orders.createdAt} >= ${currentMonth}`));
+        .where(and(eq(orders.status, 'completed'), sql`${orders.createdAt} >= ${currentMonth.toISOString()}`));
       const monthlySales = `AOA ${Number(salesResult.total || 0).toLocaleString('pt-AO')}`;
       
       return {

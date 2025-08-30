@@ -130,7 +130,7 @@ export function Sidebar() {
         data-testid="sidebar"
       >
       {/* Header fixo - Logo e nome da empresa */}
-      <div className="p-6 border-b border-border flex-shrink-0">
+      <div className="px-6 py-4 border-b border-border flex-shrink-0 h-20 flex items-center">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
             <Box className="text-primary-foreground text-lg" />

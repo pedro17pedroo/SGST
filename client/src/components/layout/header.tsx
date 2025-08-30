@@ -32,8 +32,8 @@ export function Header({ title, breadcrumbs = [] }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-card border-b border-border px-6 py-4 backdrop-blur-sm w-full" data-testid="page-header">
-      <div className="flex items-center justify-between h-12">
+    <header className="sticky top-0 z-50 bg-card border-b border-border px-6 backdrop-blur-sm w-full h-20" data-testid="page-header">
+      <div className="flex items-center justify-between h-full">
         <div className="flex flex-col justify-center min-w-0 flex-1">
           {!isMobile && (
             <nav className="text-sm text-muted-foreground" data-testid="breadcrumbs">

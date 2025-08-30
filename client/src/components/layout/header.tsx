@@ -1,5 +1,4 @@
-import { Search, Bell, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -35,7 +34,7 @@ export function Header({ title, breadcrumbs = [] }: HeaderProps) {
   return (
     <header className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4" data-testid="page-header">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex-1">
           {!isMobile && (
             <nav className="text-sm text-muted-foreground mb-2" data-testid="breadcrumbs">
               <span>SGST</span>
@@ -52,24 +51,6 @@ export function Header({ title, breadcrumbs = [] }: HeaderProps) {
           <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground" data-testid="page-title">{title}</h2>
         </div>
         <div className="flex items-center space-x-2 sm:space-x-4">
-          {!isMobile && (
-            <div className="relative">
-              <Input
-                type="search"
-                placeholder="Pesquisar..."
-                className="pl-10 w-48 lg:w-64"
-                data-testid="search-input"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            </div>
-          )}
-          
-          {isMobile && (
-            <Button variant="ghost" size="icon" className="p-2">
-              <Search className="w-4 h-4" />
-            </Button>
-          )}
-          
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="relative" data-testid="notifications-button">

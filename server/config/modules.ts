@@ -318,6 +318,29 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/green-eta'],
     tables: ['carbon_metrics', 'eco_routes', 'sustainability_reports'],
     permissions: ['green_eta.read', 'green_eta.optimize', 'green_eta.report']
+  },
+
+  // Novos Módulos Implementados - Agosto 2025
+  triple_ledger: {
+    id: 'triple_ledger',
+    name: 'Triple-Ledger Traceability',
+    description: 'Sistema anti-fraude com WORM storage, assinaturas digitais e rastreabilidade completa',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/triple-ledger'],
+    tables: ['audit_trail', 'worm_storage', 'fraud_detection'],
+    permissions: ['audit_trail.read', 'audit_trail.write', 'fraud_detection.read', 'worm_storage.read']
+  },
+
+  auto_slotting: {
+    id: 'auto_slotting',
+    name: 'Auto-Slotting Inteligente',
+    description: 'Machine learning para otimização automática de layout, afinidade de produtos e eficiência de picking',
+    enabled: true,
+    dependencies: ['inventory', 'warehouses', 'products'],
+    routes: ['/api/auto-slotting'],
+    tables: ['slotting_analytics', 'product_affinity', 'slotting_rules', 'ml_models', 'optimization_jobs'],
+    permissions: ['slotting.read', 'slotting.write', 'optimization.execute', 'ml_models.manage']
   }
 };
 

@@ -29,6 +29,8 @@ import putawayManagementModule from './putaway-management';
 import intelligentReplenishmentModule from './intelligent-replenishment';
 import { digitalTwinModule } from './digital-twin';
 import { greenETAModule } from './green-eta';
+import tripleLedgerModule from './triple-ledger';
+import autoSlottingModule from './auto-slotting';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -54,6 +56,8 @@ export class ModuleRegistry {
     this.modules.set('intelligent_replenishment', intelligentReplenishmentModule);
     this.modules.set('digital_twin', digitalTwinModule);
     this.modules.set('green_eta', greenETAModule);
+    this.modules.set('triple_ledger', tripleLedgerModule);
+    this.modules.set('auto_slotting', autoSlottingModule);
     
     // Temporary direct registration for barcode scanning
     this.modules.set('barcode_scanning', {

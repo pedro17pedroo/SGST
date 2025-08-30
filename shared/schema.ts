@@ -1162,3 +1162,186 @@ export type DigitalTwinSimulation = typeof digitalTwinSimulations.$inferSelect;
 export type InsertDigitalTwinSimulation = z.infer<typeof insertDigitalTwinSimulationSchema>;
 export type RealTimeVisualization = typeof realTimeVisualization.$inferSelect;
 export type InsertRealTimeVisualization = z.infer<typeof insertRealTimeVisualizationSchema>;
+
+// Triple-Ledger Traceability - Sistema Anti-fraude com WORM Storage
+export const auditTrail = pgTable("audit_trail", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  tableName: varchar("table_name", { length: 255 }).notNull(),
+  recordId: varchar("record_id", { length: 255 }).notNull(),
+  operation: varchar("operation", { length: 50 }).notNull(), // 'CREATE', 'UPDATE', 'DELETE'
+  oldValues: json("old_values"),
+  newValues: json("new_values"),
+  userId: uuid("user_id").references(() => users.id),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  checksum: varchar("checksum", { length: 64 }).notNull(), // SHA-256 hash
+  previousHash: varchar("previous_hash", { length: 64 }), // Chain to previous record
+  signature: text("signature"), // Digital signature
+  wormStored: boolean("worm_stored").default(false),
+  blockchainHash: varchar("blockchain_hash", { length: 64 }) // Optional blockchain reference
+});
+
+export const wormStorage = pgTable("worm_storage", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  auditId: uuid("audit_id").references(() => auditTrail.id).notNull(),
+  dataHash: varchar("data_hash", { length: 64 }).notNull(),
+  encryptedData: text("encrypted_data").notNull(),
+  accessCount: integer("access_count").default(0),
+  firstAccess: timestamp("first_access"),
+  lastAccess: timestamp("last_access"),
+  retention: timestamp("retention").notNull(),
+  immutable: boolean("immutable").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const fraudDetection = pgTable("fraud_detection", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  alertType: varchar("alert_type", { length: 100 }).notNull(),
+  severity: varchar("severity", { length: 20 }).notNull(), // 'low', 'medium', 'high', 'critical'
+  description: text("description").notNull(),
+  entityType: varchar("entity_type", { length: 50 }).notNull(),
+  entityId: varchar("entity_id", { length: 255 }).notNull(),
+  riskScore: decimal("risk_score", { precision: 5, scale: 2 }),
+  evidenceData: json("evidence_data"),
+  status: varchar("status", { length: 50 }).default("pending"), // 'pending', 'investigating', 'resolved', 'false_positive'
+  investigatedBy: uuid("investigated_by").references(() => users.id),
+  resolution: text("resolution"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Auto-Slotting Inteligente - Machine Learning para otimização de layout
+export const slottingAnalytics = pgTable("slotting_analytics", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: uuid("product_id").references(() => products.id).notNull(),
+  warehouseId: uuid("warehouse_id").references(() => warehouses.id).notNull(),
+  currentLocation: varchar("current_location", { length: 100 }),
+  recommendedLocation: varchar("recommended_location", { length: 100 }),
+  rotationFrequency: decimal("rotation_frequency", { precision: 10, scale: 4 }),
+  pickingDistance: decimal("picking_distance", { precision: 10, scale: 2 }),
+  affinityScore: decimal("affinity_score", { precision: 5, scale: 2 }),
+  seasonalityFactor: decimal("seasonality_factor", { precision: 5, scale: 2 }),
+  lastOptimization: timestamp("last_optimization"),
+  improvementPotential: decimal("improvement_potential", { precision: 5, scale: 2 }),
+  status: varchar("status", { length: 50 }).default("pending"), // 'pending', 'approved', 'implemented'
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const productAffinity = pgTable("product_affinity", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  productA: uuid("product_a").references(() => products.id).notNull(),
+  productB: uuid("product_b").references(() => products.id).notNull(),
+  affinityScore: decimal("affinity_score", { precision: 5, scale: 2 }).notNull(),
+  coOccurrenceCount: integer("co_occurrence_count").default(0),
+  lastCalculated: timestamp("last_calculated").defaultNow().notNull(),
+  confidence: decimal("confidence", { precision: 5, scale: 2 })
+});
+
+export const slottingRules = pgTable("slotting_rules", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  warehouseId: uuid("warehouse_id").references(() => warehouses.id).notNull(),
+  ruleName: varchar("rule_name", { length: 255 }).notNull(),
+  conditions: json("conditions").notNull(),
+  actions: json("actions").notNull(),
+  priority: integer("priority").default(1),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const mlModels = pgTable("ml_models", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  modelName: varchar("model_name", { length: 255 }).notNull(),
+  modelType: varchar("model_type", { length: 100 }).notNull(), // 'slotting_optimization', 'demand_forecast', 'affinity_analysis'
+  version: varchar("version", { length: 50 }).notNull(),
+  parameters: json("parameters"),
+  trainingData: json("training_data"),
+  accuracy: decimal("accuracy", { precision: 5, scale: 4 }),
+  status: varchar("status", { length: 50 }).default("training"), // 'training', 'ready', 'deployed', 'deprecated'
+  lastTraining: timestamp("last_training"),
+  deployedAt: timestamp("deployed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const optimizationJobs = pgTable("optimization_jobs", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobType: varchar("job_type", { length: 100 }).notNull(),
+  warehouseId: uuid("warehouse_id").references(() => warehouses.id),
+  parameters: json("parameters"),
+  results: json("results"),
+  status: varchar("status", { length: 50 }).default("pending"), // 'pending', 'running', 'completed', 'failed'
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  executionTime: integer("execution_time"), // in seconds
+  improvementMetrics: json("improvement_metrics"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schemas for Triple-Ledger and Auto-Slotting
+export const insertAuditTrailSchema = createInsertSchema(auditTrail).omit({
+  id: true,
+  timestamp: true,
+  checksum: true,
+  previousHash: true
+});
+
+export const insertWormStorageSchema = createInsertSchema(wormStorage).omit({
+  id: true,
+  createdAt: true,
+  accessCount: true,
+  firstAccess: true,
+  lastAccess: true
+});
+
+export const insertFraudDetectionSchema = createInsertSchema(fraudDetection).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertSlottingAnalyticsSchema = createInsertSchema(slottingAnalytics).omit({
+  id: true,
+  createdAt: true,
+  lastOptimization: true
+});
+
+export const insertProductAffinitySchema = createInsertSchema(productAffinity).omit({
+  id: true,
+  lastCalculated: true
+});
+
+export const insertSlottingRulesSchema = createInsertSchema(slottingRules).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertMlModelsSchema = createInsertSchema(mlModels).omit({
+  id: true,
+  createdAt: true,
+  lastTraining: true,
+  deployedAt: true
+});
+
+export const insertOptimizationJobsSchema = createInsertSchema(optimizationJobs).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true
+});
+
+// Export types for Triple-Ledger and Auto-Slotting
+export type AuditTrail = typeof auditTrail.$inferSelect;
+export type InsertAuditTrail = z.infer<typeof insertAuditTrailSchema>;
+export type WormStorage = typeof wormStorage.$inferSelect;
+export type InsertWormStorage = z.infer<typeof insertWormStorageSchema>;
+export type FraudDetection = typeof fraudDetection.$inferSelect;
+export type InsertFraudDetection = z.infer<typeof insertFraudDetectionSchema>;
+export type SlottingAnalytics = typeof slottingAnalytics.$inferSelect;
+export type InsertSlottingAnalytics = z.infer<typeof insertSlottingAnalyticsSchema>;
+export type ProductAffinity = typeof productAffinity.$inferSelect;
+export type InsertProductAffinity = z.infer<typeof insertProductAffinitySchema>;
+export type SlottingRules = typeof slottingRules.$inferSelect;
+export type InsertSlottingRules = z.infer<typeof insertSlottingRulesSchema>;
+export type MlModels = typeof mlModels.$inferSelect;
+export type InsertMlModels = z.infer<typeof insertMlModelsSchema>;
+export type OptimizationJobs = typeof optimizationJobs.$inferSelect;
+export type InsertOptimizationJobs = z.infer<typeof insertOptimizationJobsSchema>;

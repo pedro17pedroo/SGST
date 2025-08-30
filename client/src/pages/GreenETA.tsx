@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Header } from "@/components/layout/header";
 import { 
   Leaf, 
   TrendingDown,
@@ -187,9 +188,9 @@ const GreenRecommendations = ({ warehouseId }: { warehouseId: string }) => {
   if (!recommendations) return null;
 
   const allRecommendations = [
-    ...recommendations.energyOptimization,
-    ...recommendations.logisticsOptimization,
-    ...recommendations.packagingOptimization
+    ...(recommendations?.energyOptimization || []),
+    ...(recommendations?.logisticsOptimization || []),
+    ...(recommendations?.packagingOptimization || [])
   ];
 
   return (
@@ -241,8 +242,8 @@ const GreenRecommendations = ({ warehouseId }: { warehouseId: string }) => {
                 Potencial Total de Poupanças
               </h4>
               <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                Implementando todas as recomendações: {recommendations.estimatedSavings.carbon.toLocaleString()} kg CO2/ano
-                e {recommendations.estimatedSavings.cost.toLocaleString()} AOA poupados em {recommendations.estimatedSavings.timeframe}.
+                Implementando todas as recomendações: {(recommendations.estimatedSavings?.carbon || 0).toLocaleString()} kg CO2/ano
+                e {(recommendations.estimatedSavings?.cost || 0).toLocaleString()} AOA poupados em {recommendations.estimatedSavings?.timeframe || '12 meses'}.
               </p>
             </div>
           </div>
@@ -336,17 +337,14 @@ export default function GreenETA() {
   });
 
   return (
-    <div className="p-8 space-y-6" data-testid="page-green-eta">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Leaf className="h-8 w-8 text-green-500" />
-            Green ETA
-          </h1>
+    <div className="min-h-screen bg-background" data-testid="page-green-eta">
+      <Header title="Green ETA" breadcrumbs={["Green ETA"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Otimização sustentável com redução da pegada de carbono
           </p>
-        </div>
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -519,6 +517,7 @@ export default function GreenETA() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

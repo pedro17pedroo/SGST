@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -445,18 +446,16 @@ export default function AdvancedAnalyticsPage() {
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground" data-testid="page-title">
-            Analytics Avançadas
-          </h1>
-          <p className="text-muted-foreground mt-2">
+    <div className="min-h-screen bg-background">
+      <Header title="Analytics Avançadas" breadcrumbs={["Analytics Avançadas"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground">
             Análises preditivas, métricas avançadas e insights de negócio
           </p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
+          
+          <div className="flex items-center space-x-4">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-[140px]" data-testid="time-range-select">
               <SelectValue />
@@ -881,6 +880,7 @@ export default function AdvancedAnalyticsPage() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,17 +41,14 @@ export default function Performance() {
   }, []);
 
   return (
-    <div className="p-8 space-y-6" data-testid="page-performance">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Zap className="h-8 w-8 text-yellow-500" />
-            UX Hiper-Rápida
-          </h1>
+    <div className="min-h-screen bg-background" data-testid="page-performance">
+      <Header title="UX Hiper-Rápida" breadcrumbs={["UX Hiper-Rápida"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Sistema de otimização de performance com latência inferior a 200ms
           </p>
-        </div>
         <div className="flex items-center gap-4">
           <Button 
             variant="outline" 
@@ -366,6 +364,7 @@ export default function Performance() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -190,14 +191,14 @@ export default function AngolaOperationsPage() {
   }, [deviceId]);
 
   return (
-    <div className="container mx-auto p-6 space-y-6" data-testid="angola-operations-page">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Operações Angola</h1>
+    <div className="min-h-screen bg-background" data-testid="angola-operations-page">
+      <Header title="Operações Angola" breadcrumbs={["Operações Angola"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Sistema robusto para operação em condições desafiadoras de infraestrutura
           </p>
-        </div>
         <Badge variant="outline" className="text-sm">
           Device: {deviceId.slice(-6)}
         </Badge>
@@ -568,6 +569,7 @@ export default function AngolaOperationsPage() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

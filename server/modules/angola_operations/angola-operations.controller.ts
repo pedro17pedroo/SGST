@@ -267,6 +267,26 @@ export class AngolaOperationsController {
   }
 
   // Network Status & Monitoring
+  static async getNetworkStatus(req: Request, res: Response) {
+    try {
+      const { deviceId } = req.params;
+      
+      const networkStatus = await AngolaOperationsModel.getNetworkStatus(deviceId);
+
+      res.json({
+        message: 'Network status retrieved',
+        networkStatus
+      });
+
+    } catch (error) {
+      console.error('Erro ao obter status da rede:', error);
+      res.status(500).json({ 
+        message: 'Failed to get network status',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
   static async updateNetworkStatus(req: Request, res: Response) {
     try {
       const { deviceId, networkStatus } = req.body;

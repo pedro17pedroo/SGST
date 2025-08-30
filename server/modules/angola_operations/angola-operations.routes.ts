@@ -22,6 +22,7 @@ angolaOperationsRoutes.get('/sync/status/:deviceId', AngolaOperationsController.
 angolaOperationsRoutes.post('/sync/process', AngolaOperationsController.processDelayedSync);
 
 // Network Status & Monitoring
+angolaOperationsRoutes.get('/network/status/:deviceId', AngolaOperationsController.getNetworkStatus);
 angolaOperationsRoutes.post('/network/status', AngolaOperationsController.updateNetworkStatus);
 
 // System Resilience Configuration

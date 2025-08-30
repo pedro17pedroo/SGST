@@ -341,6 +341,17 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/auto-slotting'],
     tables: ['slotting_analytics', 'product_affinity', 'slotting_rules', 'ml_models', 'optimization_jobs'],
     permissions: ['slotting.read', 'slotting.write', 'optimization.execute', 'ml_models.manage']
+  },
+
+  angola_operations: {
+    id: 'angola_operations',
+    name: 'Operação em Angola',
+    description: 'Tolerância a falhas de rede/energia, mapas offline, SMS/USSD fallback e buffer local',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/angola'],
+    tables: ['angola_network_status', 'angola_offline_maps', 'angola_sync_queue'],
+    permissions: ['angola_operations.read', 'angola_operations.write', 'angola_operations.configure']
   }
 };
 

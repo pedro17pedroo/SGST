@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
+import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -151,16 +152,14 @@ export default function InventoryCountsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground" data-testid="page-title">
-            Contagens de Inventário
-          </h1>
-          <p className="text-muted-foreground mt-2">
+    <div className="min-h-screen bg-background">
+      <Header title="Contagens de Inventário" breadcrumbs={["Contagens de Inventário"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground">
             Gerir contagens cíclicas e completas do inventário
           </p>
-        </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -430,6 +429,7 @@ export default function InventoryCountsPage() {
           )}
         </div>
       </Card>
+      </div>
     </div>
   );
 }

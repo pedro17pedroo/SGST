@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Package, Calendar, DollarSign, User as UserIcon, Building } from "lucide-react";
+import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -499,16 +500,14 @@ export default function Orders() {
   );
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="title-orders">
-            Gestão de Encomendas
-          </h1>
+    <div className="min-h-screen bg-background">
+      <Header title="Gestão de Encomendas" breadcrumbs={["Gestão de Encomendas"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Gerir encomendas de vendas e compras
           </p>
-        </div>
         <OrderDialog
           trigger={
             <Button data-testid="button-add-order">
@@ -573,6 +572,7 @@ export default function Orders() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, TrendingUp, Package, DollarSign, Download } from "lucide-react";
+import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -113,16 +114,14 @@ export default function Reports() {
   });
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="title-reports">
-            Relatórios e Análises
-          </h1>
+    <div className="min-h-screen bg-background">
+      <Header title="Relatórios e Análises" breadcrumbs={["Relatórios e Análises"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Análise detalhada de desempenho e tendências
           </p>
-        </div>
         <div className="flex gap-2">
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-40">
@@ -537,6 +536,7 @@ export default function Reports() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

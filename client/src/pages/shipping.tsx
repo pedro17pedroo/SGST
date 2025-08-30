@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Truck, Package, Calendar, MapPin, User as UserIcon } from "lucide-react";
+import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -397,16 +398,14 @@ export default function Shipping() {
   );
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="title-shipping">
-            Gestão de Envios
-          </h1>
+    <div className="min-h-screen bg-background">
+      <Header title="Gestão de Envios" breadcrumbs={["Gestão de Envios"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Gerir envios e rastreamento de encomendas
           </p>
-        </div>
         <ShipmentDialog
           trigger={
             <Button data-testid="button-add-shipment">
@@ -471,6 +470,7 @@ export default function Shipping() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

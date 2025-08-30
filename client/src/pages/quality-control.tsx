@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
+import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -461,17 +462,10 @@ export default function QualityControlPage() {
   }) || [];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground" data-testid="page-title">
-            Controlo de Qualidade
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Gestão de inspeções de qualidade, auditorias e conformidade
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header title="Controlo de Qualidade" breadcrumbs={["Controlo de Qualidade"]} />
+      
+      <div className="px-6 py-4 space-y-6">
 
       {/* Search and Filters */}
       <div className="flex items-center space-x-4">
@@ -1198,6 +1192,7 @@ export default function QualityControlPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

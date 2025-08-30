@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -140,17 +141,10 @@ export default function ScannerPage() {
   }, [scanner]);
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground" data-testid="page-title">
-            Escaneamento de Códigos
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Escaneie códigos de barras e QR codes para rastreamento em tempo real
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header title="Escaneamento de Códigos" breadcrumbs={["Escaneamento de Códigos"]} />
+      
+      <div className="px-6 py-4 space-y-6">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Scanner Card */}
@@ -272,6 +266,7 @@ export default function ScannerPage() {
             </div>
           </div>
         </Card>
+        </div>
       </div>
     </div>
   );

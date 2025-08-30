@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Shield, User as UserIcon, UserCheck, UserX } from "lucide-react";
+import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -351,16 +352,14 @@ export default function Users() {
   );
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="title-users">
-            Gestão de Utilizadores
-          </h1>
+    <div className="min-h-screen bg-background">
+      <Header title="Gestão de Utilizadores" breadcrumbs={["Gestão de Utilizadores"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Gerir utilizadores e permissões do sistema
           </p>
-        </div>
         <UserDialog
           trigger={
             <Button data-testid="button-add-user">
@@ -425,6 +424,7 @@ export default function Users() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

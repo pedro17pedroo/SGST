@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
+import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -377,17 +378,10 @@ export default function PickingPackingPage() {
   ) || [];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground" data-testid="page-title">
-            Picking, Packing & Shipping
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Gerir operações de separação, embalagem e envio de encomendas
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header title="Picking, Packing & Shipping" breadcrumbs={["Picking, Packing & Shipping"]} />
+      
+      <div className="px-6 py-4 space-y-6">
 
       {/* Search */}
       <div className="flex items-center space-x-2">
@@ -974,6 +968,7 @@ export default function PickingPackingPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

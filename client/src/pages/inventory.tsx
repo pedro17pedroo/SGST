@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Package, AlertTriangle, TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
+import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -335,16 +336,14 @@ export default function Inventory() {
   );
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="title-inventory">
-            Gestão de Inventário
-          </h1>
+    <div className="min-h-screen bg-background">
+      <Header title="Gestão de Inventário" breadcrumbs={["Gestão de Inventário"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Controlar níveis de stock e movimentos
           </p>
-        </div>
         <StockMovementDialog
           trigger={
             <Button data-testid="button-add-movement">
@@ -430,6 +429,7 @@ export default function Inventory() {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

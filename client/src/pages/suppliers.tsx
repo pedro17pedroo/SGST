@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Building, Mail, Phone, MapPin } from "lucide-react";
+import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -304,16 +305,14 @@ export default function Suppliers() {
   );
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="title-suppliers">
-            Gestão de Fornecedores
-          </h1>
+    <div className="min-h-screen bg-background">
+      <Header title="Gestão de Fornecedores" breadcrumbs={["Gestão de Fornecedores"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
             Gerir fornecedores e informações de contacto
           </p>
-        </div>
         <SupplierDialog
           trigger={
             <Button data-testid="button-add-supplier">
@@ -378,6 +377,7 @@ export default function Suppliers() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { z } from "zod";
 const shipmentFormSchema = insertShipmentSchema.extend({
   shipmentNumber: z.string().min(1, "Número do envio é obrigatório"),
   status: z.enum(["preparing", "shipped", "in_transit", "delivered", "cancelled"]).default("preparing"),
+  estimatedDelivery: z.string().optional(),
 });
 
 type ShipmentFormData = z.infer<typeof shipmentFormSchema>;

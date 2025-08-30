@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Truck, Package, Calendar, MapPin, User as UserIcon } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -35,15 +35,40 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
   const form = useForm<ShipmentFormData>({
     resolver: zodResolver(shipmentFormSchema),
     defaultValues: {
-      shipmentNumber: shipment?.shipmentNumber || `SHP-${Date.now()}`,
-      orderId: shipment?.orderId || "",
-      status: (shipment?.status as any) || "preparing",
-      carrier: shipment?.carrier || "",
-      trackingNumber: shipment?.trackingNumber || "",
-      shippingAddress: shipment?.shippingAddress || "",
-      estimatedDelivery: shipment?.estimatedDelivery ? new Date(shipment.estimatedDelivery).toISOString().split('T')[0] : "",
+      shipmentNumber: `SHP-${Date.now()}`,
+      orderId: "",
+      status: "preparing",
+      carrier: "",
+      trackingNumber: "",
+      shippingAddress: "",
+      estimatedDelivery: "",
     },
   });
+
+  // Reset form values when shipment changes
+  React.useEffect(() => {
+    if (shipment) {
+      form.reset({
+        shipmentNumber: shipment.shipmentNumber || `SHP-${Date.now()}`,
+        orderId: shipment.orderId || "",
+        status: (shipment.status as any) || "preparing",
+        carrier: shipment.carrier || "",
+        trackingNumber: shipment.trackingNumber || "",
+        shippingAddress: shipment.shippingAddress || "",
+        estimatedDelivery: shipment.estimatedDelivery ? new Date(shipment.estimatedDelivery).toISOString().split('T')[0] : "",
+      });
+    } else {
+      form.reset({
+        shipmentNumber: `SHP-${Date.now()}`,
+        orderId: "",
+        status: "preparing",
+        carrier: "",
+        trackingNumber: "",
+        shippingAddress: "",
+        estimatedDelivery: "",
+      });
+    }
+  }, [shipment, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: ShipmentFormData) => {

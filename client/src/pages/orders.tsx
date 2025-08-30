@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Package, Calendar, DollarSign, User as UserIcon, Building } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -36,18 +36,49 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
   const form = useForm<OrderFormData>({
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
-      orderNumber: order?.orderNumber || `ORD-${Date.now()}`,
-      type: (order?.type as any) || "sale",
-      status: (order?.status as any) || "pending",
-      customerName: order?.customerName || "",
-      customerEmail: order?.customerEmail || "",
-      customerPhone: order?.customerPhone || "",
-      customerAddress: order?.customerAddress || "",
-      supplierId: order?.supplierId || "",
-      totalAmount: order?.totalAmount || "0",
-      notes: order?.notes || "",
+      orderNumber: `ORD-${Date.now()}`,
+      type: "sale",
+      status: "pending",
+      customerName: "",
+      customerEmail: "",
+      customerPhone: "",
+      customerAddress: "",
+      supplierId: "",
+      totalAmount: "0",
+      notes: "",
     },
   });
+
+  // Reset form values when order changes
+  React.useEffect(() => {
+    if (order) {
+      form.reset({
+        orderNumber: order.orderNumber || `ORD-${Date.now()}`,
+        type: (order.type as any) || "sale",
+        status: (order.status as any) || "pending",
+        customerName: order.customerName || "",
+        customerEmail: order.customerEmail || "",
+        customerPhone: order.customerPhone || "",
+        customerAddress: order.customerAddress || "",
+        supplierId: order.supplierId || "",
+        totalAmount: order.totalAmount || "0",
+        notes: order.notes || "",
+      });
+    } else {
+      form.reset({
+        orderNumber: `ORD-${Date.now()}`,
+        type: "sale",
+        status: "pending",
+        customerName: "",
+        customerEmail: "",
+        customerPhone: "",
+        customerAddress: "",
+        supplierId: "",
+        totalAmount: "0",
+        notes: "",
+      });
+    }
+  }, [order, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: OrderFormData) => {

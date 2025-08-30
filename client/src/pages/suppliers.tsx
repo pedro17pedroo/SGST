@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Building, Mail, Phone, MapPin } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -25,12 +25,31 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
   const form = useForm<SupplierFormData>({
     resolver: zodResolver(supplierFormSchema),
     defaultValues: {
-      name: supplier?.name || "",
-      email: supplier?.email || "",
-      phone: supplier?.phone || "",
-      address: supplier?.address || "",
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
     },
   });
+
+  // Reset form values when supplier changes
+  React.useEffect(() => {
+    if (supplier) {
+      form.reset({
+        name: supplier.name || "",
+        email: supplier.email || "",
+        phone: supplier.phone || "",
+        address: supplier.address || "",
+      });
+    } else {
+      form.reset({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+      });
+    }
+  }, [supplier, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: SupplierFormData) => {

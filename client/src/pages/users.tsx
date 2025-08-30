@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Shield, User as UserIcon, UserCheck, UserX } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -31,13 +31,34 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
   const form = useForm<UserFormData>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
-      username: user?.username || "",
-      email: user?.email || "",
+      username: "",
+      email: "",
       password: "",
-      role: (user?.role as any) || "operator",
-      isActive: user?.isActive ?? true,
+      role: "operator",
+      isActive: true,
     },
   });
+
+  // Reset form values when user changes
+  React.useEffect(() => {
+    if (user) {
+      form.reset({
+        username: user.username || "",
+        email: user.email || "",
+        password: "",
+        role: (user.role as any) || "operator",
+        isActive: user.isActive ?? true,
+      });
+    } else {
+      form.reset({
+        username: "",
+        email: "",
+        password: "",
+        role: "operator",
+        isActive: true,
+      });
+    }
+  }, [user, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: UserFormData) => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, MapPin, Package, Settings, Edit, Trash2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -33,14 +33,37 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
   const form = useForm<WarehouseFormData>({
     resolver: zodResolver(warehouseFormSchema),
     defaultValues: {
-      name: warehouse?.name || "",
-      address: warehouse?.address || "",
-      isActive: warehouse?.isActive ?? true,
+      name: "",
+      address: "",
+      isActive: true,
       type: "local",
       zones: "",
       capacity: "",
     },
   });
+
+  // Reset form values when warehouse changes
+  React.useEffect(() => {
+    if (warehouse) {
+      form.reset({
+        name: warehouse.name || "",
+        address: warehouse.address || "",
+        isActive: warehouse.isActive ?? true,
+        type: "local",
+        zones: "",
+        capacity: "",
+      });
+    } else {
+      form.reset({
+        name: "",
+        address: "",
+        isActive: true,
+        type: "local",
+        zones: "",
+        capacity: "",
+      });
+    }
+  }, [warehouse, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: WarehouseFormData) => {

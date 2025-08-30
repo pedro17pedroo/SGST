@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import React, { useState, useEffect } from "react";
+import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
@@ -85,43 +85,64 @@ export default function ScannerPage() {
     }
   });
 
-  const startScanning = () => {
-    setIsScanning(true);
-    const config = {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0,
-    };
+  const startScanning = async () => {
+    try {
+      // Request camera permissions first
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      
+      setIsScanning(true);
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+        supportedScanTypes: [
+          Html5QrcodeScanType.QR_CODE,
+          Html5QrcodeScanType.CODE_128,
+          Html5QrcodeScanType.EAN_8,
+          Html5QrcodeScanType.EAN_13
+        ] as Html5QrcodeScanType[],
+        rememberLastUsedCamera: true,
+        showTorchButtonIfSupported: true,
+      };
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "qr-reader",
-      config,
-      false
-    );
+      const html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader",
+        config,
+        false
+      );
 
-    html5QrcodeScanner.render(
-      (decodedText) => {
-        setScannedCode(decodedText);
-        html5QrcodeScanner.clear();
-        setIsScanning(false);
-        
-        // Automatically create scan record
-        createScanMutation.mutate({
-          scannedCode: decodedText,
-          scanType: 'barcode',
-          scanPurpose: 'inventory',
-          metadata: {
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent
-          }
-        });
-      },
-      (errorMessage) => {
-        console.log(`QR Code scanning failed: ${errorMessage}`);
-      }
-    );
+      html5QrcodeScanner.render(
+        (decodedText) => {
+          setScannedCode(decodedText);
+          html5QrcodeScanner.clear();
+          setIsScanning(false);
+          
+          // Automatically create scan record
+          createScanMutation.mutate({
+            scannedCode: decodedText,
+            scanType: 'barcode',
+            scanPurpose: 'inventory',
+            metadata: {
+              timestamp: new Date().toISOString(),
+              userAgent: navigator.userAgent
+            }
+          });
+        },
+        (errorMessage) => {
+          console.log(`QR Code scanning failed: ${errorMessage}`);
+        }
+      );
 
-    setScanner(html5QrcodeScanner);
+      setScanner(html5QrcodeScanner);
+    } catch (error) {
+      console.error('Camera access error:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro de acesso à câmara",
+        description: "Não foi possível aceder à câmara. Verifique as permissões do browser.",
+      });
+      setIsScanning(false);
+    }
   };
 
   const stopScanning = () => {

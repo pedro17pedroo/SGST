@@ -46,9 +46,9 @@ function Router() {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <main className={`flex-1 overflow-auto ${
-        isMobile ? 'pt-16' : 'ml-72'
+        isMobile ? 'pt-0' : 'ml-72'
       }`}>
-        <div className="container-responsive py-4">
+        <div className="container-responsive">
           <Switch>
             <Route path="/" component={Dashboard} />
           <Route path="/dashboard">

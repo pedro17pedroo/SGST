@@ -32,11 +32,11 @@ export function Header({ title, breadcrumbs = [] }: HeaderProps) {
   };
 
   return (
-    <header className="bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4" data-testid="page-header">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
+    <header className="sticky top-0 z-50 bg-card border-b border-border px-4 sm:px-6 py-3 sm:py-4 backdrop-blur-sm" data-testid="page-header">
+      <div className="flex items-center justify-between h-12">
+        <div className="flex flex-col justify-center min-w-0 flex-1">
           {!isMobile && (
-            <nav className="text-sm text-muted-foreground mb-2" data-testid="breadcrumbs">
+            <nav className="text-sm text-muted-foreground" data-testid="breadcrumbs">
               <span>SGST</span>
               {breadcrumbs.map((crumb, index) => (
                 <span key={index}>
@@ -48,9 +48,9 @@ export function Header({ title, breadcrumbs = [] }: HeaderProps) {
               ))}
             </nav>
           )}
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground" data-testid="page-title">{title}</h2>
+          <h2 className="text-xl lg:text-2xl font-bold text-foreground truncate" data-testid="page-title">{title}</h2>
         </div>
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        <div className="flex items-center space-x-3 ml-4">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="relative" data-testid="notifications-button">

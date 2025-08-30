@@ -352,6 +352,28 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/angola'],
     tables: ['angola_network_status', 'angola_offline_maps', 'angola_sync_queue'],
     permissions: ['angola_operations.read', 'angola_operations.write', 'angola_operations.configure']
+  },
+
+  ai_analytics: {
+    id: 'ai_analytics',
+    name: 'Análises Preditivas com IA',
+    description: 'Análises preditivas e otimização com inteligência artificial',
+    enabled: true,
+    dependencies: ['products', 'inventory'],
+    routes: ['/api/ai', '/api/ai-analytics'],
+    tables: ['ai_models', 'demand_forecasts', 'price_optimization'],
+    permissions: ['ai_analytics.read', 'ai_analytics.write', 'ai_analytics.execute']
+  },
+
+  external_integrations: {
+    id: 'external_integrations',
+    name: 'Integrações Externas Enterprise',
+    description: 'Integrações avançadas com ERP/CRM/E-commerce (SAP, Salesforce, Shopify)',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/integrations'],
+    tables: ['integrations', 'integration_logs', 'sync_jobs'],
+    permissions: ['integrations.read', 'integrations.write', 'integrations.configure']
   }
 };
 

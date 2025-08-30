@@ -335,6 +335,36 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
       order: 5
     }],
     permissions: []
+  },
+
+  ai_analytics: {
+    id: 'ai_analytics',
+    name: 'IA Analytics',
+    description: 'Previsão demanda, otimização preços, detecção anomalias e segmentação clientes',
+    enabled: true,
+    routes: ['/ai-analytics', '/advanced-analytics'],
+    menuItems: [{
+      label: 'IA Analytics',
+      icon: 'Brain',
+      path: '/ai-analytics',
+      order: 6
+    }],
+    permissions: ['ai_analytics.read']
+  },
+
+  angola_operations: {
+    id: 'angola_operations',
+    name: 'Operação em Angola',
+    description: 'Tolerância a falhas, mapas offline, SMS/USSD fallback e buffer local',
+    enabled: true,
+    routes: ['/angola-operations'],
+    menuItems: [{
+      label: 'Operações Angola',
+      icon: 'MapPin',
+      path: '/angola-operations',
+      order: 85
+    }],
+    permissions: ['angola_operations.read']
   }
 };
 

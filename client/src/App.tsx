@@ -122,7 +122,12 @@ function Router() {
             </ModuleGuard>
           </Route>
           <Route path="/advanced-analytics">
-            <ModuleGuard moduleId="advanced_analytics" fallback={<NotFound />}>
+            <ModuleGuard moduleId="ai_analytics" fallback={<NotFound />}>
+              <AdvancedAnalytics />
+            </ModuleGuard>
+          </Route>
+          <Route path="/ai-analytics">
+            <ModuleGuard moduleId="ai_analytics" fallback={<NotFound />}>
               <AdvancedAnalytics />
             </ModuleGuard>
           </Route>

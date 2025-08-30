@@ -15,9 +15,17 @@ interface Product {
   name: string;
   description: string | null;
   sku: string;
+  barcode: string | null;
   price: string;
+  weight: string | null;
+  categoryId: string | null;
+  supplierId: string | null;
+  minStockLevel: number | null;
   isActive: boolean;
   category?: {
+    name: string;
+  } | null;
+  supplier?: {
     name: string;
   } | null;
 }

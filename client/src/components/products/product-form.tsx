@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -82,6 +82,35 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       minStockLevel: product?.minStockLevel?.toString() || "",
     },
   });
+
+  // Reset form values when product changes
+  React.useEffect(() => {
+    if (product) {
+      form.reset({
+        name: product.name || "",
+        description: product.description || "",
+        sku: product.sku || "",
+        barcode: product.barcode || "",
+        price: product.price || "",
+        weight: product.weight || "",
+        categoryId: product.categoryId || "",
+        supplierId: product.supplierId || "",
+        minStockLevel: product.minStockLevel?.toString() || "",
+      });
+    } else {
+      form.reset({
+        name: "",
+        description: "",
+        sku: "",
+        barcode: "",
+        price: "",
+        weight: "",
+        categoryId: "",
+        supplierId: "",
+        minStockLevel: "",
+      });
+    }
+  }, [product, form]);
 
   const { data: categories = [] } = useQuery<any[]>({
     queryKey: ["/api/categories"],

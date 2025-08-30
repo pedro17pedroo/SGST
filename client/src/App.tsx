@@ -36,6 +36,7 @@ import WarehouseAutomation from "@/pages/WarehouseAutomation";
 import WarehouseTwin from "@/pages/WarehouseTwin";
 import GreenETA from "@/pages/GreenETA";
 import Performance from "@/pages/Performance";
+import AngolaOperations from "@/pages/AngolaOperationsPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -160,6 +161,11 @@ function Router() {
           </Route>
           <Route path="/performance">
             <Performance />
+          </Route>
+          <Route path="/angola-operations">
+            <ModuleGuard moduleId="angola_operations" fallback={<NotFound />}>
+              <AngolaOperations />
+            </ModuleGuard>
           </Route>
           <Route component={NotFound} />
           </Switch>

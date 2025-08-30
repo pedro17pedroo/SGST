@@ -31,6 +31,7 @@ import { digitalTwinModule } from './digital-twin';
 import { greenETAModule } from './green-eta';
 import tripleLedgerModule from './triple-ledger';
 import autoSlottingModule from './auto-slotting';
+import { initializeAngolaOperationsModule } from './angola_operations';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -357,6 +358,20 @@ export class ModuleRegistry {
         const { aiAnalyticsRoutes } = await import('./ai_analytics/ai-analytics.routes.js');
         app.use('/api/ai-analytics', aiAnalyticsRoutes);
         console.log('✓ Módulo IA Analytics Avançada registrado');
+      }
+    });
+
+    // Angola Operations Module - Seção 4.10
+    this.modules.set('angola_operations', {
+      config: { 
+        id: 'angola_operations', 
+        name: 'Operação em Angola',
+        description: 'Tolerância a falhas, mapas offline, SMS/USSD fallback e buffer local',
+        enabled: true
+      },
+      register: async (app: Express) => {
+        initializeAngolaOperationsModule(app);
+        console.log('✓ Módulo Operação em Angola registrado');
       }
     });
   }

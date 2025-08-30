@@ -159,4 +159,47 @@ export class OrdersModel {
       user: row.user || null
     }));
   }
+
+  static async getPendingOrders(): Promise<Array<Order & { supplier?: any | null; user?: any | null }>> {
+    const results = await db.select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      type: orders.type,
+      status: orders.status,
+      customerName: orders.customerName,
+      customerEmail: orders.customerEmail,
+      customerPhone: orders.customerPhone,
+      customerAddress: orders.customerAddress,
+      supplierId: orders.supplierId,
+      totalAmount: orders.totalAmount,
+      notes: orders.notes,
+      userId: orders.userId,
+      createdAt: orders.createdAt,
+      supplier: suppliers,
+      user: users
+    })
+      .from(orders)
+      .leftJoin(suppliers, eq(orders.supplierId, suppliers.id))
+      .leftJoin(users, eq(orders.userId, users.id))
+      .where(eq(orders.status, 'pending'))
+      .orderBy(desc(orders.createdAt));
+
+    return results.map(row => ({
+      id: row.id,
+      orderNumber: row.orderNumber,
+      type: row.type,
+      status: row.status,
+      customerName: row.customerName,
+      customerEmail: row.customerEmail,
+      customerPhone: row.customerPhone,
+      customerAddress: row.customerAddress,
+      supplierId: row.supplierId,
+      totalAmount: row.totalAmount,
+      notes: row.notes,
+      userId: row.userId,
+      createdAt: row.createdAt,
+      supplier: row.supplier || null,
+      user: row.user || null
+    }));
+  }
 }

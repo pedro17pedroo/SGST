@@ -116,4 +116,17 @@ export class OrdersController {
       });
     }
   }
+
+  static async getPendingOrders(req: Request, res: Response) {
+    try {
+      const orders = await OrdersModel.getPendingOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching pending orders:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar pedidos pendentes", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }

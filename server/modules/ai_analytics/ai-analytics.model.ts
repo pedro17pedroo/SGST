@@ -286,7 +286,7 @@ export class AIAnalyticsModel {
       anomalies: mockAnomalies,
       summary: {
         totalAnomalies: mockAnomalies.length,
-        criticalAnomalies: mockAnomalies.filter(a => a.severity === 'critical' || a.severity === 'high').length,
+        criticalAnomalies: mockAnomalies.filter(a => a.severity === 'high').length,
         patterns: ['Padrão de queda em horário específico', 'Correlação com eventos externos'],
         overallHealthScore: 0.75
       },

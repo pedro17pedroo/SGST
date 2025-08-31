@@ -1749,7 +1749,7 @@ export class DatabaseStorage implements IStorage {
         ? baseQuery.where(and(...conditions))
         : baseQuery;
 
-      return await finalQuery.orderBy(sql`turnoverRatio DESC`);
+      return await finalQuery.orderBy(desc(sql<number>`CASE WHEN AVG(${inventory.quantity}) > 0 THEN COALESCE(SUM(CASE WHEN ${stockMovements.type} = 'saída' THEN ${stockMovements.quantity} ELSE 0 END), 0) / AVG(${inventory.quantity}) ELSE 0 END`));
     } catch (error) {
       console.error('Error generating inventory turnover report:', error);
       return [];
@@ -1887,7 +1887,7 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(categories, eq(products.categoryId, categories.id))
         .where(and(...conditions));
 
-      const results = await query.orderBy(sql`totalRetailValue DESC`);
+      const results = await query.orderBy(desc(sql<number>`${inventory.quantity} * ${products.price}`));
       
       return {
         items: results,
@@ -1936,7 +1936,7 @@ export class DatabaseStorage implements IStorage {
         ? baseQuery.where(eq(suppliers.id, filters.supplierId))
         : baseQuery;
 
-      return await query.orderBy(sql`totalAmount DESC`);
+      return await query.orderBy(desc(sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)`));
     } catch (error) {
       console.error('Error generating supplier performance report:', error);
       return [];

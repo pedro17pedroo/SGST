@@ -327,7 +327,7 @@ export default function AngolaOperationsPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(offlineMaps || []).map((map) => (
+                {Array.isArray(offlineMaps) ? offlineMaps.map((map) => (
                   <div 
                     key={map.id} 
                     className="border rounded-lg p-4 space-y-3"
@@ -365,7 +365,12 @@ export default function AngolaOperationsPage() {
                       {downloadMapMutation.isPending ? 'Baixando...' : 'Baixar'}
                     </Button>
                   </div>
-                ))}
+                )) : (
+                  <div className="col-span-full text-center py-8">
+                    <Map className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Nenhum mapa offline disponível</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

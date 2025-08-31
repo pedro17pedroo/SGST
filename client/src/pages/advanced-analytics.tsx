@@ -226,7 +226,7 @@ function AIAnalyticsSection() {
           </div>
         ) : (
           <div className="space-y-4">
-            {demandForecast?.predictions.map((prediction: any) => (
+            {demandForecast?.predictions?.map((prediction: any) => (
               <div 
                 key={prediction.productId} 
                 className="border border-border rounded-lg p-4 space-y-3"

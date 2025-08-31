@@ -204,6 +204,11 @@ function App() {
                     <PublicTracking />
                   </ModuleGuard>
                 </Route>
+                <Route path="/public-tracking">
+                  <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
+                    <PublicTracking />
+                  </ModuleGuard>
+                </Route>
                 
                 {/* Protected routes - authentication required */}
                 <Route>

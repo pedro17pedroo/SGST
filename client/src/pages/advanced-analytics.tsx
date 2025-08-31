@@ -308,7 +308,7 @@ function AIAnalyticsSection() {
             </div>
           ) : (
             <div className="space-y-4">
-              {turnoverAnalysis?.categories.map((category: any) => (
+              {turnoverAnalysis?.categories?.map((category: any) => (
                 <div 
                   key={category.categoryId} 
                   className="border border-border rounded-lg p-4"

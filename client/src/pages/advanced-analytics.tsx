@@ -359,7 +359,7 @@ function AIAnalyticsSection() {
             </div>
           ) : (
             <div className="space-y-4">
-              {turnoverAnalysis?.obsoleteItems.map((item: any) => (
+              {turnoverAnalysis?.obsoleteItems?.map((item: any) => (
                 <div 
                   key={item.productId} 
                   className="border border-border rounded-lg p-4 bg-orange-50 dark:bg-orange-900/10"

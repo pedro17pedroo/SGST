@@ -399,28 +399,28 @@ function AIAnalyticsSection() {
             <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Categorias Saudáveis</p>
             <p className="text-2xl font-bold text-green-600">
-              {turnoverAnalysis?.categories.filter((c: any) => c.status === 'healthy').length || 0}
+              {turnoverAnalysis?.categories?.filter((c: any) => c.status === 'healthy').length || 0}
             </p>
           </div>
           <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
             <AlertTriangle className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Requer Atenção</p>
             <p className="text-2xl font-bold text-yellow-600">
-              {turnoverAnalysis?.categories.filter((c: any) => c.status === 'attention').length || 0}
+              {turnoverAnalysis?.categories?.filter((c: any) => c.status === 'attention').length || 0}
             </p>
           </div>
           <div className="text-center p-4 bg-red-50 dark:bg-red-900/10 rounded-lg">
             <TrendingDown className="w-8 h-8 text-red-600 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Itens Obsoletos</p>
             <p className="text-2xl font-bold text-red-600">
-              {turnoverAnalysis?.obsoleteItems.length || 0}
+              {turnoverAnalysis?.obsoleteItems?.length || 0}
             </p>
           </div>
           <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
             <DollarSign className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Valor Obsoleto</p>
             <p className="text-2xl font-bold text-blue-600">
-              AOA {turnoverAnalysis?.obsoleteItems.reduce((sum: number, item: any) => sum + item.currentValue, 0).toLocaleString() || '0'}
+              AOA {turnoverAnalysis?.obsoleteItems?.reduce((sum: number, item: any) => sum + item.currentValue, 0).toLocaleString() || '0'}
             </p>
           </div>
         </div>

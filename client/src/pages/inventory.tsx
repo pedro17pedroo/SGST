@@ -214,10 +214,10 @@ function StockMovementDialog({ trigger }: { trigger: React.ReactNode }) {
 
 function LowStockAlert({ product }: { product: Product & { stock: number } }) {
   return (
-    <Card className="border-orange-200 bg-orange-50" data-testid={`low-stock-${product.id}`}>
+    <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950" data-testid={`low-stock-${product.id}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-orange-600" />
+          <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           <CardTitle className="text-base">Stock Baixo</CardTitle>
         </div>
       </CardHeader>
@@ -225,13 +225,13 @@ function LowStockAlert({ product }: { product: Product & { stock: number } }) {
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="font-medium">{product.name}</span>
-            <Badge variant="outline" className="text-orange-700 border-orange-300">
+            <Badge variant="outline" className="text-orange-700 border-orange-300 dark:text-orange-300 dark:border-orange-700">
               {product.sku}
             </Badge>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Stock atual:</span>
-            <span className="font-medium text-orange-600">{product.stock} unidades</span>
+            <span className="font-medium text-orange-600 dark:text-orange-400">{product.stock} unidades</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Mínimo:</span>

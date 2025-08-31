@@ -1731,8 +1731,8 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(warehouses, eq(inventory.warehouseId, warehouses.id))
         .leftJoin(stockMovements, and(
           eq(stockMovements.productId, products.id),
-          sql`${stockMovements.createdAt} >= ${filters.startDate}`,
-          sql`${stockMovements.createdAt} <= ${filters.endDate}`
+          sql`${stockMovements.createdAt} >= ${filters.startDate.toISOString()}`,
+          sql`${stockMovements.createdAt} <= ${filters.endDate.toISOString()}`
         ))
         .groupBy(products.id, products.name, products.sku, categories.name, warehouses.name);
 
@@ -1817,8 +1817,8 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(categories, eq(products.categoryId, categories.id))
         .leftJoin(stockMovements, and(
           eq(stockMovements.productId, products.id),
-          sql`${stockMovements.createdAt} >= ${filters.startDate}`,
-          sql`${stockMovements.createdAt} <= ${filters.endDate}`
+          sql`${stockMovements.createdAt} >= ${filters.startDate.toISOString()}`,
+          sql`${stockMovements.createdAt} <= ${filters.endDate.toISOString()}`
         ))
         .groupBy(products.id, products.name, products.sku, categories.name, products.price)
         .orderBy(sql`totalRevenue DESC`)
@@ -1926,8 +1926,8 @@ export class DatabaseStorage implements IStorage {
         .from(suppliers)
         .leftJoin(orders, and(
           eq(orders.supplierId, suppliers.id),
-          sql`${orders.createdAt} >= ${filters.startDate}`,
-          sql`${orders.createdAt} <= ${filters.endDate}`
+          sql`${orders.createdAt} >= ${filters.startDate.toISOString()}`,
+          sql`${orders.createdAt} <= ${filters.endDate.toISOString()}`
         ))
         .leftJoin(products, eq(products.supplierId, suppliers.id))
         .groupBy(suppliers.id, suppliers.name);

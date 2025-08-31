@@ -37,9 +37,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/analytics/demand-forecast', async (req, res) => {
     try {
-      // Import AI analytics controller
-      const { AIAnalyticsController } = await import('./modules/ai_analytics/ai-analytics.controller.js');
-      await AIAnalyticsController.forecastDemand(req, res);
+      // Proxy to actual AI analytics endpoint with POST method
+      const response = await fetch('http://localhost:5000/api/ai/forecast/demand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timeHorizon: 30, includeSeasonality: true })
+      });
+      const data = await response.json();
+      res.status(response.status).json(data);
     } catch (error) {
       res.status(500).json({ message: 'Erro ao gerar previsão de demanda', error });
     }

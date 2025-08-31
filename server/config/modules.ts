@@ -360,7 +360,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     description: 'Análises preditivas e otimização com inteligência artificial',
     enabled: true,
     dependencies: ['products', 'inventory'],
-    routes: ['/api/ai', '/api/ai-analytics'],
+    routes: ['/api/ai', '/api/ai-analytics', '/api/analytics'],
     tables: ['ai_models', 'demand_forecasts', 'price_optimization'],
     permissions: ['ai_analytics.read', 'ai_analytics.write', 'ai_analytics.execute']
   },

@@ -33,6 +33,7 @@ import Alerts from "@/pages/alerts";
 import AdvancedAnalytics from "@/pages/advanced-analytics";
 import QualityControl from "@/pages/quality-control";
 import PublicTracking from "@/pages/public-tracking";
+import CustomerPortal from "@/pages/customer-portal";
 import WarehouseAutomation from "@/pages/WarehouseAutomation";
 import WarehouseTwin from "@/pages/WarehouseTwin";
 import GreenETA from "@/pages/GreenETA";
@@ -211,7 +212,16 @@ function App() {
           <AuthProvider>
             <ModuleProvider>
               <Switch>
-                {/* Public route - no authentication required */}
+                {/* Public routes - no authentication required */}
+                <Route path="/customer">
+                  <CustomerPortal />
+                </Route>
+                <Route path="/portal">
+                  <CustomerPortal />
+                </Route>
+                <Route path="/cliente">
+                  <CustomerPortal />
+                </Route>
                 <Route path="/track">
                   <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
                     <PublicTracking />

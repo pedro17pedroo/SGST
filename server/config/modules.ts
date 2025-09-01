@@ -33,6 +33,28 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     tables: ['users', 'notification_preferences'],
     permissions: ['users.read', 'users.write', 'users.delete']
   },
+
+  roles: {
+    id: 'roles',
+    name: 'Gestão de Perfis',
+    description: 'Gestão de perfis de acesso e controle de permissões',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/roles'],
+    tables: ['roles', 'role_permissions', 'user_roles'],
+    permissions: ['roles.read', 'roles.write', 'roles.delete']
+  },
+
+  permissions: {
+    id: 'permissions',
+    name: 'Gestão de Permissões',
+    description: 'Gestão de permissões do sistema e controle de acesso',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/permissions'],
+    tables: ['permissions'],
+    permissions: ['permissions.read', 'permissions.write', 'permissions.delete']
+  },
   
   settings: {
     id: 'settings',

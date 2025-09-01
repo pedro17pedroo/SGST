@@ -1641,6 +1641,125 @@ export const insertGpsSessionSchema = createInsertSchema(gpsSessions).omit({
   endedAt: true,
 });
 
+// ===== ROLE-BASED ACCESS CONTROL (RBAC) SYSTEM =====
+
+// Roles table - System roles/profiles (e.g., manager, operator, viewer)
+export const roles = pgTable("roles", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Permissions table - System permissions (e.g., products.read, orders.create)
+export const permissions = pgTable("permissions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  module: varchar("module", { length: 50 }).notNull(), // products, orders, inventory, etc.
+  action: varchar("action", { length: 50 }).notNull(), // read, create, update, delete
+  resource: varchar("resource", { length: 50 }), // specific resource if needed
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Role permissions junction table - What permissions each role has
+export const rolePermissions = pgTable("role_permissions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  roleId: uuid("role_id").notNull().references(() => roles.id, { onDelete: "cascade" }),
+  permissionId: uuid("permission_id").notNull().references(() => permissions.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User roles junction table - What roles each user has
+export const userRoles = pgTable("user_roles", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  roleId: uuid("role_id").notNull().references(() => roles.id, { onDelete: "cascade" }),
+  assignedBy: uuid("assigned_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RBAC Relations
+export const rolesRelations = relations(roles, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+  userRoles: many(userRoles),
+}));
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, {
+    fields: [rolePermissions.roleId],
+    references: [roles.id],
+  }),
+  permission: one(permissions, {
+    fields: [rolePermissions.permissionId],
+    references: [permissions.id],
+  }),
+}));
+
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoles.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [userRoles.roleId],
+    references: [roles.id],
+  }),
+  assignedByUser: one(users, {
+    fields: [userRoles.assignedBy],
+    references: [users.id],
+  }),
+}));
+
+// Update users relations to include user roles
+export const usersRelationsUpdated = relations(users, ({ many }) => ({
+  orders: many(orders),
+  stockMovements: many(stockMovements),
+  shipments: many(shipments),
+  inventoryCounts: many(inventoryCounts),
+  barcodeScans: many(barcodeScans),
+  userRoles: many(userRoles),
+  assignedRoles: many(userRoles, { relationName: "assignedRoles" }),
+}));
+
+// Insert schemas for RBAC
+export const insertRoleSchema = createInsertSchema(roles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for RBAC
+export type Role = typeof roles.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Permission = typeof permissions.$inferSelect;
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type UserRole = typeof userRoles.$inferSelect;
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+
 // Types for fleet management
 export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;

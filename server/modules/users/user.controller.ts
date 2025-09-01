@@ -91,4 +91,101 @@ export class UserController {
       });
     }
   }
+
+  // RBAC - User Roles Management
+  static async getUserRoles(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const roles = await UserModel.getUserRoles(id);
+      res.json(roles);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar perfis do utilizador", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async setUserRoles(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { roleIds } = req.body;
+      
+      await UserModel.setUserRoles(id, roleIds);
+      res.json({ message: "Perfis do utilizador atualizados com sucesso" });
+    } catch (error) {
+      console.error('Error setting user roles:', error);
+      res.status(500).json({ 
+        message: "Erro ao definir perfis do utilizador", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async addRoleToUser(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { roleId, assignedBy } = req.body;
+      
+      const result = await UserModel.addRoleToUser(id, roleId, assignedBy);
+      res.json({ message: "Perfil adicionado ao utilizador com sucesso", result });
+    } catch (error) {
+      console.error('Error adding role to user:', error);
+      res.status(500).json({ 
+        message: "Erro ao adicionar perfil ao utilizador", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async removeRoleFromUser(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { roleId } = req.body;
+      
+      await UserModel.removeRoleFromUser(id, roleId);
+      res.json({ message: "Perfil removido do utilizador com sucesso" });
+    } catch (error) {
+      console.error('Error removing role from user:', error);
+      res.status(500).json({ 
+        message: "Erro ao remover perfil do utilizador", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async getUserPermissions(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const permissions = await UserModel.getUserPermissions(id);
+      res.json(permissions);
+    } catch (error) {
+      console.error('Error fetching user permissions:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar permissões do utilizador", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async checkPermission(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { permission } = req.query;
+      
+      if (!permission || typeof permission !== 'string') {
+        return res.status(400).json({ message: "Permissão não especificada" });
+      }
+      
+      const hasPermission = await UserModel.hasPermission(id, permission);
+      res.json({ hasPermission });
+    } catch (error) {
+      console.error('Error checking user permission:', error);
+      res.status(500).json({ 
+        message: "Erro ao verificar permissão do utilizador", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }

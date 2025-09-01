@@ -35,4 +35,29 @@ export class UserModel {
   static async getByEmail(email: string) {
     return await storage.getUserByEmail(email);
   }
+
+  // RBAC - User Roles Management
+  static async getUserRoles(userId: string) {
+    return await storage.getUserRoles(userId);
+  }
+
+  static async setUserRoles(userId: string, roleIds: string[]) {
+    return await storage.setUserRoles(userId, roleIds);
+  }
+
+  static async addRoleToUser(userId: string, roleId: string, assignedBy?: string) {
+    return await storage.addRoleToUser({ userId, roleId, assignedBy });
+  }
+
+  static async removeRoleFromUser(userId: string, roleId: string) {
+    return await storage.removeRoleFromUser(userId, roleId);
+  }
+
+  static async getUserPermissions(userId: string) {
+    return await storage.getUserPermissions(userId);
+  }
+
+  static async hasPermission(userId: string, permission: string) {
+    return await storage.hasPermission(userId, permission);
+  }
 }

@@ -2,6 +2,7 @@ import {
   users, categories, suppliers, warehouses, products, inventory, stockMovements, orders, orderItems, shipments,
   productLocations, inventoryCounts, inventoryCountItems, barcodeScans, returns, returnItems,
   pickingLists, pickingListItems, vehicles, vehicleMaintenance, gpsTracking, geofences, vehicleAssignments, geofenceAlerts, gpsSessions,
+  roles, permissions, rolePermissions, userRoles,
   type User, type InsertUser, type Category, type InsertCategory, type Supplier, type InsertSupplier,
   type Warehouse, type InsertWarehouse, type Product, type InsertProduct, type Inventory, type InsertInventory,
   type StockMovement, type InsertStockMovement, type Order, type InsertOrder, type OrderItem, type InsertOrderItem,
@@ -12,7 +13,8 @@ import {
   type Vehicle, type InsertVehicle, type VehicleMaintenance, type InsertVehicleMaintenance,
   type GpsTracking, type InsertGpsTracking, type Geofence, type InsertGeofence,
   type VehicleAssignment, type InsertVehicleAssignment, type GeofenceAlert, type InsertGeofenceAlert,
-  type GpsSession, type InsertGpsSession
+  type GpsSession, type InsertGpsSession, type Role, type InsertRole, type Permission, type InsertPermission,
+  type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, ilike, sum } from "drizzle-orm";
@@ -245,6 +247,36 @@ export interface IStorage {
   updateGpsSession(id: string, session: Partial<InsertGpsSession>): Promise<GpsSession>;
   getActiveGpsSessions(): Promise<Array<GpsSession & { user: User; vehicle?: Vehicle | null }>>;
   endGpsSession(sessionId: string): Promise<GpsSession>;
+
+  // RBAC - Roles
+  getRoles(): Promise<Array<Role & { _count?: { permissions: number; users: number } }>>;
+  getRole(id: string): Promise<Role | undefined>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: string, role: Partial<InsertRole>): Promise<Role>;
+  deleteRole(id: string): Promise<void>;
+
+  // RBAC - Permissions
+  getPermissions(): Promise<Permission[]>;
+  getPermission(id: string): Promise<Permission | undefined>;
+  createPermission(permission: InsertPermission): Promise<Permission>;
+  updatePermission(id: string, permission: Partial<InsertPermission>): Promise<Permission>;
+  deletePermission(id: string): Promise<void>;
+  getPermissionsByModule(module: string): Promise<Permission[]>;
+
+  // RBAC - Role Permissions
+  getRolePermissions(roleId: string): Promise<Array<Permission>>;
+  addPermissionToRole(data: InsertRolePermission): Promise<RolePermission>;
+  removePermissionFromRole(roleId: string, permissionId: string): Promise<void>;
+  setRolePermissions(roleId: string, permissionIds: string[]): Promise<void>;
+
+  // RBAC - User Roles
+  getUserRoles(userId: string): Promise<Array<Role>>;
+  getUsersWithRole(roleId: string): Promise<Array<User>>;
+  addRoleToUser(data: InsertUserRole): Promise<UserRole>;
+  removeRoleFromUser(userId: string, roleId: string): Promise<void>;
+  setUserRoles(userId: string, roleIds: string[]): Promise<void>;
+  getUserPermissions(userId: string): Promise<Array<Permission>>;
+  hasPermission(userId: string, permission: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2402,6 +2434,191 @@ export class DatabaseStorage implements IStorage {
       .where(eq(gpsSessions.id, sessionId))
       .returning();
     return endedSession;
+  }
+
+  // RBAC - Roles Implementation
+  async getRoles(): Promise<Array<Role & { _count?: { permissions: number; users: number } }>> {
+    return await db.select().from(roles).orderBy(desc(roles.createdAt));
+  }
+
+  async getRole(id: string): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.id, id));
+    return role || undefined;
+  }
+
+  async createRole(role: InsertRole): Promise<Role> {
+    const [newRole] = await db.insert(roles).values(role).returning();
+    return newRole;
+  }
+
+  async updateRole(id: string, role: Partial<InsertRole>): Promise<Role> {
+    const [updatedRole] = await db
+      .update(roles)
+      .set({ ...role, updatedAt: sql`now()` })
+      .where(eq(roles.id, id))
+      .returning();
+    return updatedRole;
+  }
+
+  async deleteRole(id: string): Promise<void> {
+    await db.delete(roles).where(eq(roles.id, id));
+  }
+
+  // RBAC - Permissions Implementation
+  async getPermissions(): Promise<Permission[]> {
+    return await db.select().from(permissions).orderBy(permissions.module, permissions.action);
+  }
+
+  async getPermission(id: string): Promise<Permission | undefined> {
+    const [permission] = await db.select().from(permissions).where(eq(permissions.id, id));
+    return permission || undefined;
+  }
+
+  async createPermission(permission: InsertPermission): Promise<Permission> {
+    const [newPermission] = await db.insert(permissions).values(permission).returning();
+    return newPermission;
+  }
+
+  async updatePermission(id: string, permission: Partial<InsertPermission>): Promise<Permission> {
+    const [updatedPermission] = await db
+      .update(permissions)
+      .set(permission)
+      .where(eq(permissions.id, id))
+      .returning();
+    return updatedPermission;
+  }
+
+  async deletePermission(id: string): Promise<void> {
+    await db.delete(permissions).where(eq(permissions.id, id));
+  }
+
+  async getPermissionsByModule(module: string): Promise<Permission[]> {
+    return await db.select().from(permissions).where(eq(permissions.module, module));
+  }
+
+  // RBAC - Role Permissions Implementation
+  async getRolePermissions(roleId: string): Promise<Permission[]> {
+    const results = await db
+      .select({ permission: permissions })
+      .from(rolePermissions)
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(eq(rolePermissions.roleId, roleId));
+    
+    return results.map(result => result.permission);
+  }
+
+  async addPermissionToRole(data: InsertRolePermission): Promise<RolePermission> {
+    const [newRolePermission] = await db.insert(rolePermissions).values(data).returning();
+    return newRolePermission;
+  }
+
+  async removePermissionFromRole(roleId: string, permissionId: string): Promise<void> {
+    await db.delete(rolePermissions)
+      .where(
+        and(
+          eq(rolePermissions.roleId, roleId),
+          eq(rolePermissions.permissionId, permissionId)
+        )
+      );
+  }
+
+  async setRolePermissions(roleId: string, permissionIds: string[]): Promise<void> {
+    // Remove todas as permissões existentes do role
+    await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
+    
+    // Adiciona as novas permissões
+    if (permissionIds.length > 0) {
+      const rolePermissionsData = permissionIds.map(permissionId => ({
+        roleId,
+        permissionId
+      }));
+      await db.insert(rolePermissions).values(rolePermissionsData);
+    }
+  }
+
+  // RBAC - User Roles Implementation
+  async getUserRoles(userId: string): Promise<Role[]> {
+    const results = await db
+      .select({ role: roles })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, userId));
+    
+    return results.map(result => result.role);
+  }
+
+  async getUsersWithRole(roleId: string): Promise<User[]> {
+    const results = await db
+      .select({ user: users })
+      .from(userRoles)
+      .innerJoin(users, eq(userRoles.userId, users.id))
+      .where(eq(userRoles.roleId, roleId));
+    
+    return results.map(result => result.user);
+  }
+
+  async addRoleToUser(data: InsertUserRole): Promise<UserRole> {
+    const [newUserRole] = await db.insert(userRoles).values(data).returning();
+    return newUserRole;
+  }
+
+  async removeRoleFromUser(userId: string, roleId: string): Promise<void> {
+    await db.delete(userRoles)
+      .where(
+        and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.roleId, roleId)
+        )
+      );
+  }
+
+  async setUserRoles(userId: string, roleIds: string[]): Promise<void> {
+    // Remove todos os roles existentes do usuário
+    await db.delete(userRoles).where(eq(userRoles.userId, userId));
+    
+    // Adiciona os novos roles
+    if (roleIds.length > 0) {
+      const userRolesData = roleIds.map(roleId => ({
+        userId,
+        roleId
+      }));
+      await db.insert(userRoles).values(userRolesData);
+    }
+  }
+
+  async getUserPermissions(userId: string): Promise<Permission[]> {
+    const results = await db
+      .select({ permission: permissions })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .innerJoin(rolePermissions, eq(roles.id, rolePermissions.roleId))
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(eq(userRoles.userId, userId));
+    
+    // Remove duplicatas
+    const uniquePermissions = Array.from(
+      new Map(results.map(result => [result.permission.id, result.permission])).values()
+    );
+    
+    return uniquePermissions;
+  }
+
+  async hasPermission(userId: string, permissionName: string): Promise<boolean> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .innerJoin(rolePermissions, eq(roles.id, rolePermissions.roleId))
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(
+        and(
+          eq(userRoles.userId, userId),
+          eq(permissions.name, permissionName),
+          eq(roles.isActive, true)
+        )
+      );
+    
+    return result[0]?.count > 0;
   }
 }
 

@@ -38,6 +38,7 @@ import GreenETA from "@/pages/GreenETA";
 import Performance from "@/pages/Performance";
 import AngolaOperations from "@/pages/AngolaOperationsPage";
 import FleetPage from "@/pages/fleet";
+import Roles from "@/pages/roles";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -145,6 +146,11 @@ function Router() {
           <Route path="/users">
             <ModuleGuard moduleId="users" fallback={<NotFound />}>
               <Users />
+            </ModuleGuard>
+          </Route>
+          <Route path="/roles">
+            <ModuleGuard moduleId="roles" fallback={<NotFound />}>
+              <Roles />
             </ModuleGuard>
           </Route>
           <Route path="/settings">

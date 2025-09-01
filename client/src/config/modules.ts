@@ -32,6 +32,22 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     }],
     permissions: ['users.read']
   },
+
+  roles: {
+    id: 'roles',
+    name: 'Gestão de Perfis',
+    description: 'Gestão de perfis de acesso e permissões do sistema',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/roles'],
+    menuItems: [{
+      label: 'Perfis',
+      icon: 'Shield',
+      path: '/roles',
+      order: 91
+    }],
+    permissions: ['roles.read']
+  },
   
   settings: {
     id: 'settings',

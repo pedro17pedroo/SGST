@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Edit, Trash2, Shield, User as UserIcon, UserCheck, UserX } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Shield, User as UserIcon, UserCheck, UserX, Users as UsersIcon } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, type User } from "@shared/schema";
@@ -19,14 +21,32 @@ import { z } from "zod";
 
 const userFormSchema = insertUserSchema.extend({
   password: z.string().min(6, "Password deve ter pelo menos 6 caracteres"),
-  role: z.enum(["admin", "manager", "operator", "auditor"]).default("operator"),
+  roleIds: z.array(z.string()).min(1, "Deve selecionar pelo menos um perfil"),
 });
 
 type UserFormData = z.infer<typeof userFormSchema>;
 
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+}
+
 function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  
+  // Buscar roles disponíveis
+  const { data: roles = [] } = useQuery({
+    queryKey: ["/api/roles"],
+  });
+
+  // Buscar roles do usuário se estiver editando
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ["/api/users", user?.id, "roles"],
+    enabled: !!user?.id,
+  });
   
   const form = useForm<UserFormData>({
     resolver: zodResolver(userFormSchema),
@@ -34,7 +54,7 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
       username: "",
       email: "",
       password: "",
-      role: "operator",
+      roleIds: [],
       isActive: true,
     },
   });
@@ -46,7 +66,7 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
         username: user.username || "",
         email: user.email || "",
         password: "",
-        role: (user.role as any) || "operator",
+        roleIds: Array.isArray(userRoles) ? userRoles.map((role: any) => role.id) : [],
         isActive: user.isActive ?? true,
       });
     } else {
@@ -54,16 +74,23 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
         username: "",
         email: "",
         password: "",
-        role: "operator",
+        roleIds: [],
         isActive: true,
       });
     }
-  }, [user, form]);
+  }, [user, userRoles, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
-      const response = await apiRequest("POST", "/api/users", data);
-      return response.json();
+      const { roleIds, ...userData } = data;
+      const user = await apiRequest("/api/users", "POST", userData);
+      
+      // Atribuir roles ao usuário
+      if (roleIds.length > 0) {
+        await apiRequest(`/api/users/${user.id}/roles`, "PUT", { roleIds });
+      }
+      
+      return user;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -85,13 +112,21 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
 
   const updateMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
-      const { password, ...updateData } = data;
-      const payload = password ? data : updateData;
-      const response = await apiRequest("PUT", `/api/users/${user?.id}`, payload);
-      return response.json();
+      const { password, roleIds, ...updateData } = data;
+      const userPayload = password ? { ...updateData, password } : updateData;
+      
+      const updatedUser = await apiRequest(`/api/users/${user?.id}`, "PUT", userPayload);
+      
+      // Atualizar roles do usuário
+      if (roleIds.length > 0) {
+        await apiRequest(`/api/users/${user?.id}/roles`, "PUT", { roleIds });
+      }
+      
+      return updatedUser;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id, "roles"] });
       setOpen(false);
       form.reset();
       toast({
@@ -187,23 +222,48 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
 
             <FormField
               control={form.control}
-              name="role"
+              name="roleIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Função</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-role">
-                        <SelectValue placeholder="Selecione a função" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                      <SelectItem value="manager">Gestor</SelectItem>
-                      <SelectItem value="operator">Operador</SelectItem>
-                      <SelectItem value="auditor">Auditor</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Perfis de Acesso</FormLabel>
+                  <FormControl>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-3" data-testid="roles-selector">
+                      {(roles as Role[]).map((role: Role) => (
+                        <div key={role.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`role-${role.id}`}
+                            checked={field.value.includes(role.id)}
+                            onCheckedChange={(checked) => {
+                              const currentRoles = field.value || [];
+                              if (checked) {
+                                field.onChange([...currentRoles, role.id]);
+                              } else {
+                                field.onChange(currentRoles.filter((id: string) => id !== role.id));
+                              }
+                            }}
+                            data-testid={`checkbox-role-${role.id}`}
+                          />
+                          <Label
+                            htmlFor={`role-${role.id}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            data-testid={`label-role-${role.id}`}
+                          >
+                            {role.name}
+                          </Label>
+                          {role.description && (
+                            <span className="text-xs text-muted-foreground" data-testid={`desc-role-${role.id}`}>
+                              - {role.description}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                      {roles.length === 0 && (
+                        <p className="text-sm text-muted-foreground" data-testid="no-roles-message">
+                          Nenhum perfil disponível. Crie perfis na secção de Gestão de Perfis.
+                        </p>
+                      )}
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

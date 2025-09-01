@@ -33,6 +33,8 @@ import tripleLedgerModule from './triple-ledger';
 import autoSlottingModule from './auto-slotting';
 import { initializeAngolaOperationsModule } from './angola_operations';
 import { fleetManagementModule } from './fleet_management/fleet.module';
+import { rolesModule } from './roles/role.module';
+import { permissionsModule } from './permissions/permission.module';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -61,6 +63,8 @@ export class ModuleRegistry {
     this.modules.set('triple_ledger', tripleLedgerModule);
     this.modules.set('auto_slotting', autoSlottingModule);
     this.modules.set('fleet_management', fleetManagementModule);
+    this.modules.set('roles', rolesModule);
+    this.modules.set('permissions', permissionsModule);
     
     // Temporary direct registration for barcode scanning
     this.modules.set('barcode_scanning', {

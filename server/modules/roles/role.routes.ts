@@ -1,36 +1,44 @@
 import { Router } from 'express';
 import { RoleController } from './role.controller';
+import { moduleGuard } from '../../middleware/module-guard';
+import { requireAuth, requireRole, requireAdmin } from '../auth/auth.middleware';
 
 const router = Router();
 
-// GET /api/roles - Listar todos os perfis
-router.get('/', RoleController.getRoles);
+// Aplicar middleware de proteção do módulo
+router.use(moduleGuard('roles'));
 
-// GET /api/roles/:id - Buscar perfil por ID
-router.get('/:id', RoleController.getRoleById);
+// Todas as rotas de perfis requerem autenticação
+router.use(requireAuth);
 
-// POST /api/roles - Criar novo perfil
-router.post('/', RoleController.createRole);
+// GET /api/roles - Listar todos os perfis (admin e manager)
+router.get('/', requireRole(['admin', 'manager']), RoleController.getRoles);
 
-// PUT /api/roles/:id - Atualizar perfil
-router.put('/:id', RoleController.updateRole);
+// GET /api/roles/:id - Buscar perfil por ID (admin e manager)
+router.get('/:id', requireRole(['admin', 'manager']), RoleController.getRoleById);
 
-// DELETE /api/roles/:id - Eliminar perfil
-router.delete('/:id', RoleController.deleteRole);
+// POST /api/roles - Criar novo perfil (apenas admin)
+router.post('/', requireAdmin, RoleController.createRole);
 
-// GET /api/roles/:id/permissions - Buscar permissões do perfil
-router.get('/:id/permissions', RoleController.getRolePermissions);
+// PUT /api/roles/:id - Atualizar perfil (apenas admin)
+router.put('/:id', requireAdmin, RoleController.updateRole);
 
-// PUT /api/roles/:id/permissions - Definir permissões do perfil
-router.put('/:id/permissions', RoleController.setRolePermissions);
+// DELETE /api/roles/:id - Eliminar perfil (apenas admin)
+router.delete('/:id', requireAdmin, RoleController.deleteRole);
 
-// POST /api/roles/:id/permissions - Adicionar permissão ao perfil
-router.post('/:id/permissions', RoleController.addPermissionToRole);
+// GET /api/roles/:id/permissions - Buscar permissões do perfil (admin e manager)
+router.get('/:id/permissions', requireRole(['admin', 'manager']), RoleController.getRolePermissions);
 
-// DELETE /api/roles/:id/permissions - Remover permissão do perfil
-router.delete('/:id/permissions', RoleController.removePermissionFromRole);
+// PUT /api/roles/:id/permissions - Definir permissões do perfil (apenas admin)
+router.put('/:id/permissions', requireAdmin, RoleController.setRolePermissions);
 
-// GET /api/roles/:id/users - Buscar utilizadores com este perfil
-router.get('/:id/users', RoleController.getUsersWithRole);
+// POST /api/roles/:id/permissions - Adicionar permissão ao perfil (apenas admin)
+router.post('/:id/permissions', requireAdmin, RoleController.addPermissionToRole);
+
+// DELETE /api/roles/:id/permissions - Remover permissão do perfil (apenas admin)
+router.delete('/:id/permissions', requireAdmin, RoleController.removePermissionFromRole);
+
+// GET /api/roles/:id/users - Buscar utilizadores com este perfil (admin e manager)
+router.get('/:id/users', requireRole(['admin', 'manager']), RoleController.getUsersWithRole);
 
 export default router;

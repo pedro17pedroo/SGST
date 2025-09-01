@@ -257,4 +257,48 @@ export class AuthController {
       });
     }
   }
+
+  static async getCurrentUser(req: Request, res: Response) {
+    try {
+      const sessionUser = (req.session as any)?.user;
+      
+      if (!sessionUser) {
+        return res.status(401).json({ 
+          message: "Não autenticado",
+          error: "NOT_AUTHENTICATED"
+        });
+      }
+
+      // Buscar dados atualizados do utilizador incluindo permissões
+      const user = await UserModel.getById(sessionUser.id);
+      
+      if (!user || !user.isActive) {
+        return res.status(401).json({ 
+          message: "Utilizador inválido ou desativado",
+          error: "INVALID_USER"
+        });
+      }
+
+      // Buscar permissões do utilizador
+      const permissions = await UserModel.getUserPermissions(sessionUser.id);
+
+      const currentUser = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        permissions: permissions
+      };
+
+      res.json(currentUser);
+
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      res.status(500).json({ 
+        message: "Erro interno do servidor" 
+      });
+    }
+  }
 }

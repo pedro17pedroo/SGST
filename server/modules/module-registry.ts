@@ -32,6 +32,7 @@ import { greenETAModule } from './green-eta';
 import tripleLedgerModule from './triple-ledger';
 import autoSlottingModule from './auto-slotting';
 import { initializeAngolaOperationsModule } from './angola_operations';
+import { fleetManagementModule } from './fleet_management/fleet.module';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -59,6 +60,7 @@ export class ModuleRegistry {
     this.modules.set('green_eta', greenETAModule);
     this.modules.set('triple_ledger', tripleLedgerModule);
     this.modules.set('auto_slotting', autoSlottingModule);
+    this.modules.set('fleet_management', fleetManagementModule);
     
     // Temporary direct registration for barcode scanning
     this.modules.set('barcode_scanning', {

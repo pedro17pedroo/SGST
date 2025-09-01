@@ -1,14 +1,18 @@
 import {
   users, categories, suppliers, warehouses, products, inventory, stockMovements, orders, orderItems, shipments,
   productLocations, inventoryCounts, inventoryCountItems, barcodeScans, returns, returnItems,
-  pickingLists, pickingListItems,
+  pickingLists, pickingListItems, vehicles, vehicleMaintenance, gpsTracking, geofences, vehicleAssignments, geofenceAlerts, gpsSessions,
   type User, type InsertUser, type Category, type InsertCategory, type Supplier, type InsertSupplier,
   type Warehouse, type InsertWarehouse, type Product, type InsertProduct, type Inventory, type InsertInventory,
   type StockMovement, type InsertStockMovement, type Order, type InsertOrder, type OrderItem, type InsertOrderItem,
   type Shipment, type InsertShipment, type ProductLocation, type InsertProductLocation,
   type InventoryCount, type InsertInventoryCount, type InventoryCountItem, type InsertInventoryCountItem,
   type BarcodeScan, type InsertBarcodeScan, type Return, type InsertReturn, type ReturnItem, type InsertReturnItem,
-  type PickingList, type InsertPickingList, type PickingListItem, type InsertPickingListItem
+  type PickingList, type InsertPickingList, type PickingListItem, type InsertPickingListItem,
+  type Vehicle, type InsertVehicle, type VehicleMaintenance, type InsertVehicleMaintenance,
+  type GpsTracking, type InsertGpsTracking, type Geofence, type InsertGeofence,
+  type VehicleAssignment, type InsertVehicleAssignment, type GeofenceAlert, type InsertGeofenceAlert,
+  type GpsSession, type InsertGpsSession
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, ilike, sum } from "drizzle-orm";
@@ -190,6 +194,57 @@ export interface IStorage {
     endDate: Date;
     supplierId?: string;
   }): Promise<any[]>;
+
+  // Fleet Management - Vehicles
+  getVehicles(): Promise<Array<Vehicle & { driver?: User | null }>>;
+  getVehicle(id: string): Promise<Vehicle | undefined>;
+  getVehicleByLicensePlate(licensePlate: string): Promise<Vehicle | undefined>;
+  createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
+  updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle>;
+  deleteVehicle(id: string): Promise<void>;
+  getVehiclesByStatus(status: string): Promise<Vehicle[]>;
+  getAvailableVehicles(): Promise<Vehicle[]>;
+
+  // Vehicle Maintenance
+  getVehicleMaintenance(vehicleId: string): Promise<Array<VehicleMaintenance & { vehicle: Vehicle; performedByUser?: User | null }>>;
+  createVehicleMaintenance(maintenance: InsertVehicleMaintenance): Promise<VehicleMaintenance>;
+  updateVehicleMaintenance(id: string, maintenance: Partial<InsertVehicleMaintenance>): Promise<VehicleMaintenance>;
+  getUpcomingMaintenance(): Promise<Array<VehicleMaintenance & { vehicle: Vehicle }>>;
+
+  // GPS Tracking
+  createGpsTracking(tracking: InsertGpsTracking): Promise<GpsTracking>;
+  getVehicleCurrentLocation(vehicleId: string): Promise<GpsTracking | undefined>;
+  getVehicleGpsHistory(vehicleId: string, hours?: number): Promise<GpsTracking[]>;
+  getAllVehicleLocations(): Promise<Array<GpsTracking & { vehicle: Vehicle }>>;
+  updateVehicleGpsStatus(vehicleId: string, isActive: boolean): Promise<void>;
+
+  // Vehicle Assignments
+  getVehicleAssignments(): Promise<Array<VehicleAssignment & { vehicle: Vehicle; driver: User; order?: Order | null; shipment?: Shipment | null }>>;
+  getVehicleAssignment(id: string): Promise<VehicleAssignment | undefined>;
+  createVehicleAssignment(assignment: InsertVehicleAssignment): Promise<VehicleAssignment>;
+  updateVehicleAssignment(id: string, assignment: Partial<InsertVehicleAssignment>): Promise<VehicleAssignment>;
+  getActiveAssignmentsByVehicle(vehicleId: string): Promise<VehicleAssignment[]>;
+  getActiveAssignmentsByDriver(driverId: string): Promise<VehicleAssignment[]>;
+
+  // Geofences
+  getGeofences(): Promise<Array<Geofence & { warehouse?: Warehouse | null; createdBy?: User | null }>>;
+  getGeofence(id: string): Promise<Geofence | undefined>;
+  createGeofence(geofence: InsertGeofence): Promise<Geofence>;
+  updateGeofence(id: string, geofence: Partial<InsertGeofence>): Promise<Geofence>;
+  deleteGeofence(id: string): Promise<void>;
+  getActiveGeofences(): Promise<Geofence[]>;
+
+  // Geofence Alerts
+  getGeofenceAlerts(): Promise<Array<GeofenceAlert & { vehicle: Vehicle; geofence: Geofence; driver?: User | null }>>;
+  createGeofenceAlert(alert: InsertGeofenceAlert): Promise<GeofenceAlert>;
+  acknowledgeGeofenceAlert(id: string, acknowledgedBy: string): Promise<GeofenceAlert>;
+  getActiveGeofenceAlerts(): Promise<GeofenceAlert[]>;
+
+  // GPS Sessions
+  createGpsSession(session: InsertGpsSession): Promise<GpsSession>;
+  updateGpsSession(id: string, session: Partial<InsertGpsSession>): Promise<GpsSession>;
+  getActiveGpsSessions(): Promise<Array<GpsSession & { user: User; vehicle?: Vehicle | null }>>;
+  endGpsSession(sessionId: string): Promise<GpsSession>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1941,6 +1996,412 @@ export class DatabaseStorage implements IStorage {
       console.error('Error generating supplier performance report:', error);
       return [];
     }
+  }
+
+  // ===== FLEET MANAGEMENT IMPLEMENTATIONS =====
+  
+  // Vehicles
+  async getVehicles(): Promise<Array<Vehicle & { driver?: User | null }>> {
+    const results = await db
+      .select({
+        vehicle: vehicles,
+        driver: users
+      })
+      .from(vehicles)
+      .leftJoin(users, eq(vehicles.driverId, users.id))
+      .orderBy(desc(vehicles.createdAt));
+    
+    return results.map(result => ({
+      ...result.vehicle,
+      driver: result.driver
+    }));
+  }
+
+  async getVehicle(id: string): Promise<Vehicle | undefined> {
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    return vehicle || undefined;
+  }
+
+  async getVehicleByLicensePlate(licensePlate: string): Promise<Vehicle | undefined> {
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.licensePlate, licensePlate));
+    return vehicle || undefined;
+  }
+
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    const [newVehicle] = await db.insert(vehicles).values(vehicle).returning();
+    return newVehicle;
+  }
+
+  async updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle> {
+    const [updatedVehicle] = await db
+      .update(vehicles)
+      .set({ ...vehicle, updatedAt: sql`now()` })
+      .where(eq(vehicles.id, id))
+      .returning();
+    return updatedVehicle;
+  }
+
+  async deleteVehicle(id: string): Promise<void> {
+    await db.delete(vehicles).where(eq(vehicles.id, id));
+  }
+
+  async getVehiclesByStatus(status: string): Promise<Vehicle[]> {
+    return await db.select().from(vehicles).where(eq(vehicles.status, status));
+  }
+
+  async getAvailableVehicles(): Promise<Vehicle[]> {
+    return await db.select().from(vehicles).where(eq(vehicles.status, "ativo"));
+  }
+
+  // Vehicle Maintenance
+  async getVehicleMaintenance(vehicleId: string): Promise<Array<VehicleMaintenance & { vehicle: Vehicle; performedByUser?: User | null }>> {
+    const results = await db
+      .select({
+        maintenance: vehicleMaintenance,
+        vehicle: vehicles,
+        performedByUser: users
+      })
+      .from(vehicleMaintenance)
+      .leftJoin(vehicles, eq(vehicleMaintenance.vehicleId, vehicles.id))
+      .leftJoin(users, eq(vehicleMaintenance.performedBy, users.id))
+      .where(eq(vehicleMaintenance.vehicleId, vehicleId))
+      .orderBy(desc(vehicleMaintenance.maintenanceDate));
+    
+    return results.map(result => ({
+      ...result.maintenance,
+      vehicle: result.vehicle!,
+      performedByUser: result.performedByUser
+    }));
+  }
+
+  async createVehicleMaintenance(maintenance: InsertVehicleMaintenance): Promise<VehicleMaintenance> {
+    const [newMaintenance] = await db.insert(vehicleMaintenance).values(maintenance).returning();
+    return newMaintenance;
+  }
+
+  async updateVehicleMaintenance(id: string, maintenance: Partial<InsertVehicleMaintenance>): Promise<VehicleMaintenance> {
+    const [updatedMaintenance] = await db
+      .update(vehicleMaintenance)
+      .set(maintenance)
+      .where(eq(vehicleMaintenance.id, id))
+      .returning();
+    return updatedMaintenance;
+  }
+
+  async getUpcomingMaintenance(): Promise<Array<VehicleMaintenance & { vehicle: Vehicle }>> {
+    const today = new Date();
+    const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    
+    const results = await db
+      .select({
+        maintenance: vehicleMaintenance,
+        vehicle: vehicles
+      })
+      .from(vehicleMaintenance)
+      .innerJoin(vehicles, eq(vehicleMaintenance.vehicleId, vehicles.id))
+      .where(
+        and(
+          sql`${vehicleMaintenance.nextMaintenanceDate} <= ${in30Days.toISOString()}`,
+          sql`${vehicleMaintenance.nextMaintenanceDate} >= ${today.toISOString()}`,
+          eq(vehicleMaintenance.status, "agendada")
+        )
+      );
+    
+    return results.map(result => ({
+      ...result.maintenance,
+      vehicle: result.vehicle
+    }));
+  }
+
+  // GPS Tracking
+  async createGpsTracking(tracking: InsertGpsTracking): Promise<GpsTracking> {
+    const [newTracking] = await db.insert(gpsTracking).values(tracking).returning();
+    
+    // Update vehicle's last GPS update
+    await db
+      .update(vehicles)
+      .set({ 
+        lastGpsUpdate: sql`now()`,
+        isGpsActive: true 
+      })
+      .where(eq(vehicles.id, tracking.vehicleId));
+    
+    return newTracking;
+  }
+
+  async getVehicleCurrentLocation(vehicleId: string): Promise<GpsTracking | undefined> {
+    const [location] = await db
+      .select()
+      .from(gpsTracking)
+      .where(eq(gpsTracking.vehicleId, vehicleId))
+      .orderBy(desc(gpsTracking.timestamp))
+      .limit(1);
+    return location || undefined;
+  }
+
+  async getVehicleGpsHistory(vehicleId: string, hours: number = 24): Promise<GpsTracking[]> {
+    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    
+    return await db
+      .select()
+      .from(gpsTracking)
+      .where(
+        and(
+          eq(gpsTracking.vehicleId, vehicleId),
+          sql`${gpsTracking.timestamp} >= ${cutoffTime.toISOString()}`
+        )
+      )
+      .orderBy(desc(gpsTracking.timestamp));
+  }
+
+  async getAllVehicleLocations(): Promise<Array<GpsTracking & { vehicle: Vehicle }>> {
+    const latestLocations = await db
+      .select({
+        vehicleId: gpsTracking.vehicleId,
+        maxTimestamp: sql<string>`max(${gpsTracking.timestamp})`.as('max_timestamp')
+      })
+      .from(gpsTracking)
+      .groupBy(gpsTracking.vehicleId);
+
+    const locations = [];
+    for (const latest of latestLocations) {
+      const results = await db
+        .select({
+          tracking: gpsTracking,
+          vehicle: vehicles
+        })
+        .from(gpsTracking)
+        .innerJoin(vehicles, eq(gpsTracking.vehicleId, vehicles.id))
+        .where(
+          and(
+            eq(gpsTracking.vehicleId, latest.vehicleId),
+            sql`${gpsTracking.timestamp} = ${latest.maxTimestamp}`
+          )
+        );
+      
+      if (results[0]) {
+        locations.push({
+          ...results[0].tracking,
+          vehicle: results[0].vehicle
+        });
+      }
+    }
+    
+    return locations;
+  }
+
+  async updateVehicleGpsStatus(vehicleId: string, isActive: boolean): Promise<void> {
+    await db
+      .update(vehicles)
+      .set({ isGpsActive: isActive })
+      .where(eq(vehicles.id, vehicleId));
+  }
+
+  // Vehicle Assignments
+  async getVehicleAssignments(): Promise<Array<VehicleAssignment & { vehicle: Vehicle; driver: User; order?: Order | null; shipment?: Shipment | null }>> {
+    const results = await db
+      .select({
+        assignment: vehicleAssignments,
+        vehicle: vehicles,
+        driver: users,
+        order: orders,
+        shipment: shipments
+      })
+      .from(vehicleAssignments)
+      .innerJoin(vehicles, eq(vehicleAssignments.vehicleId, vehicles.id))
+      .innerJoin(users, eq(vehicleAssignments.driverId, users.id))
+      .leftJoin(orders, eq(vehicleAssignments.orderId, orders.id))
+      .leftJoin(shipments, eq(vehicleAssignments.shipmentId, shipments.id))
+      .orderBy(desc(vehicleAssignments.createdAt));
+    
+    return results.map(result => ({
+      ...result.assignment,
+      vehicle: result.vehicle,
+      driver: result.driver,
+      order: result.order,
+      shipment: result.shipment
+    }));
+  }
+
+  async getVehicleAssignment(id: string): Promise<VehicleAssignment | undefined> {
+    const [assignment] = await db.select().from(vehicleAssignments).where(eq(vehicleAssignments.id, id));
+    return assignment || undefined;
+  }
+
+  async createVehicleAssignment(assignment: InsertVehicleAssignment): Promise<VehicleAssignment> {
+    const [newAssignment] = await db.insert(vehicleAssignments).values(assignment).returning();
+    return newAssignment;
+  }
+
+  async updateVehicleAssignment(id: string, assignment: Partial<InsertVehicleAssignment>): Promise<VehicleAssignment> {
+    const [updatedAssignment] = await db
+      .update(vehicleAssignments)
+      .set({ ...assignment, updatedAt: sql`now()` })
+      .where(eq(vehicleAssignments.id, id))
+      .returning();
+    return updatedAssignment;
+  }
+
+  async getActiveAssignmentsByVehicle(vehicleId: string): Promise<VehicleAssignment[]> {
+    return await db
+      .select()
+      .from(vehicleAssignments)
+      .where(
+        and(
+          eq(vehicleAssignments.vehicleId, vehicleId),
+          sql`${vehicleAssignments.status} IN ('atribuido', 'carregando', 'em_transito')`
+        )
+      );
+  }
+
+  async getActiveAssignmentsByDriver(driverId: string): Promise<VehicleAssignment[]> {
+    return await db
+      .select()
+      .from(vehicleAssignments)
+      .where(
+        and(
+          eq(vehicleAssignments.driverId, driverId),
+          sql`${vehicleAssignments.status} IN ('atribuido', 'carregando', 'em_transito')`
+        )
+      );
+  }
+
+  // Geofences
+  async getGeofences(): Promise<Array<Geofence & { warehouse?: Warehouse | null; createdBy?: User | null }>> {
+    const results = await db
+      .select({
+        geofence: geofences,
+        warehouse: warehouses,
+        createdBy: users
+      })
+      .from(geofences)
+      .leftJoin(warehouses, eq(geofences.warehouseId, warehouses.id))
+      .leftJoin(users, eq(geofences.createdBy, users.id))
+      .orderBy(desc(geofences.createdAt));
+    
+    return results.map(result => ({
+      ...result.geofence,
+      warehouse: result.warehouse,
+      createdBy: result.createdBy
+    }));
+  }
+
+  async getGeofence(id: string): Promise<Geofence | undefined> {
+    const [geofence] = await db.select().from(geofences).where(eq(geofences.id, id));
+    return geofence || undefined;
+  }
+
+  async createGeofence(geofence: InsertGeofence): Promise<Geofence> {
+    const [newGeofence] = await db.insert(geofences).values(geofence).returning();
+    return newGeofence;
+  }
+
+  async updateGeofence(id: string, geofence: Partial<InsertGeofence>): Promise<Geofence> {
+    const [updatedGeofence] = await db
+      .update(geofences)
+      .set(geofence)
+      .where(eq(geofences.id, id))
+      .returning();
+    return updatedGeofence;
+  }
+
+  async deleteGeofence(id: string): Promise<void> {
+    await db.delete(geofences).where(eq(geofences.id, id));
+  }
+
+  async getActiveGeofences(): Promise<Geofence[]> {
+    return await db.select().from(geofences).where(eq(geofences.isActive, true));
+  }
+
+  // Geofence Alerts
+  async getGeofenceAlerts(): Promise<Array<GeofenceAlert & { vehicle: Vehicle; geofence: Geofence; driver?: User | null }>> {
+    const results = await db
+      .select({
+        alert: geofenceAlerts,
+        vehicle: vehicles,
+        geofence: geofences,
+        driver: users
+      })
+      .from(geofenceAlerts)
+      .innerJoin(vehicles, eq(geofenceAlerts.vehicleId, vehicles.id))
+      .innerJoin(geofences, eq(geofenceAlerts.geofenceId, geofences.id))
+      .leftJoin(users, eq(geofenceAlerts.driverId, users.id))
+      .orderBy(desc(geofenceAlerts.createdAt));
+    
+    return results.map(result => ({
+      ...result.alert,
+      vehicle: result.vehicle,
+      geofence: result.geofence,
+      driver: result.driver
+    }));
+  }
+
+  async createGeofenceAlert(alert: InsertGeofenceAlert): Promise<GeofenceAlert> {
+    const [newAlert] = await db.insert(geofenceAlerts).values(alert).returning();
+    return newAlert;
+  }
+
+  async acknowledgeGeofenceAlert(id: string, acknowledgedBy: string): Promise<GeofenceAlert> {
+    const [updatedAlert] = await db
+      .update(geofenceAlerts)
+      .set({ 
+        status: "reconhecido",
+        acknowledgedBy: acknowledgedBy,
+        acknowledgedAt: sql`now()`
+      })
+      .where(eq(geofenceAlerts.id, id))
+      .returning();
+    return updatedAlert;
+  }
+
+  async getActiveGeofenceAlerts(): Promise<GeofenceAlert[]> {
+    return await db.select().from(geofenceAlerts).where(eq(geofenceAlerts.status, "ativo"));
+  }
+
+  // GPS Sessions
+  async createGpsSession(session: InsertGpsSession): Promise<GpsSession> {
+    const [newSession] = await db.insert(gpsSessions).values(session).returning();
+    return newSession;
+  }
+
+  async updateGpsSession(id: string, session: Partial<InsertGpsSession>): Promise<GpsSession> {
+    const [updatedSession] = await db
+      .update(gpsSessions)
+      .set(session)
+      .where(eq(gpsSessions.id, id))
+      .returning();
+    return updatedSession;
+  }
+
+  async getActiveGpsSessions(): Promise<Array<GpsSession & { user: User; vehicle?: Vehicle | null }>> {
+    const results = await db
+      .select({
+        session: gpsSessions,
+        user: users,
+        vehicle: vehicles
+      })
+      .from(gpsSessions)
+      .innerJoin(users, eq(gpsSessions.userId, users.id))
+      .leftJoin(vehicles, eq(gpsSessions.vehicleId, vehicles.id))
+      .where(eq(gpsSessions.status, "ativo"));
+    
+    return results.map(result => ({
+      ...result.session,
+      user: result.user,
+      vehicle: result.vehicle
+    }));
+  }
+
+  async endGpsSession(sessionId: string): Promise<GpsSession> {
+    const [endedSession] = await db
+      .update(gpsSessions)
+      .set({ 
+        status: "finalizado",
+        endedAt: sql`now()`
+      })
+      .where(eq(gpsSessions.id, sessionId))
+      .returning();
+    return endedSession;
   }
 }
 

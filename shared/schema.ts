@@ -1345,3 +1345,308 @@ export type MlModels = typeof mlModels.$inferSelect;
 export type InsertMlModels = z.infer<typeof insertMlModelsSchema>;
 export type OptimizationJobs = typeof optimizationJobs.$inferSelect;
 export type InsertOptimizationJobs = z.infer<typeof insertOptimizationJobsSchema>;
+
+// ===== FLEET MANAGEMENT & GPS TRACKING SYSTEM =====
+
+// Vehicles table - Core fleet management
+export const vehicles = pgTable("vehicles", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  licensePlate: varchar("license_plate", { length: 20 }).notNull().unique(),
+  brand: varchar("brand", { length: 100 }).notNull(),
+  model: varchar("model", { length: 100 }).notNull(),
+  year: integer("year").notNull(),
+  capacityKg: decimal("capacity_kg", { precision: 10, scale: 2 }),
+  capacityM3: decimal("capacity_m3", { precision: 10, scale: 3 }),
+  fuelType: varchar("fuel_type", { length: 20 }).notNull(), // 'gasolina', 'diesel', 'eletrico', 'hibrido'
+  status: varchar("status", { length: 20 }).notNull().default("ativo"), // 'ativo', 'manutencao', 'inativo'
+  insuranceExpiry: timestamp("insurance_expiry"),
+  inspectionExpiry: timestamp("inspection_expiry"),
+  driverId: uuid("driver_id").references(() => users.id), // Current assigned driver
+  gpsDeviceId: varchar("gps_device_id", { length: 100 }), // Hardware GPS device identifier
+  isGpsActive: boolean("is_gps_active").notNull().default(false),
+  lastGpsUpdate: timestamp("last_gps_update"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Vehicle maintenance history
+export const vehicleMaintenance = pgTable("vehicle_maintenance", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleId: uuid("vehicle_id").notNull().references(() => vehicles.id),
+  type: varchar("type", { length: 50 }).notNull(), // 'preventiva', 'corretiva', 'urgente', 'inspecao'
+  description: text("description").notNull(),
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  serviceProvider: varchar("service_provider", { length: 255 }),
+  maintenanceDate: timestamp("maintenance_date").notNull(),
+  nextMaintenanceDate: timestamp("next_maintenance_date"),
+  mileage: integer("mileage"), // Kilometragem na altura da manutenção
+  status: varchar("status", { length: 20 }).notNull().default("concluida"), // 'agendada', 'em_progresso', 'concluida', 'cancelada'
+  performedBy: uuid("performed_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// GPS tracking data - Real-time location tracking
+export const gpsTracking = pgTable("gps_tracking", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleId: uuid("vehicle_id").notNull().references(() => vehicles.id),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }).notNull(),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }).notNull(),
+  speed: decimal("speed", { precision: 5, scale: 2 }), // km/h
+  heading: decimal("heading", { precision: 5, scale: 2 }), // degrees 0-360
+  altitude: decimal("altitude", { precision: 7, scale: 2 }), // meters
+  accuracy: decimal("accuracy", { precision: 5, scale: 2 }), // meters
+  batteryLevel: integer("battery_level"), // 0-100
+  signalStrength: integer("signal_strength"), // dBm
+  isEngineOn: boolean("is_engine_on"),
+  userId: uuid("user_id").references(() => users.id), // Driver/operator who sent this data
+  deviceType: varchar("device_type", { length: 50 }).default("mobile"), // 'mobile', 'tablet', 'gps_device'
+  metadata: json("metadata"), // Additional device/sensor data
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// Geofences for monitoring zones
+export const geofences = pgTable("geofences", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).notNull(), // 'warehouse', 'customer', 'restricted', 'service_area'
+  warehouseId: uuid("warehouse_id").references(() => warehouses.id), // If linked to a warehouse
+  polygonCoordinates: json("polygon_coordinates").notNull(), // Array of lat/lng points
+  radius: decimal("radius", { precision: 10, scale: 2 }), // For circular geofences (meters)
+  alertOnEnter: boolean("alert_on_enter").notNull().default(false),
+  alertOnExit: boolean("alert_on_exit").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Vehicle assignments to orders/shipments
+export const vehicleAssignments = pgTable("vehicle_assignments", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleId: uuid("vehicle_id").notNull().references(() => vehicles.id),
+  orderId: uuid("order_id").references(() => orders.id),
+  shipmentId: uuid("shipment_id").references(() => shipments.id),
+  driverId: uuid("driver_id").notNull().references(() => users.id),
+  status: varchar("status", { length: 20 }).notNull().default("atribuido"), // 'atribuido', 'carregando', 'em_transito', 'entregue', 'cancelado'
+  priority: varchar("priority", { length: 20 }).notNull().default("normal"), // 'baixa', 'normal', 'alta', 'urgente'
+  estimatedDeparture: timestamp("estimated_departure"),
+  actualDeparture: timestamp("actual_departure"),
+  estimatedArrival: timestamp("estimated_arrival"),
+  actualArrival: timestamp("actual_arrival"),
+  estimatedDistance: decimal("estimated_distance", { precision: 10, scale: 2 }), // km
+  actualDistance: decimal("actual_distance", { precision: 10, scale: 2 }), // km
+  loadCapacityUsed: decimal("load_capacity_used", { precision: 5, scale: 2 }), // Percentage 0-100
+  deliveryInstructions: text("delivery_instructions"),
+  currentLocation: json("current_location"), // {lat, lng, address, lastUpdate}
+  routeData: json("route_data"), // Planned and actual route information
+  deliveryProof: json("delivery_proof"), // Photos, signatures, GPS coordinates
+  notes: text("notes"),
+  assignedBy: uuid("assigned_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Geofence alerts and violations
+export const geofenceAlerts = pgTable("geofence_alerts", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  vehicleId: uuid("vehicle_id").notNull().references(() => vehicles.id),
+  geofenceId: uuid("geofence_id").notNull().references(() => geofences.id),
+  alertType: varchar("alert_type", { length: 20 }).notNull(), // 'enter', 'exit', 'dwell', 'speed'
+  triggerLocation: json("trigger_location").notNull(), // {lat, lng, timestamp}
+  driverId: uuid("driver_id").references(() => users.id),
+  assignmentId: uuid("assignment_id").references(() => vehicleAssignments.id),
+  status: varchar("status", { length: 20 }).notNull().default("ativo"), // 'ativo', 'reconhecido', 'resolvido'
+  acknowledgedBy: uuid("acknowledged_by").references(() => users.id),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  metadata: json("metadata"), // Additional context (speed, duration, etc.)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// GPS session tracking for mandatory GPS enforcement
+export const gpsSessions = pgTable("gps_sessions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  vehicleId: uuid("vehicle_id").references(() => vehicles.id),
+  sessionType: varchar("session_type", { length: 20 }).notNull(), // 'login', 'driving', 'manual'
+  status: varchar("status", { length: 20 }).notNull(), // 'ativo', 'pausado', 'finalizado', 'falha'
+  deviceInfo: json("device_info"), // Device model, OS, app version
+  gpsPermission: boolean("gps_permission").notNull(),
+  gpsAccuracy: decimal("gps_accuracy", { precision: 5, scale: 2 }), // meters
+  startLocation: json("start_location"), // {lat, lng, address}
+  endLocation: json("end_location"), // {lat, lng, address}
+  totalDistance: decimal("total_distance", { precision: 10, scale: 2 }), // km
+  totalDuration: integer("total_duration"), // minutes
+  trackingPoints: integer("tracking_points").default(0), // Number of GPS points recorded
+  violations: json("violations"), // GPS accuracy issues, permission denials
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+});
+
+// Vehicle relations
+export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
+  driver: one(users, {
+    fields: [vehicles.driverId],
+    references: [users.id],
+  }),
+  maintenance: many(vehicleMaintenance),
+  gpsTracking: many(gpsTracking),
+  assignments: many(vehicleAssignments),
+  geofenceAlerts: many(geofenceAlerts),
+  gpsSessions: many(gpsSessions),
+}));
+
+// Vehicle maintenance relations
+export const vehicleMaintenanceRelations = relations(vehicleMaintenance, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [vehicleMaintenance.vehicleId],
+    references: [vehicles.id],
+  }),
+  performedByUser: one(users, {
+    fields: [vehicleMaintenance.performedBy],
+    references: [users.id],
+  }),
+}));
+
+// GPS tracking relations
+export const gpsTrackingRelations = relations(gpsTracking, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [gpsTracking.vehicleId],
+    references: [vehicles.id],
+  }),
+  user: one(users, {
+    fields: [gpsTracking.userId],
+    references: [users.id],
+  }),
+}));
+
+// Geofences relations
+export const geofencesRelations = relations(geofences, ({ one, many }) => ({
+  warehouse: one(warehouses, {
+    fields: [geofences.warehouseId],
+    references: [warehouses.id],
+  }),
+  createdBy: one(users, {
+    fields: [geofences.createdBy],
+    references: [users.id],
+  }),
+  alerts: many(geofenceAlerts),
+}));
+
+// Vehicle assignments relations
+export const vehicleAssignmentsRelations = relations(vehicleAssignments, ({ one, many }) => ({
+  vehicle: one(vehicles, {
+    fields: [vehicleAssignments.vehicleId],
+    references: [vehicles.id],
+  }),
+  order: one(orders, {
+    fields: [vehicleAssignments.orderId],
+    references: [orders.id],
+  }),
+  shipment: one(shipments, {
+    fields: [vehicleAssignments.shipmentId],
+    references: [shipments.id],
+  }),
+  driver: one(users, {
+    fields: [vehicleAssignments.driverId],
+    references: [users.id],
+  }),
+  assignedBy: one(users, {
+    fields: [vehicleAssignments.assignedBy],
+    references: [users.id],
+  }),
+  geofenceAlerts: many(geofenceAlerts),
+}));
+
+// Geofence alerts relations
+export const geofenceAlertsRelations = relations(geofenceAlerts, ({ one }) => ({
+  vehicle: one(vehicles, {
+    fields: [geofenceAlerts.vehicleId],
+    references: [vehicles.id],
+  }),
+  geofence: one(geofences, {
+    fields: [geofenceAlerts.geofenceId],
+    references: [geofences.id],
+  }),
+  driver: one(users, {
+    fields: [geofenceAlerts.driverId],
+    references: [users.id],
+  }),
+  assignment: one(vehicleAssignments, {
+    fields: [geofenceAlerts.assignmentId],
+    references: [vehicleAssignments.id],
+  }),
+  acknowledgedBy: one(users, {
+    fields: [geofenceAlerts.acknowledgedBy],
+    references: [users.id],
+  }),
+}));
+
+// GPS sessions relations
+export const gpsSessionsRelations = relations(gpsSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [gpsSessions.userId],
+    references: [users.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [gpsSessions.vehicleId],
+    references: [vehicles.id],
+  }),
+}));
+
+// Insert schemas for fleet management
+export const insertVehicleSchema = createInsertSchema(vehicles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastGpsUpdate: true,
+});
+
+export const insertVehicleMaintenanceSchema = createInsertSchema(vehicleMaintenance).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGpsTrackingSchema = createInsertSchema(gpsTracking).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertGeofenceSchema = createInsertSchema(geofences).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVehicleAssignmentSchema = createInsertSchema(vehicleAssignments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertGeofenceAlertSchema = createInsertSchema(geofenceAlerts).omit({
+  id: true,
+  createdAt: true,
+  acknowledgedAt: true,
+});
+
+export const insertGpsSessionSchema = createInsertSchema(gpsSessions).omit({
+  id: true,
+  startedAt: true,
+  endedAt: true,
+});
+
+// Types for fleet management
+export type Vehicle = typeof vehicles.$inferSelect;
+export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
+export type VehicleMaintenance = typeof vehicleMaintenance.$inferSelect;
+export type InsertVehicleMaintenance = z.infer<typeof insertVehicleMaintenanceSchema>;
+export type GpsTracking = typeof gpsTracking.$inferSelect;
+export type InsertGpsTracking = z.infer<typeof insertGpsTrackingSchema>;
+export type Geofence = typeof geofences.$inferSelect;
+export type InsertGeofence = z.infer<typeof insertGeofenceSchema>;
+export type VehicleAssignment = typeof vehicleAssignments.$inferSelect;
+export type InsertVehicleAssignment = z.infer<typeof insertVehicleAssignmentSchema>;
+export type GeofenceAlert = typeof geofenceAlerts.$inferSelect;
+export type InsertGeofenceAlert = z.infer<typeof insertGeofenceAlertSchema>;
+export type GpsSession = typeof gpsSessions.$inferSelect;
+export type InsertGpsSession = z.infer<typeof insertGpsSessionSchema>;

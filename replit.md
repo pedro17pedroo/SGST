@@ -4,7 +4,7 @@
 
 SGST (Sistema de Gestão de Stock e Rastreamento) is a world-class inventory management and logistics tracking system specifically designed for Angola's challenging infrastructure conditions. The system provides offline-first operation, computer vision automation, real-time location tracking, and comprehensive logistics management. It's built as a full-stack web application with a modern React frontend and Express.js backend, targeting Portuguese-speaking markets with AOA currency support.
 
-The system handles complete inventory workflows including product registration, stock movements, order management, shipping tracking, automated counting, damage detection, real-time asset tracking, and comprehensive reporting with offline synchronization. It's designed to operate reliably in low-connectivity environments while providing enterprise-grade capabilities for businesses of all sizes in Angola.
+The system handles complete inventory workflows including product registration, stock movements, order management, shipping tracking, fleet management, vehicle GPS tracking, automated counting, damage detection, real-time asset tracking, and comprehensive reporting with offline synchronization. It includes advanced fleet management capabilities with real-time GPS monitoring, vehicle-shipment associations, and mandatory GPS activation for drivers and operators. It's designed to operate reliably in low-connectivity environments while providing enterprise-grade capabilities for businesses of all sizes in Angola.
 
 ## User Preferences
 
@@ -33,6 +33,9 @@ The API provides endpoints for:
 - Product management (CRUD operations with search capabilities)
 - Inventory tracking (stock levels, movements, alerts)
 - Order processing and shipment management
+- **Fleet management** (vehicle CRUD, GPS tracking, driver assignments)
+- **Real-time GPS tracking** (vehicle locations, route optimization, geofencing)
+- **Vehicle-shipment association** (assign vehicles to orders and shipments)
 - User management and reporting
 - **Offline synchronization** (CRDTs, conflict resolution)
 - **Computer vision** (automated counting, damage detection, label reading)
@@ -46,6 +49,9 @@ Uses **PostgreSQL** as the primary database with **Drizzle ORM** for schema mana
 - **Inventory**: Multi-warehouse stock tracking with real-time updates
 - **Categories & Suppliers**: Product organization and vendor management
 - **Orders & Shipments**: Complete order lifecycle from creation to delivery
+- **Vehicles**: Fleet management with GPS devices, driver assignments, and maintenance tracking
+- **GPS Tracking**: Real-time location data, route history, and geofencing
+- **Vehicle Assignments**: Association between vehicles and shipments/orders
 - **Stock Movements**: Audit trail for all inventory changes
 
 Schema uses UUID primary keys and includes proper foreign key relationships with cascading operations where appropriate.
@@ -81,6 +87,12 @@ The project uses modern development tooling:
 ### Charts & Visualization
 - **Recharts**: Data visualization library for dashboard analytics
 - **Embla Carousel**: Touch-friendly carousel component
+
+### GPS & Mapping
+- **Leaflet**: Open-source mapping library for GPS visualization
+- **React Leaflet**: React integration for Leaflet maps
+- **Turf.js**: Geospatial analysis library for route optimization
+- **Geolib**: GPS calculations and geofencing utilities
 
 ### Development Tools
 - **Vite**: Build tool and development server
@@ -146,6 +158,11 @@ The project uses modern development tooling:
 23. ✅ **Recebimento Inteligente** - Smart receiving workflows
 24. ✅ **Putaway Otimizado** - Optimized putaway strategies
 25. ✅ **Reabastecimento Inteligente** - AI-powered replenishment
+26. ✅ **Gestão de Veículos** - Fleet management with CRUD operations and maintenance tracking
+27. ✅ **GPS Tracking em Tempo Real** - Real-time vehicle location tracking and route monitoring
+28. ✅ **Associação Veículo-Envio** - Vehicle assignment to shipments and orders
+29. ✅ **GPS Obrigatório para Operadores** - Mandatory GPS activation for drivers and operators
+30. ✅ **Monitoramento de Frota no Mapa** - Real-time fleet visualization on integrated maps
 
 ### Additional Enterprise Modules (Available for Implementation)
 - 🔄 **Backup e Restore** - Data backup and disaster recovery
@@ -172,6 +189,9 @@ The project uses modern development tooling:
 - **Carbon footprint tracking and sustainability reporting**
 
 ### 🔄 Next Phase Priorities
+- ✅ **Fleet Management System** - Complete vehicle CRUD and GPS integration
+- ✅ **Real-time GPS Tracking** - Live vehicle monitoring and route optimization
+- ✅ **Vehicle-Shipment Association** - Automated vehicle assignment workflows
 - Mobile app development for field operations
 - Advanced AI analytics implementation
 - ERP system integrations (SAP, others)
@@ -181,17 +201,22 @@ The project uses modern development tooling:
 ## System Statistics (August 2025)
 
 ### Technical Achievement
-- **25 Active Modules** - Most comprehensive system in Angola market
-- **150+ API Endpoints** - Complete functionality coverage
-- **3 Enterprise Differentiators** - Digital Twin, Green ETA, UX Hiper-Rápida
+- **30 Active Modules** - Most comprehensive system in Angola market including fleet management
+- **180+ API Endpoints** - Complete functionality coverage including GPS and vehicle management
+- **6 Enterprise Differentiators** - Digital Twin, Green ETA, UX Hiper-Rápida, Fleet GPS, Vehicle-Shipment Integration, Real-time Fleet Monitoring
 - **Sub-200ms Performance** - Ultra-fast user experience
 - **100% Offline Operation** - Full functionality without internet
 - **Real-time 3D/2D Visualization** - Advanced warehouse interface
+- **Real-time GPS Fleet Tracking** - Live vehicle monitoring and route optimization
 - **Carbon Footprint Optimization** - Sustainable logistics planning
 - **Angola-Specific Features** - EMIS, Multicaixa, AOA currency support
 
 ### Enterprise Capabilities
 - **Advanced Simulation** - Digital Twin operational modeling
+- **Fleet Management** - Complete vehicle lifecycle management with GPS integration
+- **Real-time GPS Tracking** - Live vehicle monitoring with geofencing and route optimization
+- **Mandatory GPS for Operators** - Automatic GPS activation for drivers and field personnel
+- **Vehicle-Shipment Integration** - Intelligent vehicle assignment and tracking workflows
 - **Sustainability Metrics** - Green ETA carbon tracking and optimization
 - **Performance Monitoring** - Real-time UX optimization with automatic tuning
 - **Predictive Intelligence** - AI-powered recommendations and analytics

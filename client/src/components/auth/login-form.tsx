@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Lock, User, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GPSPermissionDialog } from "@/components/gps/gps-permission-dialog";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Nome de utilizador deve ter pelo menos 3 caracteres"),
@@ -28,6 +29,8 @@ interface LoginFormProps {
 export function LoginForm({ onLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showGPSDialog, setShowGPSDialog] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ username: string; role: string } | null>(null);
   const { toast } = useToast();
 
   const form = useForm<LoginFormData>({
@@ -58,14 +61,22 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       const result = await response.json();
 
       if (response.ok) {
-        toast({
-          title: "Login realizado com sucesso",
-          description: `Bem-vindo, ${result.user.username}!`,
-        });
-        onLogin({ 
+        const userData = { 
           username: result.user.username, 
           role: result.user.role 
-        });
+        };
+        
+        // Verificar se GPS é obrigatório
+        if (result.requiresGPS) {
+          setUserInfo(userData);
+          setShowGPSDialog(true);
+        } else {
+          toast({
+            title: "Login realizado com sucesso",
+            description: `Bem-vindo, ${result.user.username}!`,
+          });
+          onLogin(userData);
+        }
       } else {
         toast({
           title: "Erro de login",
@@ -83,6 +94,25 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGPSSuccess = (gpsData: { latitude: number; longitude: number; accuracy: number; vehicleId?: string }) => {
+    if (userInfo) {
+      toast({
+        title: "Login realizado com sucesso",
+        description: `Bem-vindo, ${userInfo.username}! GPS ativado com precisão de ${Math.round(gpsData.accuracy)}m`,
+      });
+      setShowGPSDialog(false);
+      onLogin(userInfo);
+    }
+  };
+
+  const handleGPSError = (error: string) => {
+    toast({
+      title: "Erro GPS",
+      description: `GPS é obrigatório para ${userInfo?.role === 'driver' ? 'motoristas' : 'operadores'}. ${error}`,
+      variant: "destructive",
+    });
   };
 
   return (
@@ -217,6 +247,17 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* GPS Permission Dialog */}
+      {showGPSDialog && userInfo && (
+        <GPSPermissionDialog
+          isOpen={showGPSDialog}
+          onSuccess={handleGPSSuccess}
+          onError={handleGPSError}
+          userRole={userInfo.role}
+          userName={userInfo.username}
+        />
+      )}
     </div>
   );
 }

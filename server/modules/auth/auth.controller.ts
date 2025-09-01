@@ -56,9 +56,13 @@ export class AuthController {
 
       (req.session as any).user = sessionUser;
 
+      // Verificar se GPS é obrigatório para este utilizador
+      const requiresGPS = ['operator', 'driver'].includes(user.role);
+
       res.json({
         message: "Login realizado com sucesso",
-        user: sessionUser
+        user: sessionUser,
+        requiresGPS
       });
 
     } catch (error) {

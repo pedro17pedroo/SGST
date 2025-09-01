@@ -36,6 +36,7 @@ import { initializeAngolaOperationsModule } from './angola_operations';
 import { fleetManagementModule } from './fleet_management/fleet.module';
 import { rolesModule } from './roles/role.module';
 import { permissionsModule } from './permissions/permission.module';
+import { gpsModule } from './gps/gps.module';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -67,6 +68,7 @@ export class ModuleRegistry {
     this.modules.set('fleet_management', fleetManagementModule);
     this.modules.set('roles', rolesModule);
     this.modules.set('permissions', permissionsModule);
+    this.modules.set('gps_tracking', gpsModule);
     
     // Temporary direct registration for barcode scanning
     this.modules.set('barcode_scanning', {

@@ -365,6 +365,22 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
       order: 85
     }],
     permissions: ['angola_operations.read']
+  },
+
+  fleet_management: {
+    id: 'fleet_management',
+    name: 'Gestão de Frota',
+    description: 'Gestão completa de frota, GPS tracking e associação veículo-envio',
+    enabled: true,
+    dependencies: ['users', 'shipping'],
+    routes: ['/fleet', '/fleet/vehicles', '/fleet/tracking', '/fleet/assignments'],
+    menuItems: [{
+      label: 'Gestão de Frota',
+      icon: 'Truck',
+      path: '/fleet',
+      order: 37
+    }],
+    permissions: ['fleet.read']
   }
 };
 

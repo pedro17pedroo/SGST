@@ -37,6 +37,7 @@ import WarehouseTwin from "@/pages/WarehouseTwin";
 import GreenETA from "@/pages/GreenETA";
 import Performance from "@/pages/Performance";
 import AngolaOperations from "@/pages/AngolaOperationsPage";
+import FleetPage from "@/pages/fleet";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -170,6 +171,11 @@ function Router() {
           <Route path="/angola-operations">
             <ModuleGuard moduleId="angola_operations" fallback={<NotFound />}>
               <AngolaOperations />
+            </ModuleGuard>
+          </Route>
+          <Route path="/fleet">
+            <ModuleGuard moduleId="fleet_management" fallback={<NotFound />}>
+              <FleetPage />
             </ModuleGuard>
           </Route>
           <Route component={NotFound} />

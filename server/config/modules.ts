@@ -374,6 +374,28 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/integrations'],
     tables: ['integrations', 'integration_logs', 'sync_jobs'],
     permissions: ['integrations.read', 'integrations.write', 'integrations.configure']
+  },
+
+  fleet_management: {
+    id: 'fleet_management',
+    name: 'Gestão de Frota',
+    description: 'Gestão completa de frota, GPS tracking e associação veículo-envio',
+    enabled: true,
+    dependencies: ['users', 'shipping'],
+    routes: ['/api/fleet'],
+    tables: ['vehicles', 'vehicle_maintenance', 'gps_tracking', 'geofences', 'vehicle_assignments'],
+    permissions: ['fleet.read', 'fleet.write', 'vehicles.manage', 'gps.read', 'assignments.manage']
+  },
+
+  gps_tracking: {
+    id: 'gps_tracking',
+    name: 'GPS Tracking',
+    description: 'Sistema de rastreamento GPS em tempo real',
+    enabled: true,
+    dependencies: ['fleet_management'],
+    routes: ['/api/gps'],
+    tables: ['gps_tracking', 'geofences', 'gps_alerts'],
+    permissions: ['gps.read', 'gps.write', 'geofences.manage', 'alerts.manage']
   }
 };
 

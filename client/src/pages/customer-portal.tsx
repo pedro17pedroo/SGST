@@ -227,7 +227,7 @@ export default function CustomerPortal() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">SGST</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Portal do Cliente</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Plataforma SGST</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -382,10 +382,10 @@ export default function CustomerPortal() {
         {/* Welcome Section */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-            Bem-vindo ao Portal do Cliente
+            Bem-vindo à Plataforma SGST
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Rastreie suas encomendas e acesse informações de entrega
+            Sistema de gestão de stock e rastreamento - Acesse a plataforma ou consulte o status das suas encomendas
           </p>
         </div>
 

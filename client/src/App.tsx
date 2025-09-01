@@ -54,8 +54,7 @@ function Router() {
       }`}>
         <div className="w-full">
           <Switch>
-            <Route path="/" component={Dashboard} />
-          <Route path="/dashboard">
+            <Route path="/dashboard">
             <ModuleGuard moduleId="dashboard" fallback={<NotFound />}>
               <Dashboard />
             </ModuleGuard>
@@ -213,6 +212,9 @@ function App() {
             <ModuleProvider>
               <Switch>
                 {/* Public routes - no authentication required */}
+                <Route path="/">
+                  <CustomerPortal />
+                </Route>
                 <Route path="/customer">
                   <CustomerPortal />
                 </Route>

@@ -34,6 +34,17 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     permissions: ['users.read', 'users.write', 'users.delete']
   },
 
+  customers: {
+    id: 'customers',
+    name: 'Gestão de Clientes',
+    description: 'Gestão completa de clientes, incluindo dados pessoais, histórico e preferências',
+    enabled: true,
+    dependencies: ['auth', 'users'],
+    routes: ['/api/customers'],
+    tables: ['customers'],
+    permissions: ['customers.read', 'customers.create', 'customers.update', 'customers.delete']
+  },
+
   roles: {
     id: 'roles',
     name: 'Gestão de Perfis',

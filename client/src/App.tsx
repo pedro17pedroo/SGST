@@ -21,6 +21,7 @@ import Orders from "@/pages/orders";
 import Shipping from "@/pages/shipping";
 import Reports from "@/pages/reports";
 import Users from "@/pages/users";
+import Customers from "@/pages/customers";
 import Settings from "@/pages/settings";
 import Scanner from "@/pages/scanner";
 import ProductLocations from "@/pages/product-locations";
@@ -146,6 +147,11 @@ function Router() {
           <Route path="/users">
             <ModuleGuard moduleId="users" fallback={<NotFound />}>
               <Users />
+            </ModuleGuard>
+          </Route>
+          <Route path="/customers">
+            <ModuleGuard moduleId="customers" fallback={<NotFound />}>
+              <Customers />
             </ModuleGuard>
           </Route>
           <Route path="/roles">

@@ -23,6 +23,30 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Customers table - Gestão de Clientes
+export const customers = pgTable("customers", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerNumber: varchar("customer_number", { length: 100 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  mobile: varchar("mobile", { length: 50 }),
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  province: varchar("province", { length: 100 }),
+  postalCode: varchar("postal_code", { length: 20 }),
+  country: varchar("country", { length: 100 }).default("Angola"),
+  taxNumber: varchar("tax_number", { length: 50 }),
+  customerType: varchar("customer_type", { length: 50 }).notNull().default("individual"), // individual, company
+  creditLimit: decimal("credit_limit", { precision: 12, scale: 2 }).default("0"),
+  paymentTerms: varchar("payment_terms", { length: 50 }).default("cash"), // cash, credit_30, credit_60, credit_90
+  discount: decimal("discount", { precision: 5, scale: 2 }).default("0"), // Percentage discount
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Suppliers table
 export const suppliers = pgTable("suppliers", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -88,6 +112,8 @@ export const orders = pgTable("orders", {
   orderNumber: varchar("order_number", { length: 100 }).notNull().unique(),
   type: varchar("type", { length: 50 }).notNull(), // 'sale', 'purchase'
   status: varchar("status", { length: 50 }).notNull().default("pending"),
+  customerId: uuid("customer_id").references(() => customers.id), // Nova referência para cliente
+  // Manter campos legacy temporariamente para migração
   customerName: varchar("customer_name", { length: 255 }),
   customerEmail: varchar("customer_email", { length: 255 }),
   customerPhone: varchar("customer_phone", { length: 50 }),
@@ -192,6 +218,10 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products),
 }));
 
+export const customersRelations = relations(customers, ({ many }) => ({
+  orders: many(orders),
+}));
+
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
   products: many(products),
   orders: many(orders),
@@ -249,6 +279,10 @@ export const stockMovementsRelations = relations(stockMovements, ({ one }) => ({
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [orders.customerId],
+    references: [customers.id],
+  }),
   supplier: one(suppliers, {
     fields: [orders.supplierId],
     references: [suppliers.id],
@@ -864,6 +898,12 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   createdAt: true,
 });
 
+export const insertCustomerSchema = createInsertSchema(customers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({
   id: true,
   createdAt: true,
@@ -1038,6 +1078,8 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Customer = typeof customers.$inferSelect;
+export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
 export type Warehouse = typeof warehouses.$inferSelect;

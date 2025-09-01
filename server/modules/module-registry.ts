@@ -5,6 +5,7 @@ import { ModuleManager } from '../config/modules';
 // Importar todos os módulos
 import usersModule from './users';
 import { authModule } from './auth';
+import customersModule from './customers';
 import productsModule from './products';
 import settingsModule from './settings';
 import dashboardModule from './dashboard';
@@ -45,6 +46,7 @@ export class ModuleRegistry {
     // Registrar módulos disponíveis
     this.modules.set('auth', authModule);
     this.modules.set('users', usersModule);
+    this.modules.set('customers', customersModule);
     this.modules.set('products', productsModule);
     this.modules.set('settings', settingsModule);
     this.modules.set('dashboard', dashboardModule);

@@ -216,9 +216,9 @@ export default function CustomerPortal() {
   const StatusIcon = statusInfo?.icon || Clock;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
@@ -226,12 +226,12 @@ export default function CustomerPortal() {
                 <Building className="text-white text-lg" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">SGST</h1>
-                <p className="text-sm text-gray-500">Portal do Cliente</p>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">SGST</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Portal do Cliente</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-500 flex items-center">
+              <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
                 <Clock className="inline w-4 h-4 mr-1" />
                 Disponível 24/7
               </div>
@@ -381,10 +381,10 @@ export default function CustomerPortal() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
             Bem-vindo ao Portal do Cliente
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Rastreie suas encomendas e acesse informações de entrega
           </p>
         </div>
@@ -451,9 +451,9 @@ export default function CustomerPortal() {
 
           {/* Error Message */}
           {error && (
-            <Card className="border-red-200 bg-red-50 max-w-2xl mx-auto">
+            <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 max-w-2xl mx-auto">
               <CardContent className="pt-6">
-                <div className="flex items-center gap-2 text-red-800">
+                <div className="flex items-center gap-2 text-red-800 dark:text-red-400">
                   <AlertCircle className="h-5 w-5" />
                   <span data-testid="text-error-message">{error.message}</span>
                 </div>
@@ -465,35 +465,35 @@ export default function CustomerPortal() {
           {trackingInfo && (
             <div className="space-y-6 max-w-4xl mx-auto">
               {/* Status Card */}
-              <Card>
+              <Card className="dark:bg-gray-800">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
+                  <CardTitle className="flex items-center gap-3 dark:text-gray-100">
                     <StatusIcon className="h-6 w-6" />
                     Status da Encomenda
                     <Badge className={statusInfo?.color} data-testid="badge-status">
                       {statusInfo?.label}
                     </Badge>
                   </CardTitle>
-                  <CardDescription>{statusInfo?.description}</CardDescription>
+                  <CardDescription className="dark:text-gray-300">{statusInfo?.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-500">Número de Rastreamento</Label>
-                      <p className="font-mono text-lg" data-testid="text-tracking-number">{trackingInfo.trackingNumber}</p>
+                      <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Número de Rastreamento</Label>
+                      <p className="font-mono text-lg dark:text-gray-100" data-testid="text-tracking-number">{trackingInfo.trackingNumber}</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-500">Transportadora</Label>
-                      <p className="text-lg" data-testid="text-carrier">{trackingInfo.carrier || "Não informado"}</p>
+                      <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Transportadora</Label>
+                      <p className="text-lg dark:text-gray-100" data-testid="text-carrier">{trackingInfo.carrier || "Não informado"}</p>
                     </div>
                   </div>
 
                   {trackingInfo.estimatedDelivery && (
                     <div>
-                      <Label className="text-sm font-medium text-gray-500">Previsão de Entrega</Label>
+                      <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Previsão de Entrega</Label>
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        <span data-testid="text-estimated-delivery">
+                        <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                        <span className="dark:text-gray-100" data-testid="text-estimated-delivery">
                           {format(new Date(trackingInfo.estimatedDelivery), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                         </span>
                       </div>
@@ -502,10 +502,10 @@ export default function CustomerPortal() {
 
                   {trackingInfo.shippingAddress && (
                     <div>
-                      <Label className="text-sm font-medium text-gray-500">Endereço de Entrega</Label>
+                      <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Endereço de Entrega</Label>
                       <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
-                        <span className="text-sm" data-testid="text-shipping-address">{trackingInfo.shippingAddress}</span>
+                        <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500 mt-0.5" />
+                        <span className="text-sm dark:text-gray-100" data-testid="text-shipping-address">{trackingInfo.shippingAddress}</span>
                       </div>
                     </div>
                   )}
@@ -514,9 +514,9 @@ export default function CustomerPortal() {
 
               {/* Order Information */}
               {trackingInfo.order && (
-                <Card>
+                <Card className="dark:bg-gray-800">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 dark:text-gray-100">
                       <Package className="h-5 w-5" />
                       Informações da Encomenda
                     </CardTitle>
@@ -524,16 +524,16 @@ export default function CustomerPortal() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-500">Número da Encomenda</Label>
-                        <p className="font-mono" data-testid="text-order-number">{trackingInfo.order.orderNumber}</p>
+                        <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Número da Encomenda</Label>
+                        <p className="font-mono dark:text-gray-100" data-testid="text-order-number">{trackingInfo.order.orderNumber}</p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-500">Cliente</Label>
-                        <p data-testid="text-customer-name">{trackingInfo.order.customerName}</p>
+                        <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Cliente</Label>
+                        <p className="dark:text-gray-100" data-testid="text-customer-name">{trackingInfo.order.customerName}</p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-500">Valor Total</Label>
-                        <p className="font-semibold" data-testid="text-total-amount">
+                        <Label className="text-sm font-medium text-gray-500 dark:text-gray-400">Valor Total</Label>
+                        <p className="font-semibold dark:text-gray-100" data-testid="text-total-amount">
                           {new Intl.NumberFormat('pt-AO', {
                             style: 'currency',
                             currency: 'AOA'
@@ -546,15 +546,15 @@ export default function CustomerPortal() {
                       <>
                         <Separator />
                         <div>
-                          <Label className="text-sm font-medium text-gray-500 mb-3 block">Itens da Encomenda</Label>
+                          <Label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 block">Itens da Encomenda</Label>
                           <div className="space-y-2">
                             {trackingInfo.items.map((item, index) => (
-                              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg" data-testid={`item-${index}`}>
+                              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg" data-testid={`item-${index}`}>
                                 <div>
-                                  <p className="font-medium" data-testid={`text-product-name-${index}`}>{item.productName}</p>
-                                  <p className="text-sm text-gray-500" data-testid={`text-quantity-${index}`}>Quantidade: {item.quantity}</p>
+                                  <p className="font-medium dark:text-gray-100" data-testid={`text-product-name-${index}`}>{item.productName}</p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400" data-testid={`text-quantity-${index}`}>Quantidade: {item.quantity}</p>
                                 </div>
-                                <p className="font-semibold" data-testid={`text-item-price-${index}`}>
+                                <p className="font-semibold dark:text-gray-100" data-testid={`text-item-price-${index}`}>
                                   {new Intl.NumberFormat('pt-AO', {
                                     style: 'currency',
                                     currency: 'AOA'
@@ -575,43 +575,43 @@ export default function CustomerPortal() {
 
         {/* Features Section */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="text-center">
+          <Card className="text-center dark:bg-gray-800">
             <CardHeader>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Search className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Search className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <CardTitle className="text-lg">Rastreamento em Tempo Real</CardTitle>
+              <CardTitle className="text-lg dark:text-gray-100">Rastreamento em Tempo Real</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Acompanhe suas encomendas em tempo real com informações precisas de localização e status.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="text-center">
+          <Card className="text-center dark:bg-gray-800">
             <CardHeader>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <CardTitle className="text-lg">Entrega Garantida</CardTitle>
+              <CardTitle className="text-lg dark:text-gray-100">Entrega Garantida</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Garantimos a entrega segura de suas encomendas com atualizações constantes do status.
               </p>
             </CardContent>
           </Card>
 
-          <Card className="text-center">
+          <Card className="text-center dark:bg-gray-800">
             <CardHeader>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <CardTitle className="text-lg">Suporte 24/7</CardTitle>
+              <CardTitle className="text-lg dark:text-gray-100">Suporte 24/7</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Nossa equipe está disponível 24 horas por dia para ajudar com suas dúvidas e necessidades.
               </p>
             </CardContent>
@@ -619,15 +619,15 @@ export default function CustomerPortal() {
         </div>
 
         {/* Footer */}
-        <div className="mt-16 text-center py-6 border-t border-gray-200">
-          <p className="text-gray-500 text-sm mb-2">
+        <div className="mt-16 text-center py-6 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
             Dúvidas sobre suas encomendas? Entre em contacto connosco.
           </p>
-          <div className="flex justify-center space-x-6 text-sm text-gray-500">
-            <a href="/contact" className="hover:text-gray-900">Contacto</a>
-            <a href="/help" className="hover:text-gray-900">Ajuda</a>
-            <a href="/terms" className="hover:text-gray-900">Termos</a>
-            <a href="/privacy" className="hover:text-gray-900">Privacidade</a>
+          <div className="flex justify-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
+            <a href="/contact" className="hover:text-gray-900 dark:hover:text-gray-100">Contacto</a>
+            <a href="/help" className="hover:text-gray-900 dark:hover:text-gray-100">Ajuda</a>
+            <a href="/terms" className="hover:text-gray-900 dark:hover:text-gray-100">Termos</a>
+            <a href="/privacy" className="hover:text-gray-900 dark:hover:text-gray-100">Privacidade</a>
           </div>
         </div>
       </div>

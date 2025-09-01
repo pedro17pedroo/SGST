@@ -31,6 +31,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -234,6 +235,7 @@ export default function CustomerPortal() {
                 <Clock className="inline w-4 h-4 mr-1" />
                 Disponível 24/7
               </div>
+              <ThemeToggle />
               <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="default" className="flex items-center gap-2">

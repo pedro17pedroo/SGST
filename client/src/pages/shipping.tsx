@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertShipmentSchema, type Shipment, type Order } from "@shared/schema";
+import { insertShipmentSchema, type Shipment, type Order, type Vehicle } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -21,6 +21,7 @@ const shipmentFormSchema = insertShipmentSchema.extend({
   shipmentNumber: z.string().min(1, "Número do envio é obrigatório"),
   status: z.enum(["preparing", "shipped", "in_transit", "delivered", "cancelled"]).default("preparing"),
   estimatedDelivery: z.string().optional(),
+  vehicleId: z.string().optional(),
 });
 
 type ShipmentFormData = z.infer<typeof shipmentFormSchema>;
@@ -33,11 +34,16 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
     queryKey: ["/api/orders"],
   });
   
+  const { data: vehicles = [] } = useQuery<Vehicle[]>({
+    queryKey: ["/api/vehicles"],
+  });
+  
   const form = useForm<ShipmentFormData>({
     resolver: zodResolver(shipmentFormSchema),
     defaultValues: {
       shipmentNumber: `SHP-${Date.now()}`,
       orderId: "",
+      vehicleId: "",
       status: "preparing",
       carrier: "",
       trackingNumber: "",
@@ -52,6 +58,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
       form.reset({
         shipmentNumber: shipment.shipmentNumber || `SHP-${Date.now()}`,
         orderId: shipment.orderId || "",
+        vehicleId: (shipment as any).vehicleId || "",
         status: (shipment.status as any) || "preparing",
         carrier: shipment.carrier || "",
         trackingNumber: shipment.trackingNumber || "",
@@ -62,6 +69,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
       form.reset({
         shipmentNumber: `SHP-${Date.now()}`,
         orderId: "",
+        vehicleId: "",
         status: "preparing",
         carrier: "",
         trackingNumber: "",
@@ -197,6 +205,31 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                       {orders.map((order) => (
                         <SelectItem key={order.id} value={order.id}>
                           {order.orderNumber} - {order.customerName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="vehicleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Veículo</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-vehicle">
+                        <SelectValue placeholder="Selecione o veículo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {vehicles.filter(vehicle => vehicle.status === 'ativo').map((vehicle) => (
+                        <SelectItem key={vehicle.id} value={vehicle.id}>
+                          {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
                         </SelectItem>
                       ))}
                     </SelectContent>

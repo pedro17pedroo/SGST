@@ -26,6 +26,9 @@ interface Vehicle {
   status: 'ativo' | 'manutencao' | 'inativo';
   insuranceExpiry: string;
   inspectionExpiry: string;
+  driverId?: string;
+  gpsDeviceId?: string;
+  isGpsActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +44,9 @@ interface VehicleFormData {
   status: 'ativo' | 'manutencao' | 'inativo';
   insuranceExpiry: string;
   inspectionExpiry: string;
+  driverId?: string;
+  gpsDeviceId?: string;
+  isGpsActive: boolean;
 }
 
 const initialFormData: VehicleFormData = {
@@ -53,11 +59,22 @@ const initialFormData: VehicleFormData = {
   fuelType: 'diesel',
   status: 'ativo',
   insuranceExpiry: '',
-  inspectionExpiry: ''
+  inspectionExpiry: '',
+  driverId: '',
+  gpsDeviceId: '',
+  isGpsActive: false
 };
+
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+}
 
 export default function FleetPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -68,7 +85,18 @@ export default function FleetPage() {
 
   useEffect(() => {
     fetchVehicles();
-  }, []);
+    fetchUsers();
+  }, []); 
+
+  const fetchUsers = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/users');
+      const data = await response.json();
+      setUsers(data.filter((user: User) => user.role === 'driver' || user.role === 'operator'));
+    } catch (error) {
+      console.error('Erro ao carregar utilizadores:', error);
+    }
+  };
 
   const fetchVehicles = async () => {
     try {
@@ -131,7 +159,10 @@ export default function FleetPage() {
       fuelType: vehicle.fuelType,
       status: vehicle.status,
       insuranceExpiry: vehicle.insuranceExpiry.split('T')[0],
-      inspectionExpiry: vehicle.inspectionExpiry.split('T')[0]
+      inspectionExpiry: vehicle.inspectionExpiry.split('T')[0],
+      driverId: vehicle.driverId || '',
+      gpsDeviceId: vehicle.gpsDeviceId || '',
+      isGpsActive: vehicle.isGpsActive || false
     });
     setIsDialogOpen(true);
   };
@@ -498,6 +529,44 @@ export default function FleetPage() {
                   value={formData.inspectionExpiry}
                   onChange={(e) => setFormData({...formData, inspectionExpiry: e.target.value})}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="driverId">Motorista Atribuído</Label>
+                <Select value={formData.driverId || ''} onValueChange={(value) => setFormData({...formData, driverId: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um motorista" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum motorista</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.username} - {user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gpsDeviceId">ID do Dispositivo GPS</Label>
+                <Input
+                  id="gpsDeviceId"
+                  value={formData.gpsDeviceId || ''}
+                  onChange={(e) => setFormData({...formData, gpsDeviceId: e.target.value})}
+                  placeholder="ID ou código do dispositivo GPS"
+                />
+              </div>
+
+              <div className="space-y-2 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isGpsActive"
+                  checked={formData.isGpsActive}
+                  onChange={(e) => setFormData({...formData, isGpsActive: e.target.checked})}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="isGpsActive">GPS Ativo</Label>
               </div>
             </div>
 

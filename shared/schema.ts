@@ -114,6 +114,7 @@ export const shipments = pgTable("shipments", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   shipmentNumber: varchar("shipment_number", { length: 100 }).notNull().unique(),
   orderId: uuid("order_id").references(() => orders.id),
+  vehicleId: uuid("vehicle_id").references(() => vehicles.id), // Assigned vehicle for this shipment
   status: varchar("status", { length: 50 }).notNull().default("preparing"),
   carrier: varchar("carrier", { length: 255 }),
   trackingNumber: varchar("tracking_number", { length: 255 }),
@@ -275,6 +276,10 @@ export const shipmentsRelations = relations(shipments, ({ one }) => ({
   order: one(orders, {
     fields: [shipments.orderId],
     references: [orders.id],
+  }),
+  vehicle: one(vehicles, {
+    fields: [shipments.vehicleId],
+    references: [vehicles.id],
   }),
   user: one(users, {
     fields: [shipments.userId],
@@ -1492,6 +1497,7 @@ export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
   maintenance: many(vehicleMaintenance),
   gpsTracking: many(gpsTracking),
   assignments: many(vehicleAssignments),
+  shipments: many(shipments),
   geofenceAlerts: many(geofenceAlerts),
   gpsSessions: many(gpsSessions),
 }));

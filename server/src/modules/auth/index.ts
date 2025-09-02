@@ -1,14 +1,10 @@
 import { Express } from 'express';
 import { BaseModule } from '../base/module.interface';
+import { MODULE_CONFIG } from '../../config/modules';
 import authRoutes from './auth.routes';
 
-export const authModule: BaseModule = {
-  id: 'auth',
-  name: 'Autenticação',
-  description: 'Sistema de autenticação e gestão de sessões',
-  version: '1.0.0',
-  enabled: true,
-  dependencies: [],
+export class AuthModule extends BaseModule {
+  config = MODULE_CONFIG.auth;
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo de autenticação
@@ -16,4 +12,7 @@ export const authModule: BaseModule = {
     
     console.log('✓ Módulo de Autenticação registrado');
   }
-};
+}
+
+// Exportar instância do módulo
+export const authModule = new AuthModule();

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { storage } from '../../storage.js';
+import storage from '../../storage.js';
+import type { Product, Inventory } from '../../storage/types.js';
 
 const forecastSchema = z.object({
   productId: z.string().optional(),
@@ -20,13 +21,13 @@ export class AIAnalyticsController {
       const stockMap = new Map();
       for (const product of products) {
         const productInventory = await storage.getProductInventory(product.id);
-        const totalStock = productInventory.reduce((sum, item) => sum + item.quantity, 0);
+        const totalStock = productInventory.reduce((sum: number, item: Inventory) => sum + item.quantity, 0);
         stockMap.set(product.id, totalStock);
       }
       
       // Generate predictions for top products with realistic forecast data
       const topProducts = products.slice(0, 6); // Top 6 products
-      const predictions = topProducts.map(product => {
+      const predictions = topProducts.map((product: Product) => {
         const currentStock = stockMap.get(product.id) || 0;
         const predictedDemand = Math.floor(Math.random() * 150) + 80; // 80-230 demand
         const confidence = Math.random() * 0.3 + 0.7; // 70-100% confidence

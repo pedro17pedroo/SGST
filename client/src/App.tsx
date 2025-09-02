@@ -1,5 +1,5 @@
 import React from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PerformanceOptimizer } from "./lib/performance-optimizer";
@@ -43,6 +43,16 @@ import FleetPage from "@/pages/fleet";
 import Roles from "@/pages/roles";
 import NotFound from "@/pages/not-found";
 
+function RedirectToDashboard() {
+  const [, setLocation] = useLocation();
+  
+  React.useEffect(() => {
+    setLocation('/dashboard');
+  }, [setLocation]);
+  
+  return null;
+}
+
 function Router() {
   const isMobile = useIsMobile();
   
@@ -54,6 +64,9 @@ function Router() {
       }`}>
         <div className="w-full">
           <Switch>
+            <Route path="/">
+              <RedirectToDashboard />
+            </Route>
             <Route path="/dashboard">
             <ModuleGuard moduleId="dashboard" fallback={<NotFound />}>
               <Dashboard />

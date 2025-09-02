@@ -1,0 +1,62 @@
+# Dockerfile para Backend - SGST
+FROM node:18-alpine AS builder
+
+# Instalar dependências do sistema
+RUN apk add --no-cache python3 make g++
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar arquivos de dependências
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Instalar dependências
+RUN npm ci --only=production
+
+# Copiar código fonte
+COPY server/ ./server/
+COPY shared/ ./shared/
+COPY drizzle.config.ts ./
+
+# Build da aplicação
+RUN npm run build:backend
+
+# Estágio de produção
+FROM node:18-alpine AS production
+
+# Criar usuário não-root
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S sgst -u 1001
+
+# Instalar dependências do sistema necessárias
+RUN apk add --no-cache dumb-init
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar dependências de produção
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+# Copiar aplicação buildada
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/shared ./shared
+
+# Criar diretórios necessários
+RUN mkdir -p /var/log/sgst
+RUN chown -R sgst:nodejs /app /var/log/sgst
+
+# Mudar para usuário não-root
+USER sgst
+
+# Expor porta
+EXPOSE 4002
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:4002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Comando de inicialização
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "dist/index.js"]

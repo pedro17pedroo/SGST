@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useLocation } from "wouter";
 
 interface User {
   id: string;
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     // Verificar se há um utilizador guardado no localStorage
@@ -51,6 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear local state regardless of API response
     setUser(null);
     localStorage.removeItem("sgst-user");
+    
+    // Redirect to home page after logout
+    setLocation('/');
   };
 
   const value = {

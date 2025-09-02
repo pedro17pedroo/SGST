@@ -1,0 +1,14 @@
+{
+  "name": "@sgst/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "schema.ts",
+  "exports": {
+    ".": "./schema.ts",
+    "./schema": "./schema.ts",
+    "./angola-types": "./angola-types.ts",
+    "./computer-vision-types": "./computer-vision-types.ts",
+    "./offline-types": "./offline-types.ts",
+    "./rtls-types": "./rtls-types.ts"
+  }
+}

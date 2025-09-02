@@ -446,7 +446,10 @@ export class FrontendModuleManager {
   }
 
   static isModuleEnabled(moduleId: string): boolean {
-    return this.enabledModules.has(moduleId);
+    const isEnabled = this.enabledModules.has(moduleId);
+    console.log(`🔍 Verificando módulo '${moduleId}': ${isEnabled ? 'HABILITADO' : 'DESABILITADO'}`);
+    console.log('📋 Módulos habilitados:', Array.from(this.enabledModules));
+    return isEnabled;
   }
 
   static getEnabledModules(): FrontendModuleConfig[] {

@@ -18,19 +18,4 @@ export function ModuleGuard({ moduleId, children, fallback = null }: ModuleGuard
   return <>{children}</>;
 }
 
-// Hook para verificar se um módulo está ativo
-export function useModuleEnabled(moduleId: string): boolean {
-  return FrontendModuleManager.isModuleEnabled(moduleId);
-}
-
-// Hook para obter informações de um módulo
-export function useModule(moduleId: string) {
-  const module = FrontendModuleManager.getModuleById(moduleId);
-  const isEnabled = FrontendModuleManager.isModuleEnabled(moduleId);
-  
-  return {
-    module,
-    isEnabled,
-    hasPermissions: true // Implementar verificação de permissões se necessário
-  };
-}
+// Hooks removidos temporariamente para evitar problemas no Fast Refresh

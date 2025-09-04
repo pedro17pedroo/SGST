@@ -73,7 +73,7 @@ export class AngolaOperationsController {
         message: 'Offline maps retrieved',
         maps,
         totalPackages: maps.length,
-        totalSize: maps.reduce((sum: number, map: any) => sum + map.packageSize, 0)
+        totalSize: maps.reduce((sum: number, map: { packageSize: number }) => sum + map.packageSize, 0)
       });
 
     } catch (error) {

@@ -1,31 +1,34 @@
 import { Router } from "express";
 import { DigitalTwinController } from "./digital-twin.controller";
+import { requireAuth, requireRole } from '../auth/auth.middleware';
 
 export const digitalTwinRoutes = Router();
 
-// TODO: Reativar rotas quando DigitalTwinController for restaurado
+// Middleware de autenticação para todas as rotas do digital twin
+digitalTwinRoutes.use(requireAuth);
+
 // Warehouse zones management
-digitalTwinRoutes.get('/zones/:warehouseId', DigitalTwinController.placeholder);
-digitalTwinRoutes.post('/zones', DigitalTwinController.placeholder);
-digitalTwinRoutes.put('/zones/:id', DigitalTwinController.placeholder);
-digitalTwinRoutes.delete('/zones/:id', DigitalTwinController.placeholder);
+digitalTwinRoutes.get('/zones/:warehouseId', DigitalTwinController.getWarehouseZones);
+digitalTwinRoutes.post('/zones', DigitalTwinController.createWarehouseZone);
+digitalTwinRoutes.put('/zones/:id', DigitalTwinController.updateWarehouseZone);
+digitalTwinRoutes.delete('/zones/:id', DigitalTwinController.deleteWarehouseZone);
 
 // Warehouse layout management
-digitalTwinRoutes.get('/layouts/:warehouseId', DigitalTwinController.placeholder);
-digitalTwinRoutes.post('/layouts', DigitalTwinController.placeholder);
-digitalTwinRoutes.put('/layouts/:id', DigitalTwinController.placeholder);
-digitalTwinRoutes.delete('/layouts/:id', DigitalTwinController.placeholder);
+digitalTwinRoutes.get('/layouts/:warehouseId', DigitalTwinController.getWarehouseLayouts);
+digitalTwinRoutes.post('/layouts', DigitalTwinController.createWarehouseLayout);
+digitalTwinRoutes.put('/layouts/:id', DigitalTwinController.updateWarehouseLayout);
+digitalTwinRoutes.delete('/layouts/:id', DigitalTwinController.deleteWarehouseLayout);
 
 // Digital twin simulations
-digitalTwinRoutes.get('/simulations/:warehouseId', DigitalTwinController.placeholder);
-digitalTwinRoutes.post('/simulations', DigitalTwinController.placeholder);
-digitalTwinRoutes.get('/simulations/:id/status', DigitalTwinController.placeholder);
-digitalTwinRoutes.post('/simulations/:id/run', DigitalTwinController.placeholder);
+digitalTwinRoutes.get('/simulations/:warehouseId', DigitalTwinController.getSimulations);
+digitalTwinRoutes.post('/simulations', DigitalTwinController.createSimulation);
+digitalTwinRoutes.get('/simulations/:id/status', DigitalTwinController.getSimulationStatus);
+digitalTwinRoutes.post('/simulations/:id/run', DigitalTwinController.runSimulation);
 
 // Real-time visualization
-digitalTwinRoutes.get('/visualization/:warehouseId', DigitalTwinController.placeholder);
-digitalTwinRoutes.post('/visualization', DigitalTwinController.placeholder);
+digitalTwinRoutes.get('/visualization/:warehouseId', DigitalTwinController.getRealTimeVisualization);
+digitalTwinRoutes.post('/visualization', DigitalTwinController.updateVisualization);
 
 // 3D Warehouse viewer
-digitalTwinRoutes.get('/viewer/:warehouseId', DigitalTwinController.placeholder);
-digitalTwinRoutes.get('/heatmap/:warehouseId', DigitalTwinController.placeholder);
+digitalTwinRoutes.get('/viewer/:warehouseId', DigitalTwinController.getWarehouseViewer);
+digitalTwinRoutes.get('/heatmap/:warehouseId', DigitalTwinController.getHeatmapData);

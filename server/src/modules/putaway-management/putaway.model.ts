@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../../../database/db';
 // TODO: Descomentar quando as tabelas de putaway forem criadas
 // import { 
 //   putawayRules, 
@@ -10,7 +10,7 @@ import { db } from '../../db';
 //   warehouses,
 //   receivingReceiptItems
 // } from '../../../shared/schema';
-import { products, warehouses } from '../../../shared/schema';
+import { products, warehouses } from '../../../../shared/schema';
 import { eq, and, desc, sql, asc } from 'drizzle-orm';
 // import type { 
 //   InsertPutawayRule,
@@ -21,9 +21,259 @@ import { eq, and, desc, sql, asc } from 'drizzle-orm';
 
 // TODO: Reativar toda a classe quando as tabelas necessárias forem criadas
 export class PutawayManagementModel {
-  static async placeholder() {
-    console.log('PutawayManagementModel temporariamente desabilitado durante migração para MySQL');
-    return null;
+  static async createPutawayRule(data: any) {
+    // Implementação temporária até as tabelas serem criadas
+    const rule = {
+      id: `rule-${Date.now()}`,
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    console.log('Regra de putaway criada (mock):', rule);
+    return rule;
+  }
+
+  static async getPutawayRules(warehouseId?: string) {
+    // Implementação temporária
+    return [];
+  }
+
+  static async updatePutawayRule(id: string, data: any) {
+    // Implementação temporária
+    const rule = {
+      id,
+      ...data,
+      updatedAt: new Date()
+    };
+    console.log('Regra de putaway atualizada (mock):', rule);
+    return rule;
+  }
+
+  static async deletePutawayRule(id: string) {
+    // Implementação temporária
+    console.log('Regra de putaway deletada (mock):', id);
+    return true;
+  }
+
+  static async createPutawayTask(data: any) {
+    // Implementação temporária
+    const task = {
+      id: `task-${Date.now()}`,
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    console.log('Tarefa de putaway criada (mock):', task);
+    return task;
+  }
+
+  static async getPutawayTasks(filters?: any) {
+    // Implementação temporária
+    return [];
+  }
+
+  static async updatePutawayTask(id: string, data: any) {
+    // Implementação temporária
+    const task = {
+      id,
+      ...data,
+      updatedAt: new Date()
+    };
+    console.log('Tarefa de putaway atualizada (mock):', task);
+    return task;
+  }
+
+  static async createSsccPallet(data: any) {
+    // Implementação temporária
+    const pallet = {
+      id: `pallet-${Date.now()}`,
+      ...data,
+      createdAt: new Date()
+    };
+    console.log('Pallet SSCC criado (mock):', pallet);
+    return pallet;
+  }
+
+  static async getSsccPallets(filters?: any) {
+    // Implementação temporária
+    return [];
+  }
+
+  static async updateSsccPallet(id: string, data: any) {
+    // Implementação temporária
+    const pallet = {
+      id,
+      ...data,
+      updatedAt: new Date()
+    };
+    console.log('Pallet SSCC atualizado (mock):', pallet);
+    return pallet;
+  }
+
+  static async addItemToPallet(palletId: string, data: any) {
+    // Implementação temporária
+    const item = {
+      id: `item-${Date.now()}`,
+      palletId,
+      ...data,
+      createdAt: new Date()
+    };
+    console.log('Item adicionado ao pallet (mock):', item);
+    return item;
+  }
+
+  static async getPalletItems(palletId: string) {
+    // Implementação temporária
+    return [];
+  }
+
+  static async removeItemFromPallet(palletId: string, itemId: string) {
+    // Implementação temporária
+    console.log('Item removido do pallet (mock):', { palletId, itemId });
+    return true;
+  }
+
+  static async generatePutawayRecommendations(data: any) {
+    // Implementação temporária
+    return {
+      recommendations: [],
+      strategy: 'closest_empty',
+      estimatedTime: 0
+    };
+  }
+
+  static async optimizePutawaySequence(taskIds: string[]) {
+    // Implementação temporária
+    return {
+      optimizedSequence: taskIds,
+      estimatedTime: 0,
+      distanceReduction: 0
+    };
+  }
+
+  static async getPutawayMetrics(warehouseId: string, dateRange?: any) {
+    // Implementação temporária
+    return {
+      totalTasks: 0,
+      completedTasks: 0,
+      averageTime: 0,
+      efficiency: 0
+    };
+  }
+
+  static async updatePalletStatus(id: string, status: string) {
+    // Implementação temporária
+    const pallet = {
+      id,
+      status,
+      updatedAt: new Date()
+    };
+    console.log('Status do pallet atualizado (mock):', pallet);
+    return pallet;
+  }
+
+  static async suggestOptimalLocation(productId: string, warehouseId: string, quantity: number) {
+    // Implementação temporária
+    return {
+      locationId: `loc-${Date.now()}`,
+      locationCode: 'A-01-01',
+      reason: 'Localização mais próxima disponível',
+      estimatedTime: 5,
+      ruleApplied: 'Regra de proximidade',
+      travelDistance: 15.5
+    };
+  }
+
+  static async processCrossDockOrder(orderId: string, warehouseId: string) {
+    // Implementação temporária
+    return {
+      eligible: false,
+      reason: 'Cross-dock não configurado',
+      estimatedSavings: 0
+    };
+  }
+
+  static async getPutawayStats(warehouseId: string) {
+    // Implementação temporária
+    return {
+      totalRules: 0,
+      activeRules: 0,
+      totalTasks: 0,
+      completedTasks: 0,
+      pendingTasks: 0,
+      averageCompletionTime: 0,
+      efficiency: 0
+    };
+  }
+
+  // Métodos adicionais necessários pelo controller
+  static async getAllPutawayRules(warehouseId?: string) {
+    return this.getPutawayRules(warehouseId);
+  }
+
+  static async getPutawayRuleById(id: string) {
+    // Implementação temporária
+    return {
+      id,
+      name: `Regra ${id}`,
+      warehouseId: 'warehouse-1',
+      priority: 1,
+      active: true
+    };
+  }
+
+  static async getAllPutawayTasks(warehouseId?: string) {
+    return this.getPutawayTasks({ warehouseId });
+  }
+
+  static async getPutawayTaskById(id: string) {
+    // Implementação temporária
+    return {
+      id,
+      productId: 'product-1',
+      quantity: 10,
+      status: 'pending',
+      warehouseId: 'warehouse-1'
+    };
+  }
+
+  static async assignPutawayTask(id: string, assignedTo: string) {
+    // Implementação temporária
+    return {
+      id,
+      assignedTo,
+      status: 'assigned',
+      assignedAt: new Date()
+    };
+  }
+
+  static async updatePutawayTaskStatus(id: string, status: string, actualLocationId?: string) {
+    // Implementação temporária
+    return {
+      id,
+      status,
+      actualLocationId,
+      updatedAt: new Date()
+    };
+  }
+
+  static async generateSsccCode() {
+    // Implementação temporária
+    return `SSCC${Date.now()}`;
+  }
+
+  static async getAllSsccPallets(warehouseId?: string) {
+    return this.getSsccPallets({ warehouseId });
+  }
+
+  static async getSsccPalletById(id: string) {
+    // Implementação temporária
+    return {
+      id,
+      ssccCode: `SSCC${id}`,
+      warehouseId: 'warehouse-1',
+      status: 'active'
+    };
   }
 }
 
@@ -326,7 +576,7 @@ export class PutawayManagementModel {
 
   static async getAvailableLocations(warehouseId: string) {
     // Mock available locations - in real implementation, this would check capacity
-    return Array.from({ length: 10 }, (_, i) => ({
+    return Array.from({ length: 10 }, (_: unknown, i: number) => ({
       id: `loc-${i + 1}`,
       zone: String.fromCharCode(65 + Math.floor(i / 3)), // A, B, C, D
       shelf: `${String.fromCharCode(65 + Math.floor(i / 3))}${i % 3 + 1}`,
@@ -342,7 +592,7 @@ export class PutawayManagementModel {
     const baseCode = companyPrefix + timestamp + random;
     
     // Calculate check digit (simplified)
-    const checkDigit = (10 - (baseCode.split('').reduce((sum, digit, index) => {
+    const checkDigit = (10 - (baseCode.split('').reduce((sum: number, digit: string, index: number) => {
       return sum + parseInt(digit) * (index % 2 === 0 ? 3 : 1);
     }, 0) % 10)) % 10;
     
@@ -353,12 +603,12 @@ export class PutawayManagementModel {
     // Get all items on pallet
     const items = await this.getPalletItems(palletId);
     
-    const totalWeight = items.reduce((sum, item) => {
+    const totalWeight = items.reduce((sum: number, item: any) => {
       const weight = parseFloat(item.item.weight || '0');
       return sum + (weight * item.item.quantity);
     }, 0);
 
-    const totalItems = items.reduce((sum, item) => sum + item.item.quantity, 0);
+    const totalItems = items.reduce((sum: number, item: any) => sum + item.item.quantity, 0);
 
     // Update pallet statistics
     await db

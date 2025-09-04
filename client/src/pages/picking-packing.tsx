@@ -27,9 +27,17 @@ import {
   Ruler,
   User,
   Scan,
-  PackageCheck
+  PackageCheck,
+  Trash2
 } from "lucide-react";
 import { z } from "zod";
+
+// Picking List Item Schema
+const pickingListItemSchema = z.object({
+  productId: z.string().min(1, "Produto é obrigatório"),
+  quantityToPick: z.number().min(1, "Quantidade deve ser maior que 0"),
+  locationId: z.string().optional(),
+});
 
 // Picking List Schema
 const pickingListSchema = z.object({
@@ -52,9 +60,35 @@ const packingSchema = z.object({
   notes: z.string().optional(),
 });
 
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  barcode?: string;
+  price: number;
+}
+
+interface ProductLocation {
+  id: string;
+  productId: string;
+  warehouseId: string;
+  zone?: string;
+  shelf?: string;
+  bin?: string;
+  product: Product;
+}
+
+interface Warehouse {
+  id: string;
+  name: string;
+  address?: string;
+  isActive: boolean;
+}
+
 interface PickingList {
   id: string;
-  orderNumber: string;
+  pickNumber?: string;
+  orderNumber?: string | null;
   warehouse: {
     id: string;
     name: string;
@@ -121,13 +155,13 @@ export default function PickingPackingPage() {
   const [activeTab, setActiveTab] = useState("picking");
   const [isPickingDialogOpen, setIsPickingDialogOpen] = useState(false);
   const [isPackingDialogOpen, setIsPackingDialogOpen] = useState(false);
-  const [selectedPickingList, setSelectedPickingList] = useState<PickingList | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [pickingItems, setPickingItems] = useState<Array<z.infer<typeof pickingListItemSchema>>>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const pickingForm = useForm<z.infer<typeof pickingListSchema>>({
-    resolver: zodResolver(pickingListSchema),
+    resolver: zodResolver(pickingListSchema as any),
     defaultValues: {
       orderNumber: "",
       warehouseId: "",
@@ -137,7 +171,7 @@ export default function PickingPackingPage() {
   });
 
   const packingForm = useForm<z.infer<typeof packingSchema>>({
-    resolver: zodResolver(packingSchema),
+    resolver: zodResolver(packingSchema as any),
     defaultValues: {
       pickingListId: "",
       packageType: "",
@@ -155,65 +189,13 @@ export default function PickingPackingPage() {
   const { data: pickingLists, isLoading: isLoadingPicking } = useQuery({
     queryKey: ['/api/picking-lists'],
     queryFn: async () => {
-      // Demo data for now - replace with actual API call
-      return [
-        {
-          id: 'pick-001',
-          orderNumber: 'ORD-2025-001',
-          warehouse: { id: 'wh-001', name: 'Armazém Principal' },
-          status: 'pending' as const,
-          priority: 'high' as const,
-          items: [
-            {
-              id: 'item-001',
-              product: {
-                id: '1',
-                name: 'Smartphone Samsung Galaxy A54',
-                sku: 'SPH-001',
-                barcode: '7891234567890'
-              },
-              quantity: 2,
-              location: { zone: 'A', shelf: 'A1', bin: 'A1-01' }
-            },
-            {
-              id: 'item-002',
-              product: {
-                id: '3',
-                name: 'Monitor LG 24" Full HD',
-                sku: 'MON-003',
-                barcode: '7891234567892'
-              },
-              quantity: 1,
-              location: { zone: 'B', shelf: 'B2', bin: 'B2-15' }
-            }
-          ],
-          createdAt: new Date().toISOString(),
-          notes: 'Prioridade alta - cliente VIP'
-        },
-        {
-          id: 'pick-002',
-          orderNumber: 'ORD-2025-002',
-          warehouse: { id: 'wh-001', name: 'Armazém Principal' },
-          status: 'in_progress' as const,
-          priority: 'normal' as const,
-          assignedTo: { id: 'user-002', username: 'Maria Operadora' },
-          items: [
-            {
-              id: 'item-003',
-              product: {
-                id: '4',
-                name: 'Fones JBL Tune 510BT',
-                sku: 'FON-004',
-                barcode: '7891234567893'
-              },
-              quantity: 3,
-              pickedQuantity: 2,
-              location: { zone: 'C', shelf: 'C1', bin: 'C1-08' }
-            }
-          ],
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        }
-      ] as PickingList[];
+      const response = await fetch('/api/picking-lists', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch picking lists');
+      }
+      return response.json() as Promise<PickingList[]>;
     }
   });
 
@@ -221,28 +203,13 @@ export default function PickingPackingPage() {
   const { data: packingTasks, isLoading: isLoadingPacking } = useQuery({
     queryKey: ['/api/packing-tasks'],
     queryFn: async () => {
-      // Demo data for now - replace with actual API call
-      return [
-        {
-          id: 'pack-001',
-          pickingList: { id: 'pick-003', orderNumber: 'ORD-2025-003' },
-          packageType: 'Caixa Média',
-          status: 'completed' as const,
-          weight: 2.5,
-          dimensions: { length: 30, width: 20, height: 15 },
-          trackingNumber: 'TRK-001-2025',
-          packedBy: { id: 'user-001', username: 'João Admin' },
-          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-          completedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'pack-002',
-          pickingList: { id: 'pick-002', orderNumber: 'ORD-2025-002' },
-          packageType: 'Caixa Pequena',
-          status: 'pending' as const,
-          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-        }
-      ] as PackingTask[];
+      const response = await fetch('/api/packing-tasks', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch packing tasks');
+      }
+      return response.json() as Promise<PackingTask[]>;
     }
   });
 
@@ -256,12 +223,52 @@ export default function PickingPackingPage() {
     }
   });
 
+  // Get products
+  const { data: products } = useQuery({
+    queryKey: ['/api/products'],
+    queryFn: async () => {
+      const response = await fetch('/api/products');
+      if (!response.ok) throw new Error('Failed to fetch products');
+      return response.json() as Promise<Product[]>;
+    }
+  });
+
+  // Get product locations
+  const { data: productLocations } = useQuery({
+    queryKey: ['/api/product-locations', pickingForm.watch('warehouseId')],
+    queryFn: async () => {
+      const warehouseId = pickingForm.getValues('warehouseId');
+      if (!warehouseId) return [];
+      const response = await fetch(`/api/product-locations?warehouseId=${warehouseId}`);
+      if (!response.ok) throw new Error('Failed to fetch product locations');
+      return response.json() as Promise<ProductLocation[]>;
+    },
+    enabled: !!pickingForm.watch('warehouseId')
+  });
+
   // Create picking list mutation
   const createPickingMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof pickingListSchema>) => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { id: 'new-pick', ...data };
+    mutationFn: async (data: z.infer<typeof pickingListSchema> & { items?: z.infer<typeof pickingListItemSchema>[] }) => {
+      const response = await fetch('/api/picking-lists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          orderNumbers: [data.orderNumber],
+          warehouseId: data.warehouseId,
+          priority: data.priority,
+          notes: data.notes,
+          pickingType: 'individual',
+          items: data.items || []
+        }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create picking list: ${errorText}`);
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/picking-lists'] });
@@ -271,6 +278,7 @@ export default function PickingPackingPage() {
       });
       setIsPickingDialogOpen(false);
       pickingForm.reset();
+      setPickingItems([]);
     },
     onError: (error) => {
       toast({
@@ -284,9 +292,19 @@ export default function PickingPackingPage() {
   // Create packing task mutation
   const createPackingMutation = useMutation({
     mutationFn: async (data: z.infer<typeof packingSchema>) => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { id: 'new-pack', ...data };
+      const response = await fetch('/api/packing-tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create packing task: ${errorText}`);
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/packing-tasks'] });
@@ -307,7 +325,59 @@ export default function PickingPackingPage() {
   });
 
   const onPickingSubmit = (data: z.infer<typeof pickingListSchema>) => {
-    createPickingMutation.mutate(data);
+    console.log('onPickingSubmit chamado com dados:', data);
+    console.log('pickingItems atual:', pickingItems);
+    
+    // Validar se há pelo menos um item
+    if (pickingItems.length === 0) {
+      console.log('Erro: Nenhum item na lista');
+      toast({
+        variant: "destructive",
+        title: "Erro de validação",
+        description: "Deve adicionar pelo menos um item à lista de picking.",
+      });
+      return;
+    }
+
+    // Validar se todos os itens têm produto selecionado
+    const invalidItems = pickingItems.filter(item => !item.productId || item.quantityToPick <= 0);
+    console.log('Itens inválidos encontrados:', invalidItems);
+    
+    if (invalidItems.length > 0) {
+      console.log('Erro: Itens inválidos detectados');
+      toast({
+        variant: "destructive",
+        title: "Erro de validação",
+        description: "Todos os itens devem ter um produto selecionado e quantidade maior que 0.",
+      });
+      return;
+    }
+
+    const submitData = {
+      ...data,
+      items: pickingItems
+    };
+    
+    console.log('Dados finais para submissão:', submitData);
+    createPickingMutation.mutate(submitData);
+  };
+
+  const addPickingItem = () => {
+    setPickingItems([...pickingItems, {
+      productId: "",
+      quantityToPick: 1,
+      locationId: ""
+    }]);
+  };
+
+  const removePickingItem = (index: number) => {
+    setPickingItems(pickingItems.filter((_, i) => i !== index));
+  };
+
+  const updatePickingItem = (index: number, field: keyof z.infer<typeof pickingListItemSchema>, value: any) => {
+    const updatedItems = [...pickingItems];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    setPickingItems(updatedItems);
   };
 
   const onPackingSubmit = (data: z.infer<typeof packingSchema>) => {
@@ -344,14 +414,40 @@ export default function PickingPackingPage() {
     }
   };
 
+  // Start picking list mutation
+  const startPickingMutation = useMutation({
+    mutationFn: async (pickingListId: string) => {
+      const response = await fetch(`/api/picking-lists/${pickingListId}/start`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to start picking: ${errorText}`);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/picking-lists'] });
+      toast({
+        title: "Picking iniciado com sucesso!",
+        description: "A lista de picking foi iniciada e está pronta para ser processada.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Erro ao iniciar picking",
+        description: error.message,
+      });
+    }
+  });
+
   const handleStartPicking = (pickingList: PickingList) => {
-    toast({
-      title: "Picking iniciado",
-      description: `Iniciando picking para ${pickingList.orderNumber}`,
-    });
+    startPickingMutation.mutate(pickingList.id);
   };
 
-  const handleScanItem = (pickingList: PickingList, itemId: string) => {
+  const handleScanItem = () => {
     toast({
       title: "Item escaneado",
       description: "Item confirmado na lista de picking",
@@ -368,13 +464,16 @@ export default function PickingPackingPage() {
   };
 
   const filteredPickingLists = pickingLists?.filter(list => 
-    list.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    list.warehouse.name.toLowerCase().includes(searchQuery.toLowerCase())
+    list && list.warehouse && 
+    ((list.orderNumber && list.orderNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (list.pickNumber && list.pickNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    list.warehouse.name.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
 
   const filteredPackingTasks = packingTasks?.filter(task => 
-    task.pickingList.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.packageType.toLowerCase().includes(searchQuery.toLowerCase())
+    task && task.pickingList && task.pickingList.orderNumber && task.packageType &&
+    (task.pickingList.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.packageType.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
 
   return (
@@ -415,118 +514,303 @@ export default function PickingPackingPage() {
             <h2 className="text-xl font-semibold">Listas de Picking</h2>
             <Dialog open={isPickingDialogOpen} onOpenChange={setIsPickingDialogOpen}>
               <DialogTrigger asChild>
-                <Button data-testid="add-picking-list">
+                <Button data-testid="add-picking-list" className="bg-primary hover:bg-primary/90">
                   <Plus className="w-4 h-4 mr-2" />
                   Nova Lista de Picking
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Nova Lista de Picking</DialogTitle>
+              <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
+                <DialogHeader className="pb-4 border-b">
+                  <DialogTitle className="text-xl font-semibold">Criar Nova Lista de Picking</DialogTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Preencha os dados abaixo para criar uma nova lista de picking
+                  </p>
                 </DialogHeader>
                 <Form {...pickingForm}>
-                  <form onSubmit={pickingForm.handleSubmit(onPickingSubmit)} className="space-y-4">
-                    <FormField
-                      control={pickingForm.control}
-                      name="orderNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Número da Encomenda</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="ORD-2025-001" 
-                              {...field} 
-                              data-testid="input-order-number"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <form onSubmit={pickingForm.handleSubmit(onPickingSubmit)} className="space-y-6 pt-4">
+                    {/* Informações Básicas */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-base font-semibold mb-3">Informações Básicas</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={pickingForm.control}
+                            name="orderNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium">Número da Encomenda *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Ex: ORD-2025-001" 
+                                    {...field} 
+                                    data-testid="input-order-number"
+                                    className="h-10"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-                    <FormField
-                      control={pickingForm.control}
-                      name="warehouseId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Armazém</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-warehouse-picking">
-                                <SelectValue placeholder="Seleccione o armazém" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {warehouses?.map((warehouse) => (
-                                <SelectItem key={warehouse.id} value={warehouse.id}>
-                                  {warehouse.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                          <FormField
+                            control={pickingForm.control}
+                            name="warehouseId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium">Armazém *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger data-testid="select-warehouse-picking" className="h-10">
+                                      <SelectValue placeholder="Seleccione o armazém" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {warehouses?.filter(warehouse => warehouse.name).map((warehouse) => (
+                                      <SelectItem key={warehouse.id} value={warehouse.id}>
+                                        {warehouse.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
 
-                    <FormField
-                      control={pickingForm.control}
-                      name="priority"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Prioridade</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-priority">
-                                <SelectValue placeholder="Seleccione a prioridade" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="low">Baixa</SelectItem>
-                              <SelectItem value="normal">Normal</SelectItem>
-                              <SelectItem value="high">Alta</SelectItem>
-                              <SelectItem value="urgent">Urgente</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={pickingForm.control}
+                          name="priority"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">Prioridade</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-priority" className="h-10">
+                                    <SelectValue placeholder="Seleccione a prioridade" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="low">
+                                    <div className="flex items-center">
+                                      <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                                      Baixa
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="normal">
+                                    <div className="flex items-center">
+                                      <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                                      Normal
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="high">
+                                    <div className="flex items-center">
+                                      <div className="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>
+                                      Alta
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="urgent">
+                                    <div className="flex items-center">
+                                      <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                                      Urgente
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={pickingForm.control}
-                      name="notes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Observações</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Observações especiais..." 
-                              {...field} 
-                              data-testid="textarea-picking-notes"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={pickingForm.control}
+                          name="notes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium">Observações</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Observações especiais..." 
+                                  {...field} 
+                                  data-testid="textarea-picking-notes"
+                                  className="min-h-[80px] resize-none"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
 
-                    <div className="flex justify-end space-x-2">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setIsPickingDialogOpen(false)}
-                        data-testid="button-cancel-picking"
-                      >
-                        Cancelar
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        disabled={createPickingMutation.isPending}
-                        data-testid="button-submit-picking"
-                      >
-                        Criar Lista
-                      </Button>
+                    {/* Seção de Itens */}
+                    <div className="space-y-4 border-t pt-6">
+                      <div className="flex items-center justify-between mb-4 p-4 bg-muted/30 rounded-lg border">
+                        <div>
+                          <FormLabel className="text-base font-semibold flex items-center">
+                            <Package className="h-5 w-5 mr-2 text-primary" />
+                            Itens da Lista de Picking
+                          </FormLabel>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Adicione os produtos que devem ser coletados nesta lista
+                          </p>
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="default" 
+                          size="sm"
+                          onClick={addPickingItem}
+                          data-testid="add-picking-item"
+                          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Item
+                        </Button>
+                      </div>
+                      
+                      {pickingItems.length === 0 && (
+                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-muted rounded-lg bg-muted/10">
+                          <div className="flex flex-col items-center">
+                            <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                              <Package className="w-8 h-8 text-muted-foreground/50" />
+                            </div>
+                            <h4 className="text-base font-medium text-muted-foreground mb-2">Nenhum item adicionado</h4>
+                            <p className="text-sm text-muted-foreground/75 mb-4">Clique em "Adicionar Item" para começar a criar sua lista</p>
+                            <Button
+                              type="button"
+                              onClick={addPickingItem}
+                              variant="outline"
+                              size="sm"
+                              className="border-primary/50 text-primary hover:bg-primary/10"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Adicionar Primeiro Item
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {pickingItems.map((item, index) => (
+                        <div key={index} className="border border-border rounded-lg p-4 space-y-4 bg-card shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                                <span className="text-sm font-semibold text-primary">{index + 1}</span>
+                              </div>
+                              <h4 className="text-sm font-semibold text-foreground">Item {index + 1}</h4>
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => removePickingItem(index)}
+                              data-testid={`remove-item-${index}`}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Produto */}
+                            <div>
+                              <FormLabel className="text-sm font-medium mb-2 block">Produto *</FormLabel>
+                              <Select 
+                                value={item.productId} 
+                                onValueChange={(value) => updatePickingItem(index, 'productId', value)}
+                              >
+                                <SelectTrigger data-testid={`select-product-${index}`} className="h-10">
+                                  <SelectValue placeholder="Seleccione o produto" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {products?.filter(product => product.name && product.sku).map((product) => (
+                                    <SelectItem key={product.id} value={product.id}>
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">{product.name}</span>
+                                        <span className="text-xs text-muted-foreground">SKU: {product.sku}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {/* Quantidade */}
+                            <div>
+                              <FormLabel className="text-sm font-medium mb-2 block">Quantidade *</FormLabel>
+                              <Input 
+                                type="number" 
+                                min="1" 
+                                value={item.quantityToPick}
+                                onChange={(e) => updatePickingItem(index, 'quantityToPick', parseInt(e.target.value) || 1)}
+                                data-testid={`input-quantity-${index}`}
+                                placeholder="Ex: 10"
+                                className="h-10"
+                              />
+                            </div>
+                            
+                            {/* Localização */}
+                            <div>
+                              <FormLabel className="text-sm font-medium mb-2 block">Localização</FormLabel>
+                              <Select 
+                                value={item.locationId || ""} 
+                                onValueChange={(value) => updatePickingItem(index, 'locationId', value)}
+                              >
+                                <SelectTrigger data-testid={`select-location-${index}`} className="h-10">
+                                  <SelectValue placeholder="Seleccione a localização" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="no-location">
+                                    <div className="flex items-center">
+                                      <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
+                                      Sem localização específica
+                                    </div>
+                                  </SelectItem>
+                                  {productLocations?.filter(location => 
+                                    location.productId === item.productId
+                                  ).map((location) => (
+                                    <SelectItem key={location.id} value={location.id}>
+                                      <div className="flex items-center">
+                                        <MapPin className="w-4 h-4 mr-2 text-primary" />
+                                        {[location.zone, location.shelf, location.bin].filter(Boolean).join('-') || 'Localização sem código'}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-between items-center pt-6 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        {pickingItems.length > 0 && (
+                          <span>{pickingItems.length} item(s) adicionado(s)</span>
+                        )}
+                      </div>
+                      <div className="flex space-x-3">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setIsPickingDialogOpen(false)}
+                          data-testid="button-cancel-picking"
+                          className="min-w-[100px]"
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={createPickingMutation.isPending || pickingItems.length === 0}
+                          data-testid="button-submit-picking"
+                          className="min-w-[120px] bg-primary hover:bg-primary/90"
+                        >
+                          {createPickingMutation.isPending ? "Criando..." : "Criar Lista"}
+                        </Button>
+                      </div>
                     </div>
                   </form>
                 </Form>
@@ -558,11 +842,11 @@ export default function PickingPackingPage() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-foreground" data-testid={`order-number-${list.id}`}>
-                            {list.orderNumber}
+                            {list.orderNumber || list.pickNumber || 'N/A'}
                           </h3>
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <MapPin className="w-4 h-4" />
-                            <span>{list.warehouse.name}</span>
+                            <span>{list.warehouse?.name || 'Armazém não encontrado'}</span>
                             {list.assignedTo && (
                               <>
                                 <span>•</span>
@@ -590,8 +874,8 @@ export default function PickingPackingPage() {
                           >
                             <div className="flex items-center space-x-3">
                               <div className="text-sm">
-                                <span className="font-medium">{item.product.name}</span>
-                                <span className="text-muted-foreground ml-2">({item.product.sku})</span>
+                                <span className="font-medium">{item.product?.name || 'Produto não encontrado'}</span>
+                                <span className="text-muted-foreground ml-2">({item.product?.sku || 'N/A'})</span>
                               </div>
                               <Badge variant="outline">
                                 Qtd: {item.pickedQuantity || 0}/{item.quantity}
@@ -603,7 +887,7 @@ export default function PickingPackingPage() {
                             <Button 
                               size="sm" 
                               variant="ghost"
-                              onClick={() => handleScanItem(list, item.id)}
+                              onClick={() => handleScanItem()}
                               data-testid={`scan-item-${item.id}`}
                             >
                               <Scan className="w-4 h-4" />
@@ -696,11 +980,35 @@ export default function PickingPackingPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {pickingLists?.filter(list => list.status === 'completed').map((list) => (
-                                <SelectItem key={list.id} value={list.id}>
-                                  {list.orderNumber}
-                                </SelectItem>
-                              ))}
+                              {(() => {
+                                // Debug: Log das listas de picking disponíveis
+                                console.log('🔍 [DEBUG] Todas as listas de picking:', pickingLists);
+                                
+                                const filteredLists = pickingLists?.filter(list => {
+                                  const isCompleted = list.status === 'completed';
+                                  const hasIdentifier = list.orderNumber || list.pickNumber;
+                                  
+                                  // Debug: Log detalhado de cada lista
+                                  console.log(`📋 [DEBUG] Lista ${list.id}:`, {
+                                    status: list.status,
+                                    isCompleted,
+                                    orderNumber: list.orderNumber,
+                                    pickNumber: list.pickNumber,
+                                    hasIdentifier,
+                                    willShow: isCompleted && hasIdentifier
+                                  });
+                                  
+                                  return isCompleted && hasIdentifier;
+                                });
+                                
+                                console.log('✅ [DEBUG] Listas filtradas para dropdown:', filteredLists);
+                                
+                                return filteredLists?.map((list) => (
+                                  <SelectItem key={list.id} value={list.id}>
+                                    {list.orderNumber || list.pickNumber}
+                                  </SelectItem>
+                                ));
+                              })()}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -881,7 +1189,7 @@ export default function PickingPackingPage() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-foreground" data-testid={`packing-order-${task.id}`}>
-                            {task.pickingList.orderNumber}
+                            {task.pickingList?.orderNumber || 'N/A'}
                           </h3>
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                             <span>{task.packageType}</span>

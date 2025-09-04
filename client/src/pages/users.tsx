@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Edit, Trash2, Shield, User as UserIcon, UserCheck, UserX, Users as UsersIcon } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Shield, User as UserIcon, UserCheck, UserX } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,19 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema, type User } from "@shared/schema";
+import { type User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
-const userFormSchema = insertUserSchema.extend({
+const userFormSchema = z.object({
+  username: z.string().min(1, "Nome de usuário é obrigatório"),
+  email: z.string().email("Email inválido"),
   password: z.string().min(6, "Password deve ter pelo menos 6 caracteres"),
   roleIds: z.array(z.string()).min(1, "Deve selecionar pelo menos um perfil"),
+  isActive: z.boolean(),
 });
 
 type UserFormData = z.infer<typeof userFormSchema>;
@@ -38,14 +41,16 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
   const { toast } = useToast();
   
   // Buscar roles disponíveis
-  const { data: roles = [] } = useQuery({
+  const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ["/api/roles"],
+    staleTime: 10 * 60 * 1000, // Cache por 10 minutos
   });
 
   // Buscar roles do usuário se estiver editando
-  const { data: userRoles = [] } = useQuery({
+  const { data: userRoles = [] } = useQuery<Role[]>({
     queryKey: ["/api/users", user?.id, "roles"],
-    enabled: !!user?.id,
+    enabled: !!user?.id && open, // Só buscar quando o dialog estiver aberto
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
   
   const form = useForm<UserFormData>({
@@ -57,37 +62,57 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
       roleIds: [],
       isActive: true,
     },
+    mode: "onChange",
   });
 
-  // Reset form values when user changes
-  React.useEffect(() => {
-    if (user) {
-      form.reset({
-        username: user.username || "",
-        email: user.email || "",
-        password: "",
-        roleIds: Array.isArray(userRoles) ? userRoles.map((role: any) => role.id) : [],
-        isActive: user.isActive ?? true,
-      });
-    } else {
-      form.reset({
-        username: "",
-        email: "",
-        password: "",
-        roleIds: [],
-        isActive: true,
-      });
+  // Memoizar roleIds do utilizador para evitar re-renders desnecessários
+  const memoizedUserRoleIds = useMemo(() => {
+    return Array.isArray(userRoles) ? userRoles.map((role: Role) => role.id) : [];
+  }, [userRoles]);
+
+  // Estado para controlar se já foi inicializado
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Reset form values when dialog opens or user changes
+  useEffect(() => {
+    if (open && (!isInitialized || user)) {
+      if (user) {
+        form.reset({
+          username: user.username || "",
+          email: user.email || "",
+          password: "",
+          roleIds: memoizedUserRoleIds,
+          isActive: user.isActive ?? true,
+        });
+      } else {
+        form.reset({
+          username: "",
+          email: "",
+          password: "",
+          roleIds: [],
+          isActive: true,
+        });
+      }
+      setIsInitialized(true);
     }
-  }, [user, userRoles, form]);
+  }, [user, memoizedUserRoleIds, open, isInitialized]);
+
+  // Reset initialization state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setIsInitialized(false);
+    }
+  }, [open]);
 
   const createMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
       const { roleIds, ...userData } = data;
-      const user = await apiRequest("/api/users", "POST", userData);
+      const response = await apiRequest("/api/users", "POST", userData);
+      const user = response as unknown as User;
       
       // Atribuir roles ao usuário
-      if (roleIds.length > 0) {
-        await apiRequest(`/api/users/${user.id}/roles`, "PUT", { roleIds });
+      if (roleIds && Array.isArray(roleIds) && roleIds.length > 0) {
+        await apiRequest(`/api/users/${user.id}/roles`, "PUT", { roleIds: roleIds as string[] });
       }
       
       return user;
@@ -115,11 +140,12 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
       const { password, roleIds, ...updateData } = data;
       const userPayload = password ? { ...updateData, password } : updateData;
       
-      const updatedUser = await apiRequest(`/api/users/${user?.id}`, "PUT", userPayload);
+      const response = await apiRequest(`/api/users/${user?.id}`, "PUT", userPayload);
+      const updatedUser = response as unknown as User;
       
       // Atualizar roles do usuário
-      if (roleIds.length > 0) {
-        await apiRequest(`/api/users/${user?.id}/roles`, "PUT", { roleIds });
+      if (roleIds && Array.isArray(roleIds) && roleIds.length > 0) {
+        await apiRequest(`/api/users/${user?.id}/roles`, "PUT", { roleIds: roleIds as string[] });
       }
       
       return updatedUser;
@@ -211,7 +237,10 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
                     <Input 
                       type="password"
                       placeholder="••••••••" 
-                      {...field} 
+                      value={field.value as string || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
                       data-testid="input-password"
                     />
                   </FormControl>
@@ -232,9 +261,9 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
                         <div key={role.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`role-${role.id}`}
-                            checked={field.value.includes(role.id)}
+                            checked={(field.value as string[]).includes(role.id)}
                             onCheckedChange={(checked) => {
-                              const currentRoles = field.value || [];
+                              const currentRoles = (field.value as string[]) || [];
                               if (checked) {
                                 field.onChange([...currentRoles, role.id]);
                               } else {
@@ -322,7 +351,7 @@ function UserCard({ user }: { user: User }) {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", `/api/users/${user.id}`);
+      await apiRequest(`/api/users/${user.id}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });

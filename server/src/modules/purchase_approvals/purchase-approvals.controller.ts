@@ -114,7 +114,7 @@ export class PurchaseApprovalsController {
       }
       
       const approval = await PurchaseApprovalsModel.rejectPurchaseOrder(orderId, {
-        ...validated,
+        comments: validated.comments || '',
         rejectedByUserId: (req as any).user?.id || 'anonymous-user',
         rejectedAt: new Date()
       });
@@ -155,7 +155,7 @@ export class PurchaseApprovalsController {
       }
       
       const approval = await PurchaseApprovalsModel.requestRevision(orderId, {
-        ...validated,
+        comments: validated.comments || '',
         requestedByUserId: 'current-user-id', // TODO: Get from auth context
         requestedAt: new Date()
       });
@@ -205,7 +205,16 @@ export class PurchaseApprovalsController {
       const validated = approvalChainSchema.parse(req.body);
       
       const chain = await PurchaseApprovalsModel.createApprovalChain({
-        ...validated,
+        name: validated.name || '',
+        description: validated.description,
+        active: validated.active ?? true,
+        approvers: validated.approvers?.map(approver => ({
+          userId: approver.userId || '',
+          level: approver.level || 1,
+          required: approver.required ?? true,
+          canDelegate: approver.canDelegate ?? false
+        })) || [],
+        conditions: validated.conditions,
         createdAt: new Date(),
         createdByUserId: 'current-user-id' // TODO: Get from auth context
       });
@@ -235,11 +244,21 @@ export class PurchaseApprovalsController {
       const { chainId } = req.params;
       const validated = approvalChainSchema.partial().parse(req.body);
       
-      const chain = await PurchaseApprovalsModel.updateApprovalChain(chainId, {
+      // Garantir que os campos obrigatórios estejam presentes
+      const updateData = {
         ...validated,
         updatedAt: new Date(),
-        updatedByUserId: 'current-user-id' // TODO: Get from auth context
-      });
+        updatedByUserId: 'current-user-id', // TODO: Get from auth context
+        // Garantir que approvers tenha os campos obrigatórios
+        approvers: validated.approvers?.map(approver => ({
+          userId: approver.userId || '',
+          level: approver.level || 1,
+          required: approver.required ?? true,
+          canDelegate: approver.canDelegate ?? false
+        }))
+      };
+      
+      const chain = await PurchaseApprovalsModel.updateApprovalChain(chainId, updateData);
       
       if (!chain) {
         return res.status(404).json({ message: "Cadeia de aprovação não encontrada" });
@@ -390,7 +409,12 @@ export class PurchaseApprovalsController {
       const validated = approvalLimitSchema.parse(req.body);
       
       const limit = await PurchaseApprovalsModel.createApprovalLimit({
-        ...validated,
+        userId: validated.userId || '',
+        role: validated.role,
+        maxAmount: validated.maxAmount || 0,
+        currency: validated.currency || 'AOA',
+        category: validated.category,
+        active: validated.active ?? true,
         createdAt: new Date(),
         createdByUserId: 'current-user-id' // TODO: Get from auth context
       });

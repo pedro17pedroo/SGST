@@ -16,10 +16,7 @@ import {
   Activity, 
   AlertTriangle, 
   Users, 
-  Warehouse,
   Download,
-  Filter,
-  PieChart as PieChartIcon,
   Target,
   Calendar,
   Brain,
@@ -34,13 +31,10 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  LineChart, 
   Line, 
   PieChart, 
   Pie, 
   Cell, 
-  AreaChart, 
-  Area, 
   ComposedChart 
 } from 'recharts';
 
@@ -95,7 +89,7 @@ const categoryAnalytics = [
     inventory: 234,
     turnover: 6.8
   },
-];
+]
 
 const warehouseEfficiency = [
   { warehouse: 'Principal', efficiency: 87, accuracy: 98.5, costs: 45000, capacity: 85 },
@@ -109,13 +103,6 @@ const supplierPerformance = [
   { supplier: 'ElectroMax', onTime: 88, quality: 92, cost: 78, satisfaction: 8.5 },
   { supplier: 'InfoTech Lda', onTime: 92, quality: 95, cost: 82, satisfaction: 8.8 },
   { supplier: 'Digital Solutions', onTime: 85, quality: 89, cost: 76, satisfaction: 8.1 },
-];
-
-const predictiveData = [
-  { month: 'Jul', predicted: 1950000, confidence: 85, demand: 'Alto' },
-  { month: 'Ago', predicted: 2100000, confidence: 82, demand: 'Muito Alto' },
-  { month: 'Set', predicted: 1850000, confidence: 78, demand: 'Alto' },
-  { month: 'Out', predicted: 2250000, confidence: 75, demand: 'Crítico' },
 ];
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff8042', '#8dd1e1', '#d084d0'];
@@ -432,8 +419,7 @@ function AIAnalyticsSection() {
 export default function AdvancedAnalyticsPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [timeRange, setTimeRange] = useState("6m");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [warehouseFilter, setWarehouseFilter] = useState("all");
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-PT', {
@@ -618,7 +604,7 @@ export default function AdvancedAnalyticsPage() {
                     fill="#8884d8"
                     dataKey="revenue"
                   >
-                    {categoryAnalytics.map((entry, index) => (
+                    {categoryAnalytics.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

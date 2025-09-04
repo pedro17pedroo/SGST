@@ -1,18 +1,7 @@
 import { Request, Response } from "express";
 import { DigitalTwinModel } from "./digital-twin.model";
-// TODO: Descomentar quando os schemas de digital twin forem criados
-// import { insertWarehouseZoneSchema, insertWarehouseLayoutSchema, insertDigitalTwinSimulationSchema } from "@shared/schema";
+import { insertWarehouseZoneSchema, insertWarehouseLayoutSchema, insertDigitalTwinSimulationSchema } from "@shared/schema";
 
-// TODO: Reativar toda a classe quando as tabelas necessárias forem criadas
-export class DigitalTwinController {
-  static async placeholder(req: Request, res: Response) {
-    res.status(503).json({ 
-      message: 'DigitalTwinController temporariamente desabilitado durante migração para MySQL' 
-    });
-  }
-}
-
-/* TODO: Descomentar quando as tabelas de digital twin forem criadas
 export class DigitalTwinController {
   // Warehouse Zones
   static async getWarehouseZones(req: Request, res: Response) {
@@ -229,20 +218,149 @@ export class DigitalTwinController {
     try {
       const { warehouseId } = req.params;
       
-      // Get comprehensive warehouse data for visualization
-      const [zones, layouts, visualization] = await Promise.all([
-        DigitalTwinModel.getWarehouseZones(warehouseId),
-        DigitalTwinModel.getWarehouseLayouts(warehouseId),
-        DigitalTwinModel.getRealTimeVisualization(warehouseId)
-      ]);
+      // Dados de exemplo para demonstração
+      const mockZones = [
+        {
+          id: 'zone-1',
+          name: 'Zona de Recebimento',
+          type: 'receiving',
+          coordinates: {
+            x: 10,
+            y: 10,
+            width: 50,
+            height: 30,
+            z: 0,
+            floor: 1
+          },
+          capacity: {
+            maxItems: 1000,
+            maxWeight: 5000,
+            maxVolume: 2000
+          },
+          currentUtilization: {
+            items: 750,
+            weight: 3500,
+            volume: 1400,
+            percentage: 75
+          }
+        },
+        {
+          id: 'zone-2',
+          name: 'Zona de Armazenamento A',
+          type: 'storage',
+          coordinates: {
+            x: 70,
+            y: 10,
+            width: 80,
+            height: 60,
+            z: 0,
+            floor: 1
+          },
+          capacity: {
+            maxItems: 2000,
+            maxWeight: 10000,
+            maxVolume: 4000
+          },
+          currentUtilization: {
+            items: 1600,
+            weight: 8000,
+            volume: 3200,
+            percentage: 80
+          }
+        },
+        {
+          id: 'zone-3',
+          name: 'Zona de Picking',
+          type: 'picking',
+          coordinates: {
+            x: 160,
+            y: 10,
+            width: 60,
+            height: 40,
+            z: 0,
+            floor: 1
+          },
+          capacity: {
+            maxItems: 800,
+            maxWeight: 3000,
+            maxVolume: 1500
+          },
+          currentUtilization: {
+            items: 480,
+            weight: 1800,
+            volume: 900,
+            percentage: 60
+          }
+        },
+        {
+          id: 'zone-4',
+          name: 'Zona de Expedição',
+          type: 'shipping',
+          coordinates: {
+            x: 230,
+            y: 10,
+            width: 50,
+            height: 30,
+            z: 0,
+            floor: 1
+          },
+          capacity: {
+            maxItems: 500,
+            maxWeight: 2000,
+            maxVolume: 1000
+          },
+          currentUtilization: {
+            items: 200,
+            weight: 800,
+            volume: 400,
+            percentage: 40
+          }
+        }
+      ];
+
+      const mockRealTimeData = [
+        {
+          id: 'entity-1',
+          type: 'forklift',
+          position: { x: 45, y: 25 },
+          status: 'moving',
+          operator: 'João Silva'
+        },
+        {
+          id: 'entity-2',
+          type: 'worker',
+          position: { x: 180, y: 30 },
+          status: 'picking',
+          operator: 'Maria Santos'
+        },
+        {
+          id: 'entity-3',
+          type: 'agv',
+          position: { x: 120, y: 40 },
+          status: 'transporting',
+          operator: 'AGV-001'
+        }
+      ];
 
       const viewerData = {
-        zones,
-        layouts: layouts[0] || null, // Get most recent layout
-        realTimeData: visualization,
+        zones: mockZones,
+        layouts: {
+          id: 'layout-1',
+          layoutName: 'Layout Principal',
+          version: '1.0',
+          layoutData: JSON.stringify({
+            width: 300,
+            height: 80,
+            zones: mockZones.length
+          }),
+          dimensions: JSON.stringify({ width: 300, height: 80, depth: 10 }),
+          isActive: true,
+          createdAt: new Date().toISOString()
+        },
+        realTimeData: mockRealTimeData,
         metadata: {
-          totalZones: zones.length,
-          activeEntities: visualization.length,
+          totalZones: mockZones.length,
+          activeEntities: mockRealTimeData.length,
           lastUpdate: new Date().toISOString()
         }
       };
@@ -279,4 +397,3 @@ export class DigitalTwinController {
     }
   }
 }
-*/

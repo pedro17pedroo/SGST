@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../types/auth';
 import { z } from 'zod';
 import { PurchaseOrdersModel } from './purchase-orders.model';
 
@@ -84,7 +85,7 @@ const automaticReplenishmentSchema = z.object({
 });
 
 export class PurchaseOrdersController {
-  static async getPurchaseOrders(req: Request, res: Response) {
+  static async getPurchaseOrders(req: AuthenticatedRequest, res: Response) {
     try {
       const filters = {
         status: req.query.status as string,
@@ -108,12 +109,18 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async createPurchaseOrder(req: Request, res: Response) {
+  static async createPurchaseOrder(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = createPurchaseOrderSchema.parse(req.body);
       
       const purchaseOrder = await PurchaseOrdersModel.createPurchaseOrder({
         ...validated,
+        items: validated.items.map(item => ({
+          ...item,
+          expectedDeliveryDate: item.expectedDeliveryDate ? new Date(item.expectedDeliveryDate) : undefined
+        })),
+        status: 'draft' as const,
+        requiresApproval: false, // Will be determined by the model
         createdAt: new Date(),
         createdByUserId: req.user?.id || validated.requestedByUserId
       });
@@ -143,7 +150,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async approvePurchaseOrder(req: Request, res: Response) {
+  static async approvePurchaseOrder(req: AuthenticatedRequest, res: Response) {
     try {
       const { purchaseOrderId } = req.params;
       const validated = approvalActionSchema.parse(req.body);
@@ -174,7 +181,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async getApprovalWorkflows(req: Request, res: Response) {
+  static async getApprovalWorkflows(req: AuthenticatedRequest, res: Response) {
     try {
       const workflows = await PurchaseOrdersModel.getApprovalWorkflows();
       
@@ -188,7 +195,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async createApprovalWorkflow(req: Request, res: Response) {
+  static async createApprovalWorkflow(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = approvalWorkflowSchema.parse(req.body);
       
@@ -218,7 +225,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async getPendingApprovals(req: Request, res: Response) {
+  static async getPendingApprovals(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user?.id || req.query.userId as string;
       
@@ -253,7 +260,7 @@ export class PurchaseOrdersController {
 
   // === FUNCIONALIDADES DE REPOSIÇÃO AUTOMÁTICA ===
 
-  static async getAutomaticReplenishmentRules(req: Request, res: Response) {
+  static async getAutomaticReplenishmentRules(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string;
       const productId = req.query.productId as string;
@@ -273,7 +280,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async createAutomaticReplenishmentRule(req: Request, res: Response) {
+  static async createAutomaticReplenishmentRule(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = automaticReplenishmentSchema.parse(req.body);
       
@@ -303,7 +310,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async triggerAutomaticReplenishment(req: Request, res: Response) {
+  static async triggerAutomaticReplenishment(req: AuthenticatedRequest, res: Response) {
     try {
       const { warehouseId, productId } = req.params;
       const forceReorder = req.query.force === 'true';
@@ -336,7 +343,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async getReplenishmentRecommendations(req: Request, res: Response) {
+  static async getReplenishmentRecommendations(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string;
       const category = req.query.category as string;
@@ -372,7 +379,7 @@ export class PurchaseOrdersController {
     }
   }
 
-  static async runAutomaticReplenishmentBatch(req: Request, res: Response) {
+  static async runAutomaticReplenishmentBatch(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string;
       const dryRun = req.query.dryRun === 'true';

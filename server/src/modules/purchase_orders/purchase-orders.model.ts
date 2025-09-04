@@ -1,4 +1,6 @@
-import { storage } from '../../storage';
+import { db } from '../../../database/db';
+import { products, suppliers } from '../../../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 export interface PurchaseOrder {
   id: string;
@@ -409,10 +411,13 @@ export class PurchaseOrdersModel {
           }],
           notes: 'Ordem criada automaticamente pelo sistema de reposição',
           priority: 'normal',
+          status: 'draft',
+          requiresApproval: true,
           requestedByUserId: 'system',
           autoApprovalRules: {
             enableAutoApproval: rule.automationRules.autoApprovalEnabled,
-            maxAmount: rule.automationRules.maxAutoOrderValue
+            maxAmount: rule.automationRules.maxAutoOrderValue,
+            requiresMultipleApprovals: false
           },
           createdAt: new Date(),
           createdByUserId: 'system'

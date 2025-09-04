@@ -1,42 +1,39 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, UserCheck, UserX, Phone, Mail, MapPin, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Power, PowerOff, UserCheck, Phone, Mail } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { PermissionGuard } from '@/components/auth/permission-guard';
+import { Header } from '@/components/layout/header';
 
-// Schema de validação
-const customerSchema = z.object({
-  customerNumber: z.string().optional(),
-  name: z.string().min(1, 'Nome é obrigatório'),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  mobile: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  province: z.string().optional(),
-  postalCode: z.string().optional(),
-  country: z.string().default('Angola'),
-  taxNumber: z.string().optional(),
-  customerType: z.enum(['individual', 'company']).default('individual'),
-  creditLimit: z.string().default('0'),
-  paymentTerms: z.enum(['cash', 'credit_30', 'credit_60', 'credit_90']).default('cash'),
-  discount: z.string().default('0'),
-  notes: z.string().optional(),
-});
-
-type CustomerFormData = z.infer<typeof customerSchema>;
+// Tipo para dados do formulário
+interface CustomerFormData {
+  customerNumber?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  country: string;
+  taxNumber?: string;
+  customerType: 'individual' | 'company';
+  creditLimit: string;
+  paymentTerms: 'cash' | 'credit_30' | 'credit_60' | 'credit_90';
+  discount: string;
+  notes?: string;
+}
 
 interface Customer {
   id: string;
@@ -63,25 +60,51 @@ interface Customer {
 
 export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Queries
-  const { data: customers = [], isLoading } = useQuery({
+  // Buscar clientes
+  const { data: customers = [], isLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
     enabled: true,
   });
 
-  const { data: customerStats } = useQuery({
+  // Buscar estatísticas
+  const { data: customerStats } = useQuery<{
+    total: number;
+    active: number;
+    individual: number;
+    company: number;
+  }>({
     queryKey: ['/api/customers/stats'],
     enabled: true,
   });
 
-  // Mutations
+  // Formulário
+  const form = useForm<CustomerFormData>({
+    defaultValues: {
+      customerNumber: '',
+      name: '',
+      email: '',
+      phone: '',
+      mobile: '',
+      address: '',
+      city: '',
+      province: '',
+      postalCode: '',
+      country: 'Angola',
+      taxNumber: '',
+      customerType: 'individual',
+      creditLimit: '0',
+      paymentTerms: 'cash',
+      discount: '0',
+      notes: '',
+    },
+  });
+
+  // Mutation para criar cliente
   const createCustomerMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
       const response = await fetch('/api/customers', {
@@ -96,18 +119,17 @@ export default function CustomersPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/customers/stats'] });
       setIsCreateDialogOpen(false);
-      toast({ description: 'Cliente criado com sucesso!' });
+      form.reset();
+      toast({ title: 'Cliente criado com sucesso!' });
     },
-    onError: (error: any) => {
-      toast({ 
-        variant: 'destructive',
-        description: error.message || 'Erro ao criar cliente'
-      });
+    onError: () => {
+      toast({ title: 'Erro ao criar cliente', variant: 'destructive' });
     },
   });
 
+  // Mutation para atualizar cliente
   const updateCustomerMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<CustomerFormData> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: CustomerFormData }) => {
       const response = await fetch(`/api/customers/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -119,103 +141,73 @@ export default function CustomersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/customers/stats'] });
-      setIsEditDialogOpen(false);
-      setSelectedCustomer(null);
-      toast({ description: 'Cliente atualizado com sucesso!' });
+      setEditingCustomer(null);
+      form.reset();
+      toast({ title: 'Cliente atualizado com sucesso!' });
     },
-    onError: (error: any) => {
-      toast({ 
-        variant: 'destructive',
-        description: error.message || 'Erro ao atualizar cliente'
-      });
+    onError: () => {
+      toast({ title: 'Erro ao atualizar cliente', variant: 'destructive' });
     },
   });
 
-  const toggleCustomerStatusMutation = useMutation({
-    mutationFn: async ({ id, action }: { id: string; action: 'activate' | 'deactivate' }) => {
-      const response = await fetch(`/api/customers/${id}/${action}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error(`Erro ao ${action === 'activate' ? 'ativar' : 'desativar'} cliente`);
-      return response.json();
-    },
-    onSuccess: (_, { action }) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/customers/stats'] });
-      toast({ 
-        description: `Cliente ${action === 'activate' ? 'ativado' : 'desativado'} com sucesso!` 
-      });
-    },
-    onError: (error: any) => {
-      toast({ 
-        variant: 'destructive',
-        description: error.message || 'Erro ao alterar status do cliente'
-      });
-    },
-  });
-
-  const deleteCustomerMutation = useMutation({
+  // Mutation para desativar cliente
+  const deactivateCustomerMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/customers/${id}`, {
-        method: 'DELETE',
+      const response = await fetch(`/api/customers/${id}/deactivate`, {
+        method: 'PUT',
       });
-      if (!response.ok) throw new Error('Erro ao eliminar cliente');
+      if (!response.ok) throw new Error('Erro ao desativar cliente');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       queryClient.invalidateQueries({ queryKey: ['/api/customers/stats'] });
-      toast({ description: 'Cliente eliminado com sucesso!' });
+      toast({ title: 'Cliente desativado com sucesso!' });
     },
-    onError: (error: any) => {
-      toast({ 
-        variant: 'destructive',
-        description: error.message || 'Erro ao eliminar cliente'
+    onError: () => {
+      toast({ title: 'Erro ao desativar cliente', variant: 'destructive' });
+    },
+  });
+
+  // Mutation para ativar cliente
+  const activateCustomerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/customers/${id}/activate`, {
+        method: 'PUT',
       });
+      if (!response.ok) throw new Error('Erro ao ativar cliente');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/customers/stats'] });
+      toast({ title: 'Cliente ativado com sucesso!' });
+    },
+    onError: () => {
+      toast({ title: 'Erro ao ativar cliente', variant: 'destructive' });
     },
   });
 
-  // Forms
-  const createForm = useForm<CustomerFormData>({
-    resolver: zodResolver(customerSchema),
-    defaultValues: {
-      customerType: 'individual',
-      country: 'Angola',
-      creditLimit: '0',
-      paymentTerms: 'cash',
-      discount: '0',
-    },
-  });
-
-  const editForm = useForm<CustomerFormData>({
-    resolver: zodResolver(customerSchema),
-  });
-
-  // Filter customers based on search
-  const filteredCustomers = customers.filter((customer: Customer) =>
+  // Filtrar clientes
+  const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.customerNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone?.includes(searchTerm)
+    customer.customerNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateCustomer = (data: CustomerFormData) => {
-    createCustomerMutation.mutate(data);
+  // Submeter formulário
+  const onSubmit = (data: CustomerFormData) => {
+    if (editingCustomer) {
+      updateCustomerMutation.mutate({ id: editingCustomer.id, data });
+    } else {
+      createCustomerMutation.mutate(data);
+    }
   };
 
-  const handleEditCustomer = (data: CustomerFormData) => {
-    if (!selectedCustomer) return;
-    updateCustomerMutation.mutate({ id: selectedCustomer.id, data });
-  };
-
-  const handleViewCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setIsViewDialogOpen(true);
-  };
-
-  const handleEditClick = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    editForm.reset({
+  // Editar cliente
+  const handleEdit = (customer: Customer) => {
+    setEditingCustomer(customer);
+    form.reset({
       customerNumber: customer.customerNumber,
       name: customer.name,
       email: customer.email || '',
@@ -233,441 +225,402 @@ export default function CustomersPage() {
       discount: customer.discount,
       notes: customer.notes || '',
     });
-    setIsEditDialogOpen(true);
   };
 
-  const handleToggleStatus = (customer: Customer) => {
-    const action = customer.isActive ? 'deactivate' : 'activate';
-    toggleCustomerStatusMutation.mutate({ id: customer.id, action });
-  };
+  // Desativar cliente
+  const handleDeactivate = async (customerId: string) => {
+    const result = await Swal.fire({
+      title: 'Desativar Cliente',
+      text: 'Tem certeza que deseja desativar este cliente?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sim, desativar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    });
 
-  const handleDeleteCustomer = (id: string) => {
-    if (confirm('Tem certeza que deseja eliminar este cliente?')) {
-      deleteCustomerMutation.mutate(id);
+    if (result.isConfirmed) {
+      deactivateCustomerMutation.mutate(customerId);
     }
   };
 
-  const formatPaymentTerms = (terms: string) => {
-    const mapping = {
-      cash: 'À vista',
-      credit_30: '30 dias',
-      credit_60: '60 dias',
-      credit_90: '90 dias',
-    };
-    return mapping[terms as keyof typeof mapping] || terms;
-  };
+  // Ativar cliente
+  const handleActivate = async (customerId: string) => {
+    const result = await Swal.fire({
+      title: 'Ativar Cliente',
+      text: 'Tem certeza que deseja ativar este cliente?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sim, ativar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    });
 
-  const formatCustomerType = (type: string) => {
-    return type === 'individual' ? 'Pessoa Física' : 'Empresa';
+    if (result.isConfirmed) {
+      activateCustomerMutation.mutate(customerId);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="page-title">
-            Gestão de Clientes
-          </h1>
-          <p className="text-muted-foreground">
-            Gerir informações e histórico de clientes
-          </p>
-        </div>
-        <PermissionGuard module="customers" action="create">
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="btn-add-customer">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Cliente
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Criar Novo Cliente</DialogTitle>
-                <DialogDescription>
-                  Preencha as informações do cliente
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...createForm}>
-                <form onSubmit={createForm.handleSubmit(handleCreateCustomer)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={createForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Nome do cliente" {...field} data-testid="input-customer-name" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="customerType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-customer-type">
-                                <SelectValue placeholder="Selecionar tipo" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="individual">Pessoa Física</SelectItem>
-                              <SelectItem value="company">Empresa</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={createForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="cliente@exemplo.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefone</FormLabel>
-                          <FormControl>
-                            <Input placeholder="+244 xxx xxx xxx" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={createForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Endereço</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Endereço completo" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={createForm.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cidade</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Luanda" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="province"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Província</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Luanda" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="taxNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>NIF</FormLabel>
-                          <FormControl>
-                            <Input placeholder="000000000" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={createForm.control}
-                      name="paymentTerms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Termos de Pagamento</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecionar termos" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="cash">À vista</SelectItem>
-                              <SelectItem value="credit_30">30 dias</SelectItem>
-                              <SelectItem value="credit_60">60 dias</SelectItem>
-                              <SelectItem value="credit_90">90 dias</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={createForm.control}
-                      name="creditLimit"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Limite de Crédito (AOA)</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={createForm.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Observações adicionais" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button type="submit" disabled={createCustomerMutation.isPending} data-testid="btn-save-customer">
-                      {createCustomerMutation.isPending ? 'Criando...' : 'Criar Cliente'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        </PermissionGuard>
-      </div>
-
-      {/* Stats Cards */}
-      {customerStats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{customerStats.total}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Clientes Ativos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{customerStats.active}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pessoas Físicas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{customerStats.individual}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Empresas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{customerStats.company}</div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Search and Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Clientes</CardTitle>
-          <CardDescription>
-            Lista de todos os clientes registados no sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+    <div className="min-h-screen bg-background">
+      <Header title="Gestão de Clientes" breadcrumbs={['Clientes']} />
+      
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Action Bar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
               <Input
-                placeholder="Pesquisar por nome, número, email ou telefone..."
+                placeholder="Pesquisar clientes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-                data-testid="input-search-customers"
+                className="pl-10 w-80"
+                data-testid="customer-search"
               />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             </div>
           </div>
+          <PermissionGuard module="customers" action="create">
+            <Dialog open={isCreateDialogOpen || !!editingCustomer} onOpenChange={(open) => {
+              if (!open) {
+                setIsCreateDialogOpen(false);
+                setEditingCustomer(null);
+                form.reset();
+              }
+            }}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setIsCreateDialogOpen(true)} data-testid="btn-add-customer">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Cliente
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{editingCustomer ? 'Editar Cliente' : 'Criar Novo Cliente'}</DialogTitle>
+                  <DialogDescription>
+                    {editingCustomer ? 'Edite as informações do cliente.' : 'Preencha as informações do novo cliente.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome *</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="customerType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="individual">Pessoa Física</SelectItem>
+                                <SelectItem value="company">Empresa</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-          {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Termos</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4">
-                      Carregando clientes...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredCustomers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4">
-                      Nenhum cliente encontrado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCustomers.map((customer: Customer) => (
-                    <TableRow key={customer.id} data-testid={`customer-row-${customer.id}`}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{customer.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            #{customer.customerNumber}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {customer.email && (
-                            <div className="flex items-center text-sm">
-                              <Mail className="w-3 h-3 mr-1" />
-                              {customer.email}
-                            </div>
-                          )}
-                          {customer.phone && (
-                            <div className="flex items-center text-sm">
-                              <Phone className="w-3 h-3 mr-1" />
-                              {customer.phone}
-                            </div>
-                          )}
-                          {customer.city && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <MapPin className="w-3 h-3 mr-1" />
-                              {customer.city}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {formatCustomerType(customer.customerType)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {formatPaymentTerms(customer.paymentTerms)}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={customer.isActive ? 'default' : 'secondary'}>
-                          {customer.isActive ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewCustomer(customer)}
-                            data-testid={`btn-view-${customer.id}`}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <PermissionGuard module="customers" action="update">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditClick(customer)}
-                              data-testid={`btn-edit-${customer.id}`}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </PermissionGuard>
-                          <PermissionGuard module="customers" action="update">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleToggleStatus(customer)}
-                              data-testid={`btn-toggle-${customer.id}`}
-                            >
-                              {customer.isActive ? (
-                                <UserX className="w-4 h-4 text-orange-500" />
-                              ) : (
-                                <UserCheck className="w-4 h-4 text-green-500" />
-                              )}
-                            </Button>
-                          </PermissionGuard>
-                          <PermissionGuard module="customers" action="delete">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteCustomer(customer.id)}
-                              data-testid={`btn-delete-${customer.id}`}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </PermissionGuard>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Endereço</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cidade</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="province"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Província</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="postalCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Código Postal</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <DialogFooter>
+                      <Button type="button" variant="outline" onClick={() => {
+                        setIsCreateDialogOpen(false);
+                        setEditingCustomer(null);
+                        form.reset();
+                      }}>
+                        Cancelar
+                      </Button>
+                      <Button type="submit" disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}>
+                        {editingCustomer ? 'Atualizar' : 'Criar'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </PermissionGuard>
+        </div>
+
+        {/* Stats Cards */}
+        {customerStats && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{customerStats.total}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Clientes Ativos</CardTitle>
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{customerStats.active}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pessoas Físicas</CardTitle>
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{customerStats.individual}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Empresas</CardTitle>
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{customerStats.company}</div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        {/* Customer List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Clientes</CardTitle>
+            <CardDescription>
+              Lista de todos os clientes registrados no sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="flex items-center space-x-4 py-4 animate-pulse">
+                      <div className="w-12 h-12 bg-muted rounded-lg"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-muted rounded w-1/4"></div>
+                        <div className="h-3 bg-muted rounded w-1/2"></div>
+                      </div>
+                      <div className="h-4 bg-muted rounded w-24"></div>
+                      <div className="flex space-x-2">
+                        <div className="w-8 h-8 bg-muted rounded"></div>
+                        <div className="w-8 h-8 bg-muted rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium">Cliente</th>
+                      <th className="text-left py-3 px-4 font-medium">Tipo</th>
+                      <th className="text-left py-3 px-4 font-medium">Contato</th>
+                      <th className="text-left py-3 px-4 font-medium">Status</th>
+                      <th className="text-left py-3 px-4 font-medium">Data de Criação</th>
+                      <th className="text-left py-3 px-4 font-medium">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCustomers.length > 0 ? (
+                      filteredCustomers.map((customer) => (
+                        <tr key={customer.id} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4">
+                            <div>
+                              <div className="font-medium">{customer.name}</div>
+                              <div className="text-sm text-muted-foreground">{customer.customerNumber}</div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge variant={customer.customerType === 'company' ? 'default' : 'secondary'}>
+                              {customer.customerType === 'company' ? 'Empresa' : 'Pessoa Física'}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="space-y-1">
+                              {customer.email && (
+                                <div className="flex items-center text-sm">
+                                  <Mail className="w-3 h-3 mr-1" />
+                                  {customer.email}
+                                </div>
+                              )}
+                              {customer.phone && (
+                                <div className="flex items-center text-sm">
+                                  <Phone className="w-3 h-3 mr-1" />
+                                  {customer.phone}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge variant={customer.isActive ? 'default' : 'secondary'}>
+                              {customer.isActive ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">
+                            {new Date(customer.createdAt).toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center space-x-2">
+                              <PermissionGuard module="customers" action="update">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(customer)}
+                                  data-testid={`btn-edit-customer-${customer.id}`}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </PermissionGuard>
+                              <PermissionGuard module="customers" action="update">
+                                {customer.isActive ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeactivate(customer.id)}
+                                    data-testid={`btn-deactivate-customer-${customer.id}`}
+                                    title="Desativar cliente"
+                                  >
+                                    <PowerOff className="w-4 h-4 text-red-500" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleActivate(customer.id)}
+                                    data-testid={`btn-activate-customer-${customer.id}`}
+                                    title="Ativar cliente"
+                                  >
+                                    <Power className="w-4 h-4 text-green-500" />
+                                  </Button>
+                                )}
+                              </PermissionGuard>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                          {searchTerm ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

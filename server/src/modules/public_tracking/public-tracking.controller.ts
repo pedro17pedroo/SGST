@@ -102,7 +102,7 @@ export class PublicTrackingController {
         trackingNumber,
         email,
         phone,
-        createdAt: new Date()
+        notificationTypes: ['status_update', 'delivery_notification']
       });
       
       res.status(201).json({

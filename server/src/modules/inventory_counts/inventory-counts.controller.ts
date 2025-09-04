@@ -7,15 +7,15 @@ const createInventoryCountSchema = z.object({
   countNumber: z.string().min(1, "Número da contagem é obrigatório"),
   type: z.enum(['cycle', 'full', 'spot']),
   warehouseId: z.string().uuid("ID do armazém inválido"),
-  scheduledDate: z.string().datetime().optional(),
+  scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Formato de data inválido").optional(),
   notes: z.string().optional(),
   userId: z.string().uuid("ID do utilizador inválido")
 });
 
 const updateInventoryCountSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).optional(),
-  scheduledDate: z.string().datetime().optional(),
-  completedDate: z.string().datetime().optional(),
+  scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Formato de data inválido").optional(),
+  completedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Formato de data inválido").optional(),
   notes: z.string().optional()
 });
 

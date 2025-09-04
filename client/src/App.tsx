@@ -1,5 +1,8 @@
 import React from "react";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
+import { useBrowserLocation } from "wouter/use-browser-location";
+import "./debug-env"; // Debug das variáveis de ambiente
+import "./test-api-url"; // Teste da URL da API
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PerformanceOptimizer } from "./lib/performance-optimizer";
@@ -11,9 +14,11 @@ import { ThemeProvider } from "@/contexts/theme-context";
 import { ModuleProvider } from "@/contexts/module-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { ModuleGuard } from "@/components/layout/module-guard";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
+import Categories from "@/pages/categories";
 import Inventory from "@/pages/inventory";
 import Warehouses from "@/pages/warehouses";
 import Suppliers from "@/pages/suppliers";
@@ -34,6 +39,7 @@ import AdvancedAnalytics from "@/pages/advanced-analytics";
 import QualityControl from "@/pages/quality-control";
 import PublicTracking from "@/pages/public-tracking";
 import CustomerPortal from "@/pages/customer-portal";
+import Register from "@/pages/register";
 import WarehouseAutomation from "@/pages/WarehouseAutomation";
 import WarehouseTwin from "@/pages/WarehouseTwin";
 import GreenETA from "@/pages/GreenETA";
@@ -75,6 +81,11 @@ function Router() {
           <Route path="/products">
             <ModuleGuard moduleId="products" fallback={<NotFound />}>
               <Products />
+            </ModuleGuard>
+          </Route>
+          <Route path="/categories">
+            <ModuleGuard moduleId="products" fallback={<NotFound />}>
+              <Categories />
             </ModuleGuard>
           </Route>
           <Route path="/inventory">
@@ -218,54 +229,65 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <AuthProvider>
-            <ModuleProvider>
-              <Switch>
-                {/* Public routes - no authentication required */}
-                <Route path="/">
-                  <CustomerPortal />
-                </Route>
-                <Route path="/customer">
-                  <CustomerPortal />
-                </Route>
-                <Route path="/portal">
-                  <CustomerPortal />
-                </Route>
-                <Route path="/cliente">
-                  <CustomerPortal />
-                </Route>
-                <Route path="/track">
-                  <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
-                    <PublicTracking />
-                  </ModuleGuard>
-                </Route>
-                <Route path="/tracking">
-                  <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
-                    <PublicTracking />
-                  </ModuleGuard>
-                </Route>
-                <Route path="/public-tracking">
-                  <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
-                    <PublicTracking />
-                  </ModuleGuard>
-                </Route>
-                
-                {/* Protected routes - authentication required */}
-                <Route>
-                  <ProtectedRoute>
-                    <Router />
-                  </ProtectedRoute>
-                </Route>
-              </Switch>
-              <Toaster />
-            </ModuleProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <AuthProvider>
+              <ModuleProvider>
+                <WouterRouter hook={useBrowserLocation}>
+                <Switch>
+                  {/* Public routes - no authentication required */}
+                  <Route path="/">
+                    <CustomerPortal />
+                  </Route>
+                  <Route path="/customer">
+                    <CustomerPortal />
+                  </Route>
+                  <Route path="/portal">
+                    <CustomerPortal />
+                  </Route>
+                  <Route path="/cliente">
+                    <CustomerPortal />
+                  </Route>
+                  <Route path="/track">
+                    <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
+                      <PublicTracking />
+                    </ModuleGuard>
+                  </Route>
+                  <Route path="/tracking">
+                    <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
+                      <PublicTracking />
+                    </ModuleGuard>
+                  </Route>
+                  <Route path="/public-tracking">
+                    <ModuleGuard moduleId="public_tracking" fallback={<NotFound />}>
+                      <PublicTracking />
+                    </ModuleGuard>
+                  </Route>
+                  <Route path="/login">
+                    <Register />
+                  </Route>
+                  <Route path="/register">
+                    <Register />
+                  </Route>
+
+                  
+                  {/* Protected routes - authentication required */}
+                  <Route>
+                    <ProtectedRoute>
+                      <Router />
+                    </ProtectedRoute>
+                  </Route>
+                </Switch>
+                </WouterRouter>
+                <Toaster />
+              </ModuleProvider>
+            </AuthProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

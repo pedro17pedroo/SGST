@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import {
   AlertCircle, 
   Info, 
   CheckCircle, 
-  Clock, 
+ 
   XCircle,
   Plus,
   Search,
@@ -31,8 +31,7 @@ import {
   Package,
   Warehouse,
   ShoppingCart,
-  Building,
-  User
+  Building
 } from "lucide-react";
 import { z } from "zod";
 
@@ -99,7 +98,7 @@ interface NotificationPreference {
 }
 
 export default function AlertsPage() {
-  const [activeTab, setActiveTab] = useState("alerts");
+
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
   const [isPreferencesDialogOpen, setIsPreferencesDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -196,7 +195,7 @@ export default function AlertsPage() {
   });
 
   // Get notification preferences
-  const { data: preferences, isLoading: isLoadingPreferences } = useQuery({
+  const { data: preferences } = useQuery({
     queryKey: ['/api/notification-preferences'],
     queryFn: async () => {
       // Demo data for now - replace with actual API call
@@ -260,7 +259,7 @@ export default function AlertsPage() {
 
   // Acknowledge alert mutation
   const acknowledgeAlertMutation = useMutation({
-    mutationFn: async (alertId: string) => {
+    mutationFn: async () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       return { success: true };
@@ -276,7 +275,7 @@ export default function AlertsPage() {
 
   // Resolve alert mutation
   const resolveAlertMutation = useMutation({
-    mutationFn: async (alertId: string) => {
+    mutationFn: async () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       return { success: true };
@@ -858,7 +857,7 @@ export default function AlertsPage() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => acknowledgeAlertMutation.mutate(alert.id)}
+                          onClick={() => acknowledgeAlertMutation.mutate()}
                           disabled={acknowledgeAlertMutation.isPending}
                           data-testid={`acknowledge-alert-${alert.id}`}
                         >
@@ -867,7 +866,7 @@ export default function AlertsPage() {
                         </Button>
                         <Button 
                           size="sm"
-                          onClick={() => resolveAlertMutation.mutate(alert.id)}
+                          onClick={() => resolveAlertMutation.mutate()}
                           disabled={resolveAlertMutation.isPending}
                           data-testid={`resolve-alert-${alert.id}`}
                         >
@@ -879,7 +878,7 @@ export default function AlertsPage() {
                     {alert.status === 'acknowledged' && (
                       <Button 
                         size="sm"
-                        onClick={() => resolveAlertMutation.mutate(alert.id)}
+                        onClick={() => resolveAlertMutation.mutate()}
                         disabled={resolveAlertMutation.isPending}
                         data-testid={`resolve-acknowledged-alert-${alert.id}`}
                       >

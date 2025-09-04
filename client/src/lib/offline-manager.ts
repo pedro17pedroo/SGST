@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid';
 class OfflineManager {
   private state: OfflineState;
   private config: SyncConfig;
-  private syncInterval: NodeJS.Timeout | null = null;
+  private syncInterval: number | null = null;
   private listeners: Set<(state: OfflineState) => void> = new Set();
 
   constructor() {

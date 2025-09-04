@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
@@ -9,8 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-      !isProduction && runtimeErrorOverlay(),
-    ].filter(Boolean),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "src"),
@@ -44,18 +42,14 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       proxy: {
         '/api': {
-          target: 'http://localhost:4002',
+          target: 'http://localhost:4001',
           changeOrigin: true,
         },
       },
-      // Enable SPA fallback for client-side routing
-      historyApiFallback: true,
     },
     preview: {
       host: '0.0.0.0',
       port: 3000,
-      // Enable SPA fallback for client-side routing in preview mode
-      historyApiFallback: true,
     },
   };
 });

@@ -137,9 +137,9 @@ export class IntelligentReplenishmentController {
         forecasts,
         summary: {
           totalPeriods: forecasts.length,
-          averageDemand: Math.round(forecasts.reduce((sum, f) => sum + f.demandQuantity, 0) / forecasts.length),
-          averageConfidence: Math.round(forecasts.reduce((sum, f) => sum + f.confidenceLevel, 0) / forecasts.length),
-          totalDemand: forecasts.reduce((sum, f) => sum + f.demandQuantity, 0)
+          averageDemand: forecasts.length > 0 ? Math.round(forecasts.reduce((sum: number, f: any) => sum + (f.demandQuantity || 0), 0) / forecasts.length) : 0,
+          averageConfidence: forecasts.length > 0 ? Math.round(forecasts.reduce((sum: number, f: any) => sum + (f.confidenceLevel || 0), 0) / forecasts.length) : 0,
+          totalDemand: forecasts.reduce((sum: number, f: any) => sum + (f.demandQuantity || 0), 0)
         }
       });
     } catch (error) {

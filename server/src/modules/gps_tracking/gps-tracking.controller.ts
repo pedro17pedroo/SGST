@@ -383,9 +383,15 @@ export class GPSTrackingController {
     try {
       const validated = routeOptimizationSchema.parse(req.body);
       
+      // Adicionar propriedade 'order' aos destinos
+      const destinationsWithOrder = validated.destinations.map((dest, index) => ({
+        ...dest,
+        order: index + 1
+      }));
+
       const optimizedRoute = await GPSTrackingModel.optimizeRoute({
         startLocation: validated.startLocation,
-        destinations: validated.destinations,
+        destinations: destinationsWithOrder,
         vehicleType: validated.vehicleType,
         optimizationType: validated.optimize
       });

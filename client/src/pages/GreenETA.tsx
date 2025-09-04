@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { 
-  Leaf, 
   TrendingDown,
   TrendingUp,
   Truck,
@@ -21,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { apiRequest } from "@/lib/queryClient";
+
 
 interface SustainabilityReport {
   period: {
@@ -142,7 +141,7 @@ const CarbonSavingsChart = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {savingsReport.monthlySavings.slice(-6).map((month, index) => (
+          {savingsReport.monthlySavings.slice(-6).map((month) => (
             <div key={month.month} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 text-sm text-muted-foreground">
@@ -180,7 +179,16 @@ const CarbonSavingsChart = () => {
 };
 
 const GreenRecommendations = ({ warehouseId }: { warehouseId: string }) => {
-  const { data: recommendations } = useQuery({
+  const { data: recommendations } = useQuery<{
+    energyOptimization?: any[];
+    logisticsOptimization?: any[];
+    packagingOptimization?: any[];
+    estimatedSavings?: {
+      carbon?: number;
+      cost?: number;
+      timeframe?: string;
+    };
+  }>({
     queryKey: ['/api/green-eta/recommendations', warehouseId],
     enabled: !!warehouseId
   });

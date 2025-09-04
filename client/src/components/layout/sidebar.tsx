@@ -14,9 +14,7 @@ import {
   Building,
   Scan,
   MapPin,
-  ClipboardList,
-  PackageCheck,
-  RotateCcw,
+
   Bell,
   TrendingUp,
   Shield,
@@ -158,6 +156,7 @@ export function Sidebar() {
             const getModuleForPath = (path: string): string => {
               if (path === '/dashboard') return 'dashboard';
               if (path === '/products') return 'products';
+              if (path === '/categories') return 'products';
               if (path === '/inventory') return 'inventory';
               if (path === '/orders') return 'orders';
               if (path === '/warehouses') return 'warehouses';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { offlineManager } from '@/lib/offline-manager';
-import { OfflineState, ConflictResolution } from '@shared/offline-types';
+import { OfflineState } from '@shared/offline-types';
 
 export function useOffline() {
   const [state, setState] = useState<OfflineState>(offlineManager.getState());

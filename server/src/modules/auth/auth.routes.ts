@@ -6,6 +6,7 @@ const router = Router();
 
 // Rotas de autenticação públicas
 router.post('/login', AuthController.login);
+router.post('/login-token', AuthController.loginWithToken);
 router.post('/logout', AuthController.logout);
 
 // Rotas de perfil protegidas - requerem autenticação

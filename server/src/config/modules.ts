@@ -150,7 +150,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     description: 'Envios e rastreamento de entregas',
     enabled: true,
     dependencies: ['orders'],
-    routes: ['/api/shipments'],
+    routes: ['/api/shipping'],
     tables: ['shipments'],
     permissions: ['shipments.read', 'shipments.write', 'shipments.delete']
   },
@@ -285,6 +285,17 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/cv'],
     tables: ['cv_counting_results'],
     permissions: ['computer_vision.read', 'computer_vision.write', 'computer_vision.verify']
+  },
+
+  voice_ar: {
+    id: 'voice_ar',
+    name: 'Voice Picking & Realidade Aumentada',
+    description: 'Sistema de Voice Picking e funcionalidades de Realidade Aumentada para operações de armazém',
+    enabled: true,
+    dependencies: ['products', 'inventory', 'warehouses'],
+    routes: ['/api/voice-ar'],
+    tables: ['voice_sessions', 'ar_sessions', 'voice_commands', 'ar_markers'],
+    permissions: ['voice_ar.read', 'voice_ar.write', 'voice_ar.configure', 'voice_ar.analytics']
   },
 
   smart_receiving: {
@@ -429,6 +440,89 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     routes: ['/api/gps'],
     tables: ['gps_tracking', 'geofences', 'gps_alerts'],
     permissions: ['gps.read', 'gps.write', 'geofences.manage', 'alerts.manage']
+  },
+
+  edi: {
+    id: 'edi',
+    name: 'EDI (Electronic Data Interchange)',
+    description: 'Sistema completo de EDI para troca de dados eletrônicos com parceiros comerciais',
+    enabled: true,
+    dependencies: ['auth', 'users', 'suppliers'],
+    routes: ['/api/edi'],
+    tables: [
+      'edi_connections',
+      'edi_message_types', 
+      'edi_mapping_rules',
+      'edi_validation_rules',
+      'edi_documents',
+      'edi_transactions',
+      'edi_audit_logs'
+    ],
+    permissions: [
+      'edi.read',
+      'edi.create', 
+      'edi.update',
+      'edi.delete',
+      'edi.process',
+      'edi.send',
+      'edi.test',
+      'edi.monitor',
+      'edi.audit'
+    ]
+  },
+
+  anomaly_fraud_detection: {
+    id: 'anomaly_fraud_detection',
+    name: 'Detecção de Anomalias e Fraudes',
+    description: 'Sistema avançado de detecção de anomalias e prevenção de fraudes com análise comportamental e alertas em tempo real',
+    enabled: true,
+    dependencies: ['auth', 'users'],
+    routes: ['/api/anomaly-fraud'],
+    tables: [
+      'anomaly_rules',
+      'anomaly_detections', 
+      'fraud_patterns',
+      'security_alerts',
+      'behavior_profiles',
+      'risk_scores'
+    ],
+    permissions: [
+      'anomaly-fraud.read',
+      'anomaly-fraud.create',
+      'anomaly-fraud.update',
+      'anomaly-fraud.delete',
+      'anomaly-fraud.investigate',
+      'anomaly-fraud.manage-rules',
+      'anomaly-fraud.manage-patterns',
+      'anomaly-fraud.view-alerts',
+      'anomaly-fraud.manage-alerts',
+      'anomaly-fraud.view-risk-scores',
+      'anomaly-fraud.calculate-risk',
+      'anomaly-fraud.view-statistics'
+    ]
+  },
+
+  inventory_alerts: {
+    id: 'inventory_alerts',
+    name: 'Alertas de Inventário',
+    description: 'Sistema avançado de alertas para gestão de inventário com notificações de stock baixo, excesso e vencimento',
+    enabled: true,
+    dependencies: ['inventory', 'products', 'warehouses'],
+    routes: ['/api/stock-alerts', '/api/inventory-alerts'],
+    tables: [
+      'inventory_alerts',
+      'alert_settings',
+      'alert_notifications'
+    ],
+    permissions: [
+      'inventory_alerts.read',
+      'inventory_alerts.create',
+      'inventory_alerts.update',
+      'inventory_alerts.delete',
+      'inventory_alerts.acknowledge',
+      'inventory_alerts.resolve',
+      'inventory_alerts.settings'
+    ]
   }
 };
 

@@ -118,10 +118,6 @@ export function CustomerCombobox({
     setSearchQuery("")
   }
 
-  const displayValue = selectedCustomer 
-    ? `${selectedCustomer.name} (${selectedCustomer.customerNumber})`
-    : placeholder
-
   return (
     <div className={cn("w-full", className)}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -207,7 +203,7 @@ export function CustomerCombobox({
                       return (
                         <CommandItem
                           key={customer.id}
-                          value={customer.id}
+                          value={`${customer.name} ${customer.customerNumber} ${customer.email || ''} ${customer.phone || ''}`}
                           onSelect={() => handleSelect(customer)}
                           className="flex items-center gap-3 p-3"
                         >

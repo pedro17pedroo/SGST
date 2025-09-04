@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../types/auth';
 import { z } from 'zod';
 import { InventoryAlertsModel } from './inventory-alerts.model';
 
@@ -30,7 +31,54 @@ const alertSettingsSchema = z.object({
 });
 
 export class InventoryAlertsController {
-  static async getAlerts(req: Request, res: Response) {
+  // Endpoint específico para stock-alerts (compatibilidade com frontend)
+  static async getStockAlerts(req: AuthenticatedRequest, res: Response) {
+    try {
+      const warehouseId = req.query.warehouseId as string | undefined;
+      const type = req.query.type as string | undefined;
+      const status = req.query.status as string | undefined;
+      const severity = req.query.severity as string | undefined;
+      
+      const alerts = await InventoryAlertsModel.getAlerts({
+        warehouseId,
+        type,
+        status,
+        severity
+      });
+      
+      // Formatar resposta para compatibilidade com frontend
+      // Por enquanto retorna array vazio até implementação completa
+      const stockAlerts = alerts.map((alert: any) => ({
+        id: alert.id || '',
+        type: alert.type || 'low_stock',
+        productId: alert.productId || '',
+        warehouseId: alert.warehouseId || '',
+        message: alert.message || '',
+        severity: alert.severity || 'medium',
+        status: alert.status || 'active',
+        createdAt: alert.createdAt || new Date(),
+        threshold: alert.threshold || 0
+      }));
+      
+      res.json({
+        alerts: stockAlerts,
+        total: stockAlerts.length,
+        summary: {
+          critical: stockAlerts.filter(a => a.severity === 'critical').length,
+          high: stockAlerts.filter(a => a.severity === 'high').length,
+          medium: stockAlerts.filter(a => a.severity === 'medium').length,
+          low: stockAlerts.filter(a => a.severity === 'low').length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching stock alerts:', error);
+      res.status(500).json({
+        message: "Erro ao buscar alertas de stock",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+  static async getAlerts(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string | undefined;
       const type = req.query.type as string | undefined;
@@ -54,7 +102,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async getAlert(req: Request, res: Response) {
+  static async getAlert(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const alert = await InventoryAlertsModel.getAlertById(id);
@@ -75,7 +123,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async createAlert(req: Request, res: Response) {
+  static async createAlert(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = createAlertSchema.parse(req.body);
       const alert = await InventoryAlertsModel.createAlert({
@@ -102,7 +150,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async updateAlert(req: Request, res: Response) {
+  static async updateAlert(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const validated = updateAlertSchema.parse(req.body);
@@ -129,7 +177,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async deleteAlert(req: Request, res: Response) {
+  static async deleteAlert(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       await InventoryAlertsModel.deleteAlert(id);
@@ -143,7 +191,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async getLowStockAlerts(req: Request, res: Response) {
+  static async getLowStockAlerts(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string | undefined;
       const alerts = await InventoryAlertsModel.getLowStockAlerts(warehouseId);
@@ -157,7 +205,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async getOverstockAlerts(req: Request, res: Response) {
+  static async getOverstockAlerts(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string | undefined;
       const alerts = await InventoryAlertsModel.getOverstockAlerts(warehouseId);
@@ -171,7 +219,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async getExpiryAlerts(req: Request, res: Response) {
+  static async getExpiryAlerts(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string | undefined;
       const daysAhead = parseInt(req.query.days as string) || 30;
@@ -186,7 +234,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async getDeadStockAlerts(req: Request, res: Response) {
+  static async getDeadStockAlerts(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string | undefined;
       const days = parseInt(req.query.days as string) || 90;
@@ -201,7 +249,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async getAlertSettings(req: Request, res: Response) {
+  static async getAlertSettings(req: AuthenticatedRequest, res: Response) {
     try {
       const warehouseId = req.query.warehouseId as string | undefined;
       const settings = await InventoryAlertsModel.getAlertSettings(warehouseId);
@@ -215,7 +263,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async updateAlertSettings(req: Request, res: Response) {
+  static async updateAlertSettings(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = alertSettingsSchema.parse(req.body);
       const warehouseId = req.query.warehouseId as string || 'default';
@@ -243,7 +291,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async acknowledgeAlert(req: Request, res: Response) {
+  static async acknowledgeAlert(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const { notes } = req.body;
@@ -264,7 +312,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async resolveAlert(req: Request, res: Response) {
+  static async resolveAlert(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const { resolution, notes } = req.body;
@@ -286,7 +334,7 @@ export class InventoryAlertsController {
     }
   }
 
-  static async bulkAlertAction(req: Request, res: Response) {
+  static async bulkAlertAction(req: AuthenticatedRequest, res: Response) {
     try {
       const { alertIds, action, notes } = req.body;
       

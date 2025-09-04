@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { z } from 'zod';
+import { AuthenticatedRequest } from '../../types/auth';
 import { CustomDashboardsModel } from './custom-dashboards.model';
 
 // Validation schemas
@@ -78,7 +79,7 @@ const widgetDataSchema = z.object({
 });
 
 export class CustomDashboardsController {
-  static async getDashboards(req: Request, res: Response) {
+  static async getDashboards(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.user?.id;
       const includePublic = req.query.includePublic === 'true';
@@ -112,7 +113,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async getDashboard(req: Request, res: Response) {
+  static async getDashboard(req: AuthenticatedRequest, res: Response) {
     try {
       const { dashboardId } = req.params;
       const userId = req.user?.id;
@@ -135,7 +136,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async createDashboard(req: Request, res: Response) {
+  static async createDashboard(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = createDashboardSchema.parse(req.body);
       
@@ -169,7 +170,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async updateDashboard(req: Request, res: Response) {
+  static async updateDashboard(req: AuthenticatedRequest, res: Response) {
     try {
       const { dashboardId } = req.params;
       const validated = updateDashboardSchema.parse(req.body);
@@ -204,7 +205,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async deleteDashboard(req: Request, res: Response) {
+  static async deleteDashboard(req: AuthenticatedRequest, res: Response) {
     try {
       const { dashboardId } = req.params;
       
@@ -222,7 +223,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async duplicateDashboard(req: Request, res: Response) {
+  static async duplicateDashboard(req: AuthenticatedRequest, res: Response) {
     try {
       const { dashboardId } = req.params;
       const { name } = req.body;
@@ -250,7 +251,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async getWidgetData(req: Request, res: Response) {
+  static async getWidgetData(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = widgetDataSchema.parse(req.body);
       
@@ -285,7 +286,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async getAvailableDataSources(req: Request, res: Response) {
+  static async getAvailableDataSources(req: AuthenticatedRequest, res: Response) {
     try {
       const dataSources = await CustomDashboardsModel.getAvailableDataSources();
       
@@ -310,7 +311,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async getDashboardTemplates(req: Request, res: Response) {
+  static async getDashboardTemplates(req: AuthenticatedRequest, res: Response) {
     try {
       const category = req.query.category as string;
       
@@ -323,7 +324,7 @@ export class CustomDashboardsController {
           description: template.description,
           category: template.category,
           preview: template.preview,
-          widgets: template.widgets.length,
+          widgets: template.widgets,
           complexity: template.complexity,
           tags: template.tags
         }))
@@ -337,7 +338,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async createFromTemplate(req: Request, res: Response) {
+  static async createFromTemplate(req: AuthenticatedRequest, res: Response) {
     try {
       const { templateId } = req.params;
       const { name, customizations } = req.body;
@@ -366,7 +367,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async exportDashboard(req: Request, res: Response) {
+  static async exportDashboard(req: AuthenticatedRequest, res: Response) {
     try {
       const { dashboardId } = req.params;
       const format = req.query.format as string || 'pdf';
@@ -396,7 +397,7 @@ export class CustomDashboardsController {
     }
   }
 
-  static async shareDashboard(req: Request, res: Response) {
+  static async shareDashboard(req: AuthenticatedRequest, res: Response) {
     try {
       const { dashboardId } = req.params;
       const { shareType, recipients, permissions, expiryDate } = req.body;

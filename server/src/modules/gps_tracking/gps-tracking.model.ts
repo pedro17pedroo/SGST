@@ -390,7 +390,7 @@ export class GPSTrackingModel {
       startLocation: data.startLocation,
       destinations: optimizedDestinations,
       vehicleType: data.vehicleType,
-      optimizationType: data.optimize,
+      optimizationType: data.optimizationType,
       totalDistance,
       totalTime,
       createdAt: new Date()

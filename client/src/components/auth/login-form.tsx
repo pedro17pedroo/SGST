@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Lock, User, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GPSPermissionDialog } from "@/components/gps/gps-permission-dialog";
+import { apiRequest } from "@/lib/queryClient";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Nome de utilizador deve ter pelo menos 3 caracteres"),
@@ -22,15 +23,23 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+}
+
 interface LoginFormProps {
-  onLogin: (userData: { username: string; role: string }) => void;
+  onLogin: (userData: User) => void;
 }
 
 export function LoginForm({ onLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showGPSDialog, setShowGPSDialog] = useState(false);
-  const [userInfo, setUserInfo] = useState<{ username: string; role: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<User | null>(null);
   const { toast } = useToast();
 
   const form = useForm<LoginFormData>({
@@ -46,43 +55,31 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important for cookies/sessions
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password
-        }),
+      const response = await apiRequest('POST', '/api/auth/login', {
+        username: data.username,
+        password: data.password
       });
 
       const result = await response.json();
-
-      if (response.ok) {
-        const userData = { 
-          username: result.user.username, 
-          role: result.user.role 
-        };
-        
-        // Verificar se GPS é obrigatório
-        if (result.requiresGPS) {
-          setUserInfo(userData);
-          setShowGPSDialog(true);
-        } else {
-          toast({
-            title: "Login realizado com sucesso",
-            description: `Bem-vindo, ${result.user.username}!`,
-          });
-          onLogin(userData);
-        }
+      
+      const userData = { 
+        id: result.user.id,
+        username: result.user.username, 
+        email: result.user.email || '',
+        role: result.user.role,
+        isActive: result.user.isActive || true
+      };
+      
+      // Verificar se GPS é obrigatório
+      if (result.requiresGPS) {
+        setUserInfo(userData);
+        setShowGPSDialog(true);
       } else {
         toast({
-          title: "Erro de login",
-          description: result.message || "Credenciais inválidas",
-          variant: "destructive",
+          title: "Login realizado com sucesso",
+          description: `Bem-vindo, ${result.user.username}!`,
         });
+        onLogin(userData);
       }
     } catch (error) {
       console.error('Login error:', error);

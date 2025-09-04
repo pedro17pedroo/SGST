@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,7 +75,7 @@ export function StockMovementForm({ open, onOpenChange }: StockMovementFormProps
   const createMutation = useMutation({
     mutationFn: createStockMovement,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/stock-movements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/stock-movements"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-activities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/low-stock"] });

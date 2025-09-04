@@ -22,17 +22,17 @@ const inventoryCountSchema = z.object({
   warehouseId: z.string().min(1, "Armazém é obrigatório"),
   scheduledDate: z.string().optional(),
   notes: z.string().optional(),
-});
+}) as z.ZodType<any>;
 
 interface InventoryCount {
   id: string;
   countNumber: string;
   type: string;
   status: string;
-  warehouse: {
+  warehouse?: {
     id: string;
     name: string;
-  };
+  } | null;
   user?: {
     id: string;
     username: string;
@@ -57,7 +57,7 @@ export default function InventoryCountsPage() {
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof inventoryCountSchema>>({
-    resolver: zodResolver(inventoryCountSchema),
+    resolver: zodResolver(inventoryCountSchema as any),
     defaultValues: {
       countNumber: "",
       type: "cycle",
@@ -161,13 +161,13 @@ export default function InventoryCountsPage() {
             Gerir contagens cíclicas e completas do inventário
           </p>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="add-count-button">
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Contagem
-            </Button>
-          </DialogTrigger>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="add-count-button">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Contagem
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Nova Contagem de Inventário</DialogTitle>
@@ -296,8 +296,8 @@ export default function InventoryCountsPage() {
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
-      </div>
+          </Dialog>
+        </div>
 
       <Card className="p-6">
         <div className="overflow-x-auto">
@@ -375,7 +375,7 @@ export default function InventoryCountsPage() {
                         <div className="flex items-center space-x-2">
                           <MapPin className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm text-foreground" data-testid={`warehouse-name-${count.id}`}>
-                            {count.warehouse.name}
+                            {count.warehouse?.name || 'Armazém não encontrado'}
                           </span>
                         </div>
                       </td>

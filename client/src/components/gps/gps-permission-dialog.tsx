@@ -59,7 +59,7 @@ export function GPSPermissionDialog({
 
   const loadAvailableVehicles = async () => {
     try {
-      const response = await fetch('/api/vehicles/available', {
+      const response = await fetch('/api/fleet/vehicles/available', {
         credentials: 'include'
       });
       

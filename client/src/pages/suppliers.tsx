@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Building, Mail, Phone, MapPin } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -10,12 +10,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertSupplierSchema, type Supplier } from "@shared/schema";
+import { type Supplier } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
-const supplierFormSchema = insertSupplierSchema;
+// Schema personalizado para o formulário de fornecedores
+const supplierFormSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+});
+
 type SupplierFormData = z.infer<typeof supplierFormSchema>;
 
 function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: React.ReactNode }) {
@@ -33,7 +40,7 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
   });
 
   // Reset form values when supplier changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (supplier) {
       form.reset({
         name: supplier.name || "",

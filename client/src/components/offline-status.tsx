@@ -2,7 +2,7 @@ import { useOffline } from '@/hooks/use-offline';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, WifiOff, Sync, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export function OfflineStatus() {
   const { 
@@ -79,7 +79,7 @@ export function OfflineStatus() {
           
           {syncInProgress && (
             <div className="flex items-center gap-2 text-sm text-blue-600">
-              <Sync className="h-4 w-4 animate-spin" />
+              <RefreshCw className="h-4 w-4 animate-spin" />
               <span data-testid="text-sync-progress">Sincronizando...</span>
             </div>
           )}

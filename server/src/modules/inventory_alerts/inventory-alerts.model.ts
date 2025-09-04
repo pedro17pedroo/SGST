@@ -1,61 +1,73 @@
-import { DatabaseStorage } from '../../storage';
-
-const storage = new DatabaseStorage();
+// TODO: Implement proper storage integration
 
 export class InventoryAlertsModel {
   static async getAlerts(filters: any) {
-    return await storage.getInventoryAlerts(filters);
+    // TODO: Implement inventory alerts functionality
+    return [];
   }
 
   static async getAlertById(id: string) {
-    return await storage.getInventoryAlertById(id);
+    // TODO: Implement get alert by ID functionality
+    return null;
   }
 
   static async createAlert(data: any) {
-    return await storage.createInventoryAlert(data);
+    // TODO: Implement create alert functionality
+    throw new Error('Create alert not implemented yet');
   }
 
   static async updateAlert(id: string, data: any) {
-    return await storage.updateInventoryAlert(id, data);
+    // TODO: Implement update alert functionality
+    throw new Error('Update alert not implemented yet');
   }
 
   static async deleteAlert(id: string) {
-    return await storage.deleteInventoryAlert(id);
+    // TODO: Implement delete alert functionality
+    throw new Error('Delete alert not implemented yet');
   }
 
   static async getLowStockAlerts(warehouseId?: string) {
-    return await storage.getLowStockAlerts(warehouseId);
+    // TODO: Implement low stock alerts functionality
+    return [];
   }
 
   static async getOverstockAlerts(warehouseId?: string) {
-    return await storage.getOverstockAlerts(warehouseId);
+    // TODO: Implement overstock alerts functionality
+    return [];
   }
 
   static async getExpiryAlerts(warehouseId?: string, daysAhead: number = 30) {
-    return await storage.getExpiryAlerts(warehouseId, daysAhead);
+    // TODO: Implement expiry alerts functionality
+    return [];
   }
 
   static async getDeadStockAlerts(warehouseId?: string, days: number = 90) {
-    return await storage.getDeadStockAlerts(warehouseId, days);
+    // TODO: Implement dead stock alerts functionality
+    return [];
   }
 
   static async getAlertSettings(warehouseId?: string) {
-    return await storage.getAlertSettings(warehouseId);
+    // TODO: Implement get alert settings functionality
+    return {};
   }
 
   static async updateAlertSettings(warehouseId: string, data: any) {
-    return await storage.updateAlertSettings(warehouseId, data);
+    // TODO: Implement update alert settings functionality
+    throw new Error('Update alert settings not implemented yet');
   }
 
   static async acknowledgeAlert(id: string, data: any) {
-    return await storage.acknowledgeAlert(id, data);
+    // TODO: Implement acknowledge alert functionality
+    throw new Error('Acknowledge alert not implemented yet');
   }
 
   static async resolveAlert(id: string, data: any) {
-    return await storage.resolveAlert(id, data);
+    // TODO: Implement resolve alert functionality
+    throw new Error('Resolve alert not implemented yet');
   }
 
   static async bulkAlertAction(alertIds: string[], data: any) {
-    return await storage.bulkAlertAction(alertIds, data);
+    // TODO: Implement bulk alert action functionality
+    throw new Error('Bulk alert action not implemented yet');
   }
 }

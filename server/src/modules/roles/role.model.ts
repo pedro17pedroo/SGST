@@ -1,62 +1,150 @@
-import { storage } from '../../storage';
-// TODO: Descomentar quando os schemas de role forem criados
-// import { insertRoleSchema, insertRolePermissionSchema } from '@shared/schema';
-import { insertRoleSchema } from '@shared/schema';
+import { db } from '../../../database/db';
+import { roles, insertRoleSchema, rolePermissions, permissions, userRoles, users } from '../../../../shared/schema';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 export type RoleCreateData = z.infer<typeof insertRoleSchema>;
 export type RoleUpdateData = Partial<RoleCreateData>;
 
-// TODO: Reativar toda a classe quando as tabelas necessárias forem criadas
-export class RoleModel {
-  static async placeholder() {
-    throw new Error('RoleModel temporariamente desabilitado durante migração para MySQL');
-  }
-}
-
-/* TODO: Descomentar quando as tabelas de role forem criadas
 export class RoleModel {
   static async getAll() {
-    return await storage.getRoles();
+    try {
+      const result = await db.select().from(roles);
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar todos os perfis:', error);
+      return [];
+    }
   }
 
   static async getById(id: string) {
-    return await storage.getRole(id);
+    try {
+      const result = await db.select().from(roles).where(eq(roles.id, id)).limit(1);
+      return result[0] || null;
+    } catch (error) {
+      console.error('Erro ao buscar perfil por ID:', error);
+      return null;
+    }
   }
 
   static async create(roleData: RoleCreateData) {
-    const validatedData = insertRoleSchema.parse(roleData);
-    return await storage.createRole(validatedData);
+    try {
+      const validatedData = insertRoleSchema.parse(roleData);
+      const result = await db.insert(roles).values(validatedData).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Erro ao criar perfil:', error);
+      throw new Error('Erro ao criar perfil');
+    }
   }
 
   static async update(id: string, updateData: RoleUpdateData) {
-    const validatedData = insertRoleSchema.partial().parse(updateData);
-    return await storage.updateRole(id, validatedData);
+    try {
+      const validatedData = insertRoleSchema.partial().parse(updateData);
+      const result = await db.update(roles).set(validatedData).where(eq(roles.id, id)).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      throw new Error('Erro ao atualizar perfil');
+    }
   }
 
   static async delete(id: string) {
-    return await storage.deleteRole(id);
+    try {
+      await db.delete(roles).where(eq(roles.id, id));
+      return true;
+    } catch (error) {
+      console.error('Erro ao eliminar perfil:', error);
+      return false;
+    }
   }
 
   static async getRolePermissions(roleId: string) {
-    return await storage.getRolePermissions(roleId);
+    try {
+      const result = await db
+        .select({
+          id: permissions.id,
+          name: permissions.name,
+          description: permissions.description,
+          resource: permissions.resource,
+          action: permissions.action,
+        })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(eq(rolePermissions.roleId, roleId));
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar permissões do perfil:', error);
+      return [];
+    }
   }
 
   static async addPermissionToRole(roleId: string, permissionId: string) {
-    const validatedData = insertRolePermissionSchema.parse({ roleId, permissionId });
-    return await storage.addPermissionToRole(validatedData);
+    try {
+      const result = await db.insert(rolePermissions).values({
+        roleId,
+        permissionId,
+      }).returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Erro ao adicionar permissão ao perfil:', error);
+      throw new Error('Erro ao adicionar permissão ao perfil');
+    }
   }
 
   static async removePermissionFromRole(roleId: string, permissionId: string) {
-    return await storage.removePermissionFromRole(roleId, permissionId);
+    try {
+      await db.delete(rolePermissions)
+        .where(eq(rolePermissions.roleId, roleId) && eq(rolePermissions.permissionId, permissionId));
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover permissão do perfil:', error);
+      return false;
+    }
   }
 
   static async setRolePermissions(roleId: string, permissionIds: string[]) {
-    return await storage.setRolePermissions(roleId, permissionIds);
+    try {
+      // Remove todas as permissões existentes do perfil
+      await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
+      
+      // Adiciona as novas permissões
+      if (permissionIds.length > 0) {
+        const rolePermissionData = permissionIds.map(permissionId => ({
+          roleId,
+          permissionId,
+        }));
+        
+        await db.insert(rolePermissions).values(rolePermissionData);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao definir permissões do perfil:', error);
+      throw new Error('Erro ao definir permissões do perfil');
+    }
   }
 
   static async getUsersWithRole(roleId: string) {
-    return await storage.getUsersWithRole(roleId);
+    try {
+      const result = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          isActive: users.isActive,
+        })
+        .from(userRoles)
+        .innerJoin(users, eq(userRoles.userId, users.id))
+        .where(eq(userRoles.roleId, roleId));
+      
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar utilizadores com perfil:', error);
+      return [];
+    }
   }
 }
-*/

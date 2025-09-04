@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../../../database/db';
 import { suppliers, type Supplier, type InsertSupplier } from '@shared/schema';
 import { desc, eq } from 'drizzle-orm';
 

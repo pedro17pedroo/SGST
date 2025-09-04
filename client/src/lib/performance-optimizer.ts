@@ -4,9 +4,7 @@ import { QueryClient } from "@tanstack/react-query";
 export class PerformanceOptimizer {
   private static cache = new Map<string, any>();
   private static preloadedData = new Map<string, Promise<any>>();
-  private static lastRequestTimes = new Map<string, number>();
   private static readonly CACHE_TTL = 5000; // 5 seconds
-  private static readonly PRELOAD_THRESHOLD = 100; // ms
 
   // Intelligent Prefetching
   static prefetchCriticalData(queryClient: QueryClient) {
@@ -21,8 +19,18 @@ export class PerformanceOptimizer {
     criticalQueries.forEach(query => {
       queryClient.prefetchQuery({
         queryKey: [query],
+        queryFn: () => fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001'}${query}`, {
+          credentials: 'include'
+        }).then(res => {
+          if (!res.ok) {
+            console.warn(`Failed to prefetch ${query}: HTTP ${res.status}`);
+            throw new Error(`HTTP ${res.status}`);
+          }
+          return res.json();
+        }),
         staleTime: 30000, // 30 seconds
-        gcTime: 60000 // 1 minute
+        gcTime: 60000, // 1 minute
+        retry: false // Não tentar novamente em caso de erro
       });
     });
   }
@@ -142,13 +150,12 @@ export class PerformanceOptimizer {
   private static preloadPageData(path: string, queryClient: QueryClient) {
     const preloadQueries = {
       '/products': ['/api/products?limit=20', '/api/categories', '/api/suppliers'],
-      '/inventory': ['/api/inventory/summary', '/api/warehouses', '/api/stock-alerts'],
-      '/orders': ['/api/orders/recent', '/api/orders/pending'],
-      '/shipping': ['/api/shipments/active', '/api/carriers'],
-      '/warehouses': ['/api/warehouses', '/api/warehouse-zones'],
-      '/reports': ['/api/reports/summary'],
-      '/digital-twin': ['/api/digital-twin/viewer', '/api/warehouses'],
-      '/green-eta': ['/api/green-eta/reports/sustainability']
+      '/inventory': ['/api/inventory/summary', '/api/warehouses', '/api/inventory/stock-alerts'],
+      '/orders': ['/api/orders/recent'],
+      '/shipping': ['/api/shipping/active', '/api/shipping/carriers'],
+      '/warehouses': ['/api/warehouses'],
+      '/reports': ['/api/reports/inventory-turnover'],
+      '/digital-twin': ['/api/warehouses']
     };
 
     const queries = preloadQueries[path as keyof typeof preloadQueries];
@@ -156,6 +163,12 @@ export class PerformanceOptimizer {
       queries.forEach(query => {
         queryClient.prefetchQuery({
           queryKey: [query],
+          queryFn: () => fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${query}`, {
+            credentials: 'include'
+          }).then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          }),
           staleTime: 10000
         });
       });
@@ -164,18 +177,28 @@ export class PerformanceOptimizer {
 
   // Optimize images and assets
   static optimizeAssets() {
-    // Preload critical images
-    const criticalImages = [
-      '/assets/logo.svg',
-      '/assets/dashboard-bg.jpg'
+    // Preload critical resources only if they exist
+    const criticalResources: string[] = [
+      // Add actual resources here when available
+      // '/assets/logo.svg',
+      // '/assets/dashboard-bg.jpg'
     ];
 
-    criticalImages.forEach(src => {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = src;
-      document.head.appendChild(link);
+    criticalResources.forEach(src => {
+      // Check if resource exists before preloading
+      fetch(src, { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = src;
+            document.head.appendChild(link);
+          }
+        })
+        .catch(() => {
+          // Silently ignore missing resources
+        });
     });
   }
 
@@ -228,7 +251,7 @@ export class PerformanceOptimizer {
 
   // Initialize all optimizations
   static initialize(queryClient: QueryClient) {
-    this.prefetchCriticalData(queryClient);
+    // Não fazer prefetch imediatamente - aguardar autenticação
     this.initPredictiveLoading(queryClient);
     this.optimizeAssets();
     this.monitorPerformance();
@@ -237,6 +260,12 @@ export class PerformanceOptimizer {
     setInterval(() => this.cleanupCache(), 120000);
     
     console.log('🚀 UX Hiper-Rápida iniciada - Latência alvo < 200ms');
+  }
+
+  // Inicializar prefetch após autenticação
+  static initializeAfterAuth(queryClient: QueryClient) {
+    this.prefetchCriticalData(queryClient);
+    console.log('🔐 Prefetch iniciado após autenticação');
   }
 
   // Get performance metrics

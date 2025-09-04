@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Truck, MapPin, Calendar, Clock, User, Package, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,7 +95,7 @@ export function VehicleAssignments() {
     try {
       const [vehiclesRes, shipmentsRes, driversRes] = await Promise.all([
         apiRequest('GET', '/api/fleet/vehicles/available'),
-        apiRequest('GET', '/api/shipments?status=pending'),
+        apiRequest('GET', '/api/shipping?status=pending'),
         apiRequest('GET', '/api/users?role=driver')
       ]);
 

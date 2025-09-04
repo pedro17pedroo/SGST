@@ -1,7 +1,19 @@
 import { Router } from 'express';
 import { InventoryAlertsController } from './inventory-alerts.controller';
+import { moduleGuard } from '../../middleware/module-guard';
+import { requireAuth, requireRole } from '../auth/auth.middleware';
 
 const router = Router();
+
+// Aplicar middleware de proteção do módulo
+router.use(moduleGuard('inventory_alerts'));
+
+// Todas as rotas requerem autenticação
+router.use(requireAuth);
+
+// Endpoints específicos para stock-alerts (compatibilidade com frontend)
+router.get('/stock-alerts', InventoryAlertsController.getStockAlerts);
+router.get('/inventory/stock-alerts', InventoryAlertsController.getStockAlerts);
 
 // Alert management
 router.get('/alerts', InventoryAlertsController.getAlerts);

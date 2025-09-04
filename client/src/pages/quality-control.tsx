@@ -27,7 +27,6 @@ import {
   Package,
   Clock,
   User,
-  Camera,
   Microscope,
   Award,
   TrendingUp,

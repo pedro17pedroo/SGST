@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { setAuthHandler, queryClient, apiRequest } from "@/lib/queryClient";
+import { PerformanceOptimizer } from "@/lib/performance-optimizer";
 
 interface User {
   id: string;
@@ -13,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   login: (userData: User) => void;
   logout: () => Promise<void>;
+  handleUnauthorized: () => void;
   isAuthenticated: boolean;
 }
 
@@ -27,24 +30,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedUser = localStorage.getItem("sgst-user");
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        // Inicializar prefetch se já estiver autenticado
+        PerformanceOptimizer.initializeAfterAuth(queryClient);
       } catch {
         localStorage.removeItem("sgst-user");
       }
     }
   }, []);
 
+  // Register auth handler with queryClient
+  useEffect(() => {
+    setAuthHandler(handleUnauthorized);
+  }, []);
+
   const login = (userData: User) => {
+    console.log('Login chamado com dados:', userData);
     setUser(userData);
     localStorage.setItem("sgst-user", JSON.stringify(userData));
+    
+    // Inicializar prefetch após autenticação
+    PerformanceOptimizer.initializeAfterAuth(queryClient);
+    
+    // Usar setTimeout para garantir que o estado seja atualizado antes do redirecionamento
+    setTimeout(() => {
+      console.log('Redirecionando para dashboard...');
+      setLocation('/dashboard');
+    }, 50);
   };
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include', // Include cookies for session
-      });
+      await apiRequest('POST', '/api/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
       // Continue with local logout even if API call fails
@@ -58,10 +76,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLocation('/');
   };
 
+  // Handle unauthorized access (401 errors)
+  const handleUnauthorized = () => {
+    setUser(null);
+    localStorage.removeItem("sgst-user");
+    
+    // Only redirect if not already on login page
+    if (window.location.pathname !== '/') {
+      setLocation('/');
+    }
+  };
+
   const value = {
     user,
     login,
     logout,
+    handleUnauthorized,
     isAuthenticated: !!user,
   };
 

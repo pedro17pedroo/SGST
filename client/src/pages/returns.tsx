@@ -18,16 +18,12 @@ import {
   User, 
   CheckCircle, 
   Clock, 
-  AlertTriangle, 
   XCircle,
   Plus,
   Search,
   RefreshCw,
   DollarSign,
-  FileText,
-  Eye,
-  Edit,
-  Truck
+  Eye
 } from "lucide-react";
 import { z } from "zod";
 
@@ -44,18 +40,7 @@ const returnSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Return Item Schema
-const returnItemSchema = z.object({
-  productId: z.string().min(1, "Produto é obrigatório"),
-  quantity: z.number().min(1, "Quantidade deve ser maior que 0"),
-  reason: z.string().min(1, "Motivo é obrigatório"),
-  condition: z.enum(["new", "damaged", "used", "defective"]),
-  unitPrice: z.number().min(0, "Preço deve ser positivo"),
-  refundAmount: z.number().min(0, "Valor de reembolso deve ser positivo"),
-  restockable: z.boolean(),
-  warehouseId: z.string().optional(),
-  qualityNotes: z.string().optional(),
-});
+
 
 interface Return {
   id: string;
@@ -117,13 +102,6 @@ interface ReturnItem {
   qualityNotes?: string;
 }
 
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  price: number;
-}
-
 interface Supplier {
   id: string;
   name: string;
@@ -138,7 +116,7 @@ interface Order {
 export default function ReturnsPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedReturn, setSelectedReturn] = useState<Return | null>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -267,15 +245,7 @@ export default function ReturnsPage() {
     }
   });
 
-  // Get products for form
-  const { data: products } = useQuery({
-    queryKey: ['/api/products'],
-    queryFn: async () => {
-      const response = await fetch('/api/products');
-      if (!response.ok) throw new Error('Failed to fetch products');
-      return response.json() as Promise<Product[]>;
-    }
-  });
+
 
   // Get suppliers for form
   const { data: suppliers } = useQuery({
@@ -324,7 +294,7 @@ export default function ReturnsPage() {
 
   // Approve return mutation
   const approveReturnMutation = useMutation({
-    mutationFn: async (returnId: string) => {
+    mutationFn: async (_returnId: string) => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
@@ -347,7 +317,7 @@ export default function ReturnsPage() {
 
   // Process return mutation
   const processReturnMutation = useMutation({
-    mutationFn: async (returnId: string) => {
+    mutationFn: async (_returnId: string) => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
@@ -849,7 +819,9 @@ export default function ReturnsPage() {
                         <Button 
                           size="sm" 
                           variant="ghost"
-                          onClick={() => setSelectedReturn(returnItem)}
+                          onClick={() => {
+                            // TODO: Implementar visualização de detalhes da devolução
+                          }}
                           data-testid={`view-return-${returnItem.id}`}
                         >
                           <Eye className="w-4 h-4" />

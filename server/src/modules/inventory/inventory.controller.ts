@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { InventoryModel } from './inventory.model';
+import { storage } from '../../storage/index';
 
 export class InventoryController {
   static async getLowStockProducts(req: Request, res: Response) {
@@ -80,6 +81,51 @@ export class InventoryController {
       console.error('Error fetching inventory summary:', error);
       res.status(500).json({ 
         message: "Erro ao buscar resumo do inventário", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async getStockMovements(req: Request, res: Response) {
+    try {
+      const { limit } = req.query;
+      const movements = await storage.getStockMovements(limit ? parseInt(limit as string) : undefined);
+      res.json(movements);
+    } catch (error) {
+      console.error('Error fetching stock movements:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar movimentações de stock", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async createStockMovement(req: Request, res: Response) {
+    try {
+      const movement = await storage.createStockMovement(req.body);
+      res.status(201).json(movement);
+    } catch (error) {
+      console.error('Error creating stock movement:', error);
+      res.status(500).json({ 
+        message: "Erro ao criar movimentação de stock", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async getWarehouseZones(req: Request, res: Response) {
+    try {
+      // TODO: Implementar quando as zonas de armazém forem definidas no schema
+      const zones = [
+        { id: '1', name: 'Zona A', description: 'Produtos de alta rotatividade', warehouseId: '1' },
+        { id: '2', name: 'Zona B', description: 'Produtos de média rotatividade', warehouseId: '1' },
+        { id: '3', name: 'Zona C', description: 'Produtos de baixa rotatividade', warehouseId: '1' }
+      ];
+      res.json(zones);
+    } catch (error) {
+      console.error('Error fetching warehouse zones:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar zonas do armazém", 
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

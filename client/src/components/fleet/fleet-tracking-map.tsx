@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,7 +87,6 @@ function FitBounds({ locations }: { locations: VehicleLocation[] }) {
 export function FleetTrackingMap({ 
   height = '500px', 
   showControls = true,
-  selectedVehicleId,
   onVehicleSelect 
 }: FleetTrackingMapProps) {
   const [vehicleLocations, setVehicleLocations] = useState<VehicleLocation[]>([]);

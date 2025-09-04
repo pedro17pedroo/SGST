@@ -62,11 +62,11 @@ export class ComputerVisionController {
       const { id } = req.params;
       const result = await ComputerVisionModel.getCountingResult(id);
       
-      if (!result || result.length === 0) {
+      if (!result) {
         return res.status(404).json({ message: "Resultado de contagem não encontrado" });
       }
       
-      res.json(result[0]);
+      res.json(result);
     } catch (error) {
       console.error('Error fetching counting result:', error);
       res.status(500).json({ 
@@ -85,7 +85,7 @@ export class ComputerVisionController {
       });
 
       const { manualCount, verifiedBy } = schema.parse(req.body);
-      const result = await ComputerVisionModel.verifyCountingResult(id, manualCount, verifiedBy);
+      const result = await ComputerVisionModel.verifyCountingResult(id, verifiedBy);
       
       res.json({
         message: "Contagem verificada com sucesso",

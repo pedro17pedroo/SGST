@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../../../database/db';
 // TODO: Descomentar quando as tabelas de auto-slotting forem criadas
 // import { 
 //   slottingAnalytics, productAffinity, slottingRules, mlModels, optimizationJobs,
@@ -9,14 +9,169 @@ import { db } from '../../db';
 //   type MlModels, type InsertMlModels,
 //   type OptimizationJobs, type InsertOptimizationJobs
 // } from '@shared/schema';
-import { products, inventory, orders, orderItems, warehouses } from '@shared/schema';
+import { products, inventory, orders, orderItems, warehouses } from '../../../../shared/schema';
 import { desc, eq, sql, and, gte, lte, or, inArray } from 'drizzle-orm';
 
-// TODO: Reativar toda a classe quando as tabelas necessárias forem criadas
+// Implementação temporária dos métodos necessários para o AutoSlottingModel
 export class AutoSlottingModel {
-  static async placeholder() {
-    console.log('AutoSlottingModel temporariamente desabilitado durante migração para MySQL');
+  // Slotting Analytics methods
+  static async getSlottingAnalytics(filters: {
+    warehouseId?: string;
+    productId?: string;
+    status?: string;
+    limit: number;
+    offset: number;
+  }) {
+    console.log('getSlottingAnalytics chamado com filtros:', filters);
+    // Retorna dados mock até as tabelas serem criadas
+    return [];
+  }
+
+  static async getSlottingAnalytic(id: string) {
+    console.log('getSlottingAnalytic chamado para ID:', id);
     return null;
+  }
+
+  static async calculateSlottingAnalytics(warehouseId: string, productIds?: string[]) {
+    console.log('calculateSlottingAnalytics chamado para warehouse:', warehouseId);
+    return {
+      calculated: 0,
+      recommendations: [],
+      totalImprovementPotential: 0
+    };
+  }
+
+  static async approveSlottingRecommendation(id: string) {
+    console.log('approveSlottingRecommendation chamado para ID:', id);
+    return { success: true, message: 'Recomendação aprovada (mock)' };
+  }
+
+  // Product Affinity methods
+  static async getProductAffinity(filters: {
+    warehouseId?: string;
+    productId?: string;
+    limit: number;
+    offset: number;
+    minScore?: number;
+  }) {
+    console.log('getProductAffinity chamado com filtros:', filters);
+    return [];
+  }
+
+  static async getProductAffinityByProduct(productId: string, limit: number) {
+    console.log('getProductAffinityByProduct chamado para produto:', productId);
+    return [];
+  }
+
+  static async calculateProductAffinity(startDate: string, endDate: string, warehouseId?: string) {
+    console.log('calculateProductAffinity chamado:', { startDate, endDate, warehouseId });
+    return { calculated: 0, affinityPairs: [] };
+  }
+
+  // Slotting Rules methods
+  static async getSlottingRules(filters: {
+    warehouseId?: string;
+    ruleType?: string;
+    isActive?: boolean;
+    limit: number;
+    offset: number;
+  }) {
+    console.log('getSlottingRules chamado com filtros:', filters);
+    return [];
+  }
+
+  static async getSlottingRule(id: string) {
+    console.log('getSlottingRule chamado para ID:', id);
+    return null;
+  }
+
+  static async createSlottingRule(data: any) {
+    console.log('createSlottingRule chamado com dados:', data);
+    return { id: 'mock-rule-id', ...data };
+  }
+
+  static async updateSlottingRule(id: string, data: any) {
+    console.log('updateSlottingRule chamado:', { id, data });
+    return { id, ...data };
+  }
+
+  static async deleteSlottingRule(id: string) {
+    console.log('deleteSlottingRule chamado para ID:', id);
+    return { success: true };
+  }
+
+  // ML Models methods
+  static async getMlModels(filters: {
+    modelType?: string;
+    status?: string;
+    limit: number;
+    offset: number;
+  }) {
+    console.log('getMlModels chamado com filtros:', filters);
+    return [];
+  }
+
+  static async getMlModel(id: string) {
+    console.log('getMlModel chamado para ID:', id);
+    return null;
+  }
+
+  static async createMlModel(data: any) {
+    console.log('createMlModel chamado com dados:', data);
+    return { id: 'mock-model-id', ...data };
+  }
+
+  static async trainMlModel(id: string, trainingData: any) {
+    console.log('trainMlModel chamado:', { id, trainingData });
+    return { success: true, message: 'Treinamento iniciado (mock)' };
+  }
+
+  static async deployMlModel(id: string) {
+    console.log('deployMlModel chamado para ID:', id);
+    return { success: true, message: 'Modelo implantado (mock)' };
+  }
+
+  // Optimization Jobs methods
+  static async getOptimizationJobs(filters: {
+    warehouseId?: string;
+    jobType?: string;
+    status?: string;
+    limit: number;
+    offset: number;
+  }) {
+    console.log('getOptimizationJobs chamado com filtros:', filters);
+    return [];
+  }
+
+  static async getOptimizationJob(id: string) {
+    console.log('getOptimizationJob chamado para ID:', id);
+    return null;
+  }
+
+  static async createOptimizationJob(data: any) {
+    console.log('createOptimizationJob chamado com dados:', data);
+    return { id: 'mock-job-id', ...data };
+  }
+
+  static async executeOptimizationJob(id: string) {
+    console.log('executeOptimizationJob chamado para ID:', id);
+    return { success: true, message: 'Job executado (mock)' };
+  }
+
+  // Layout Optimization methods
+  static async optimizeLayout(warehouseId: string, optimizationType: string) {
+    console.log('optimizeLayout chamado:', { warehouseId, optimizationType });
+    return { success: true, recommendations: [] };
+  }
+
+  static async optimizePickingRoutes(warehouseId: string, pickingListIds: string[]) {
+    console.log('optimizePickingRoutes chamado:', { warehouseId, pickingListIds });
+    return { success: true, optimizedRoutes: [] };
+  }
+
+  static async getLayoutRecommendations(warehouseId: string, priority?: string) {
+    console.log('getLayoutRecommendations chamado:', { warehouseId, priority });
+    return [];
   }
 }
 

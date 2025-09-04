@@ -87,14 +87,35 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     description: 'Catálogo de produtos e categorias',
     enabled: true,
     dependencies: ['users'],
-    routes: ['/products'],
+    routes: ['/products', '/categories'],
     menuItems: [{
       label: 'Produtos',
       icon: 'Package',
       path: '/products',
       order: 10
+    }, {
+      label: 'Categorias',
+      icon: 'Package2',
+      path: '/categories',
+      order: 11
     }],
     permissions: ['products.read']
+  },
+
+  customers: {
+    id: 'customers',
+    name: 'Gestão de Clientes',
+    description: 'Gestão de clientes e contactos',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/customers'],
+    menuItems: [{
+      label: 'Clientes',
+      icon: 'Users',
+      path: '/customers',
+      order: 12
+    }],
+    permissions: ['customers.read']
   },
 
   suppliers: {
@@ -406,34 +427,35 @@ export class FrontendModuleManager {
 
   static async loadModuleConfiguration(): Promise<void> {
     try {
-      // Buscar configuração de módulos do backend
       const response = await fetch('/api/modules');
-      if (response.ok) {
-        const backendModules = await response.json();
-        
-        // Sincronizar com configuração do backend
-        this.enabledModules.clear();
-        backendModules.forEach((module: any) => {
-          if (module.enabled) {
-            this.enabledModules.add(module.id);
-            // Atualizar configuração local se necessário
-            if (FRONTEND_MODULE_CONFIG[module.id]) {
-              FRONTEND_MODULE_CONFIG[module.id].enabled = true;
-            }
-          } else {
-            if (FRONTEND_MODULE_CONFIG[module.id]) {
-              FRONTEND_MODULE_CONFIG[module.id].enabled = false;
-            }
-          }
-        });
-        
-        console.log('📱 Configuração de módulos do frontend sincronizada');
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao carregar módulos: ${response.status}`);
       }
+      
+      const modules = await response.json();
+      this.syncWithBackend(modules);
     } catch (error) {
-      console.warn('⚠️ Erro ao carregar configuração de módulos:', error);
-      // Usar configuração local como fallback
+      console.error('Erro ao carregar configuração de módulos:', error);
       this.loadLocalConfiguration();
     }
+  }
+
+  static syncWithBackend(modules: any[]): void {
+    this.enabledModules.clear();
+    modules.forEach((module: any) => {
+      if (module.enabled) {
+        this.enabledModules.add(module.id);
+        // Atualizar configuração local se necessário
+        if (FRONTEND_MODULE_CONFIG[module.id]) {
+          FRONTEND_MODULE_CONFIG[module.id].enabled = true;
+        }
+      } else {
+        if (FRONTEND_MODULE_CONFIG[module.id]) {
+          FRONTEND_MODULE_CONFIG[module.id].enabled = false;
+        }
+      }
+    });
   }
 
   static loadLocalConfiguration(): void {
@@ -446,10 +468,7 @@ export class FrontendModuleManager {
   }
 
   static isModuleEnabled(moduleId: string): boolean {
-    const isEnabled = this.enabledModules.has(moduleId);
-    console.log(`🔍 Verificando módulo '${moduleId}': ${isEnabled ? 'HABILITADO' : 'DESABILITADO'}`);
-    console.log('📋 Módulos habilitados:', Array.from(this.enabledModules));
-    return isEnabled;
+    return this.enabledModules.has(moduleId);
   }
 
   static getEnabledModules(): FrontendModuleConfig[] {

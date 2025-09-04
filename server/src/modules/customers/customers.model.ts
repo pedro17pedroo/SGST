@@ -1,26 +1,26 @@
-import { db } from '../../db';
-import { customers, type Customer, type InsertCustomer } from '../../../shared/schema';
-import { eq, and, or, ilike, desc, sql, count } from 'drizzle-orm';
+import { db } from '../../../database/db';
+import { customers, type Customer, type InsertCustomer } from '@shared/schema';
+import { eq, and, or, like, desc, sql, count } from 'drizzle-orm';
 
 export class CustomerModel {
   static async getCustomers(): Promise<Customer[]> {
     const results = await db.select().from(customers).orderBy(desc(customers.createdAt));
-    return results;
+    return results as Customer[];
   }
 
   static async getCustomer(id: string): Promise<Customer | undefined> {
     const result = await db.select().from(customers).where(eq(customers.id, id));
-    return result[0];
+    return result[0] as Customer | undefined;
   }
 
   static async getCustomerByNumber(customerNumber: string): Promise<Customer | undefined> {
     const result = await db.select().from(customers).where(eq(customers.customerNumber, customerNumber));
-    return result[0];
+    return result[0] as Customer | undefined;
   }
 
   static async getCustomerByEmail(email: string): Promise<Customer | undefined> {
     const result = await db.select().from(customers).where(eq(customers.email, email));
-    return result[0];
+    return result[0] as Customer | undefined;
   }
 
   static async searchCustomers(query: string): Promise<Customer[]> {
@@ -28,15 +28,15 @@ export class CustomerModel {
       .from(customers)
       .where(
         or(
-          ilike(customers.name, `%${query}%`),
-          ilike(customers.email, `%${query}%`),
-          ilike(customers.phone, `%${query}%`),
-          ilike(customers.customerNumber, `%${query}%`)
+          like(customers.name, `%${query}%`),
+          like(customers.email, `%${query}%`),
+          like(customers.phone, `%${query}%`),
+          like(customers.customerNumber, `%${query}%`)
         )
       )
       .orderBy(desc(customers.createdAt));
     
-    return results;
+    return results as Customer[];
   }
 
   static async getActiveCustomers(): Promise<Customer[]> {
@@ -45,23 +45,21 @@ export class CustomerModel {
       .where(eq(customers.isActive, true))
       .orderBy(desc(customers.createdAt));
     
-    return results;
+    return results as Customer[];
   }
 
   static async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    // Gerar número do cliente automaticamente se não fornecido
-    if (!customer.customerNumber) {
-      const nextNumber = await this.getNextCustomerNumber();
-      customer.customerNumber = nextNumber;
-    }
+    // Gerar número do cliente automaticamente
+    const nextNumber = await this.getNextCustomerNumber();
 
     await db.insert(customers).values({
       ...customer,
+      customerNumber: nextNumber,
       updatedAt: new Date()
     });
     
     const newCustomer = await db.select().from(customers).orderBy(desc(customers.createdAt)).limit(1);
-    return newCustomer[0];
+    return newCustomer[0] as Customer;
   }
 
   static async updateCustomer(id: string, customer: Partial<InsertCustomer>): Promise<Customer> {
@@ -73,7 +71,7 @@ export class CustomerModel {
       .where(eq(customers.id, id));
     
     const updatedCustomer = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
-    return updatedCustomer[0];
+    return updatedCustomer[0] as Customer;
   }
 
   static async deleteCustomer(id: string): Promise<void> {
@@ -89,7 +87,7 @@ export class CustomerModel {
       .where(eq(customers.id, id));
     
     const deactivatedCustomer = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
-    return deactivatedCustomer[0];
+    return deactivatedCustomer[0] as Customer;
   }
 
   static async activateCustomer(id: string): Promise<Customer> {
@@ -101,7 +99,7 @@ export class CustomerModel {
       .where(eq(customers.id, id));
     
     const activatedCustomer = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
-    return activatedCustomer[0];
+    return activatedCustomer[0] as Customer;
   }
 
   static async getCustomerStats() {
@@ -122,7 +120,7 @@ export class CustomerModel {
     };
   }
 
-  static async getTopCustomers(limit = 10) {
+  static async getTopCustomers(limit = 10): Promise<Customer[]> {
     // This would require joining with orders table to get purchase amounts
     // For now, return most recent customers
     const results = await db.select()
@@ -131,15 +129,30 @@ export class CustomerModel {
       .orderBy(desc(customers.createdAt))
       .limit(limit);
     
-    return results;
+    return results as Customer[];
   }
 
   private static async getNextCustomerNumber(): Promise<string> {
+    // Buscar todos os clientes para processar os números localmente
     const result = await db.select({
-      lastNumber: sql<string>`COALESCE(MAX(CAST(SUBSTRING(${customers.customerNumber} FROM '^CL([0-9]+)$') AS INTEGER)), 0)`
+      customerNumber: customers.customerNumber
     }).from(customers);
     
-    const nextNumber = (parseInt(result[0].lastNumber || '0') + 1).toString().padStart(6, '0');
+    // Extrair os números e encontrar o maior
+    let maxNumber = 0;
+    for (const customer of result) {
+      // Verificar se o número segue o padrão CL + dígitos
+      const match = customer.customerNumber.match(/^CL(\d+)$/);
+      if (match) {
+        const number = parseInt(match[1], 10);
+        if (number > maxNumber) {
+          maxNumber = number;
+        }
+      }
+    }
+    
+    // Gerar o próximo número
+    const nextNumber = (maxNumber + 1).toString().padStart(6, '0');
     return `CL${nextNumber}`;
   }
 

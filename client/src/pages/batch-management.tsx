@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 
-// Batch Schema
+// Form schema for batch management (compatible with form inputs)
 const batchSchema = z.object({
   batchNumber: z.string().min(1, "Número do lote é obrigatório"),
   productId: z.string().min(1, "Produto é obrigatório"),
@@ -40,9 +40,12 @@ const batchSchema = z.object({
   expiryDate: z.string().min(1, "Data de validade é obrigatória"),
   quantity: z.number().int().positive("Quantidade deve ser positiva"),
   supplierBatchRef: z.string().optional(),
-  qualityStatus: z.enum(["pending", "approved", "rejected", "quarantine"]).default("pending"),
+  qualityStatus: z.enum(["pending", "approved", "rejected", "quarantine"]),
   notes: z.string().optional(),
 });
+
+// Tipo inferido do schema
+type BatchFormData = z.infer<typeof batchSchema>;
 
 interface Batch {
   id: string;
@@ -81,7 +84,7 @@ export default function BatchManagementPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof batchSchema>>({
+  const form = useForm<BatchFormData>({
     resolver: zodResolver(batchSchema),
     defaultValues: {
       batchNumber: "",
@@ -91,7 +94,7 @@ export default function BatchManagementPage() {
       expiryDate: "",
       quantity: 1,
       supplierBatchRef: "",
-      qualityStatus: "pending",
+      qualityStatus: "pending" as const,
       notes: "",
     },
   });
@@ -172,7 +175,7 @@ export default function BatchManagementPage() {
 
   // Create batch mutation
   const createBatchMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof batchSchema>) => {
+    mutationFn: async (data: BatchFormData) => {
       const response = await fetch('/api/batches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -195,7 +198,7 @@ export default function BatchManagementPage() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof batchSchema>) => {
+  const onSubmit = (data: BatchFormData) => {
     createBatchMutation.mutate(data);
   };
 

@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { 
   Box, 
   Eye, 
-  Settings, 
   Play, 
   Pause, 
   RotateCw,
@@ -24,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface WarehouseZone {
@@ -104,7 +103,7 @@ const ZoneCard = ({ zone }: { zone: WarehouseZone }) => {
   );
 };
 
-const WarehouseVisualization = ({ warehouseId, viewMode }: { warehouseId: string; viewMode: '2d' | '3d' }) => {
+const WarehouseVisualization = ({ warehouseId }: { warehouseId: string }) => {
   const { data: viewerData, isLoading } = useQuery<WarehouseViewer>({
     queryKey: ['/api/digital-twin/viewer', warehouseId],
     enabled: !!warehouseId
@@ -364,7 +363,6 @@ export default function WarehouseTwin() {
               {selectedWarehouse && (
                 <WarehouseVisualization 
                   warehouseId={selectedWarehouse} 
-                  viewMode={viewMode} 
                 />
               )}
             </CardContent>

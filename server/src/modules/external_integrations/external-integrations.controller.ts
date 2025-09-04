@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../../types/auth';
 import { z } from 'zod';
 import { ExternalIntegrationsModel } from './external-integrations.model';
 
@@ -97,7 +98,7 @@ const syncRequestSchema = z.object({
 });
 
 export class ExternalIntegrationsController {
-  static async getIntegrations(req: Request, res: Response) {
+  static async getIntegrations(req: AuthenticatedRequest, res: Response) {
     try {
       const type = req.query.type as string;
       const active = req.query.active === 'true' ? true : req.query.active === 'false' ? false : undefined;
@@ -125,7 +126,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async createERPIntegration(req: Request, res: Response) {
+  static async createERPIntegration(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = erpIntegrationSchema.parse(req.body);
       
@@ -160,7 +161,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async createCRMIntegration(req: Request, res: Response) {
+  static async createCRMIntegration(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = crmIntegrationSchema.parse(req.body);
       
@@ -195,7 +196,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async createEcommerceIntegration(req: Request, res: Response) {
+  static async createEcommerceIntegration(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = ecommerceIntegrationSchema.parse(req.body);
       
@@ -230,7 +231,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async testIntegration(req: Request, res: Response) {
+  static async testIntegration(req: AuthenticatedRequest, res: Response) {
     try {
       const { integrationId } = req.params;
       
@@ -255,7 +256,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async syncData(req: Request, res: Response) {
+  static async syncData(req: AuthenticatedRequest, res: Response) {
     try {
       const validated = syncRequestSchema.parse(req.body);
       
@@ -290,7 +291,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async getSyncHistory(req: Request, res: Response) {
+  static async getSyncHistory(req: AuthenticatedRequest, res: Response) {
     try {
       const integrationId = req.query.integrationId as string;
       const entityType = req.query.entityType as string;
@@ -329,7 +330,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async getIntegrationHealth(req: Request, res: Response) {
+  static async getIntegrationHealth(req: AuthenticatedRequest, res: Response) {
     try {
       const health = await ExternalIntegrationsModel.getIntegrationHealth();
       
@@ -353,7 +354,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async updateIntegration(req: Request, res: Response) {
+  static async updateIntegration(req: AuthenticatedRequest, res: Response) {
     try {
       const { integrationId } = req.params;
       const updates = req.body;
@@ -382,7 +383,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async deleteIntegration(req: Request, res: Response) {
+  static async deleteIntegration(req: AuthenticatedRequest, res: Response) {
     try {
       const { integrationId } = req.params;
       
@@ -400,7 +401,7 @@ export class ExternalIntegrationsController {
     }
   }
 
-  static async getAvailableConnectors(req: Request, res: Response) {
+  static async getAvailableConnectors(req: AuthenticatedRequest, res: Response) {
     try {
       const connectors = await ExternalIntegrationsModel.getAvailableConnectors();
       

@@ -1,6 +1,7 @@
 import { Express } from 'express';
 import { fleetRoutes } from './fleet.routes.js';
-import { IModule, ModuleConfig } from '../types.js';
+import { IModule } from '../base/module.interface';
+import { ModuleConfig } from '../../config/modules';
 
 const config: ModuleConfig = {
   id: 'fleet_management',

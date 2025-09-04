@@ -307,4 +307,13 @@ export class SmartReceivingController {
       });
     }
   }
+
+  // Métodos alias para compatibilidade
+  static async getAllAsns(req: Request, res: Response) {
+    return SmartReceivingController.getAsns(req, res);
+  }
+
+  static async getAsnById(req: Request, res: Response) {
+    return SmartReceivingController.getAsn(req, res);
+  }
 }

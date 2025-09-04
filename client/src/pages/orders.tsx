@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Package, Calendar, DollarSign, User as UserIcon, Building } from "lucide-react";
 import { Header } from "@/components/layout/header";
@@ -11,22 +11,30 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertOrderSchema, type Order, type Supplier } from "@shared/schema";
+import { type Order, type Supplier, type Customer } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
+import { CustomerCombobox } from "@/components/ui/customer-combobox";
+import { AddCustomerModal } from "@/components/ui/add-customer-modal";
 
-const orderFormSchema = insertOrderSchema.extend({
-  orderNumber: z.string().min(1, "Número da encomenda é obrigatório"),
-  type: z.enum(["sale", "purchase"]).default("sale"),
-  status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]).default("pending"),
-});
-
-type OrderFormData = z.infer<typeof orderFormSchema>;
+type OrderFormData = {
+  type: "sale" | "purchase";
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  supplierId?: string;
+  totalAmount: string;
+  notes?: string;
+};
 
 function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [newlyCreatedCustomer, setNewlyCreatedCustomer] = useState<Customer | null>(null);
   const { toast } = useToast();
   
   const { data: suppliers = [] } = useQuery<Supplier[]>({
@@ -34,11 +42,10 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
   });
   
   const form = useForm<OrderFormData>({
-    resolver: zodResolver(orderFormSchema),
     defaultValues: {
-      orderNumber: `ORD-${Date.now()}`,
       type: "sale",
       status: "pending",
+      customerId: "",
       customerName: "",
       customerEmail: "",
       customerPhone: "",
@@ -49,13 +56,49 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
     },
   });
 
+  // Atualizar formulário quando cliente é selecionado
+  useEffect(() => {
+    if (selectedCustomer) {
+      form.setValue("customerId", selectedCustomer.id);
+      form.setValue("customerName", selectedCustomer.name);
+      form.setValue("customerEmail", selectedCustomer.email || "");
+      form.setValue("customerPhone", selectedCustomer.phone || selectedCustomer.mobile || "");
+      
+      // Construir endereço completo
+      const addressParts = [
+        selectedCustomer.address,
+        selectedCustomer.city,
+        selectedCustomer.province,
+        selectedCustomer.postalCode,
+        selectedCustomer.country
+      ].filter(Boolean);
+      
+      form.setValue("customerAddress", addressParts.join(", "));
+    }
+  }, [selectedCustomer, form]);
+
+  // Função para lidar com a criação de novo cliente
+  const handleCustomerCreated = (customer: Customer) => {
+    setNewlyCreatedCustomer(customer);
+    setShowAddCustomerModal(false);
+  };
+
+  // Função para lidar com a seleção de cliente (incluindo recém-criado)
+  const handleCustomerSelect = (customer: any) => {
+    setSelectedCustomer(customer);
+    // Limpar referência do cliente recém-criado após seleção
+    if (newlyCreatedCustomer && customer?.id === newlyCreatedCustomer.id) {
+      setNewlyCreatedCustomer(null);
+    }
+  };
+
   // Reset form values when order changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (order) {
       form.reset({
-        orderNumber: order.orderNumber || `ORD-${Date.now()}`,
         type: (order.type as any) || "sale",
         status: (order.status as any) || "pending",
+        customerId: (order as any).customerId || "",
         customerName: order.customerName || "",
         customerEmail: order.customerEmail || "",
         customerPhone: order.customerPhone || "",
@@ -64,11 +107,15 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
         totalAmount: order.totalAmount || "0",
         notes: order.notes || "",
       });
+      // Se há um customerId, limpar o cliente selecionado para evitar conflitos
+      if ((order as any).customerId) {
+        setSelectedCustomer(null);
+      }
     } else {
       form.reset({
-        orderNumber: `ORD-${Date.now()}`,
         type: "sale",
         status: "pending",
+        customerId: "",
         customerName: "",
         customerEmail: "",
         customerPhone: "",
@@ -77,6 +124,7 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
         totalAmount: "0",
         notes: "",
       });
+      setSelectedCustomer(null);
     }
   }, [order, form]);
 
@@ -151,23 +199,6 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="orderNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número da Encomenda</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="ORD-001" 
-                        {...field} 
-                        data-testid="input-order-number"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               
               <FormField
                 control={form.control}
@@ -240,62 +271,61 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="customerName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome do Cliente</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Nome completo do cliente" 
-                      {...field} 
-                      value={field.value || ""}
-                      data-testid="input-customer-name"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+            {/* Seleção de Cliente */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-base font-medium">Cliente</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddCustomerModal(true)}
+                  className="text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Novo Cliente
+                </Button>
+              </div>
+              
+              <CustomerCombobox
+                value={form.watch("customerId")}
+                onValueChange={(value) => form.setValue("customerId", value)}
+                onCustomerSelect={handleCustomerSelect}
+                onAddNewCustomer={() => setShowAddCustomerModal(true)}
+                placeholder="Pesquisar cliente..."
+                newlyCreatedCustomer={newlyCreatedCustomer}
+              />
+              
+              {/* Campos ocultos para manter compatibilidade */}
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={({ field }) => (
+                  <Input type="hidden" {...field} value={field.value || ""} />
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="customerName"
+                render={({ field }) => (
+                  <Input type="hidden" {...field} value={field.value || ""} />
+                )}
+              />
+              
               <FormField
                 control={form.control}
                 name="customerEmail"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email do Cliente</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email"
-                        placeholder="cliente@email.ao" 
-                        {...field} 
-                        value={field.value || ""}
-                        data-testid="input-customer-email"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <Input type="hidden" {...field} value={field.value || ""} />
                 )}
               />
-
+              
               <FormField
                 control={form.control}
                 name="customerPhone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone do Cliente</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="+244-912-345-678" 
-                        {...field} 
-                        value={field.value || ""}
-                        data-testid="input-customer-phone"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <Input type="hidden" {...field} value={field.value || ""} />
                 )}
               />
             </div>
@@ -386,6 +416,13 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
           </form>
         </Form>
       </DialogContent>
+      
+      {/* Modal para adicionar novo cliente */}
+      <AddCustomerModal
+        open={showAddCustomerModal}
+        onOpenChange={setShowAddCustomerModal}
+        onCustomerCreated={(customer: any) => handleCustomerCreated(customer)}
+      />
     </Dialog>
   );
 }
@@ -526,7 +563,7 @@ export default function Orders() {
   });
 
   const filteredOrders = orders.filter((order: Order) =>
-    order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
+    (order.orderNumber && order.orderNumber.toLowerCase().includes(search.toLowerCase())) ||
     (order.customerName && order.customerName.toLowerCase().includes(search.toLowerCase()))
   );
 

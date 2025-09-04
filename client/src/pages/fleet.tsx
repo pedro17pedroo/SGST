@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Truck, MapPin, Calendar, AlertTriangle, Search, Filter } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Truck, AlertTriangle, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,52 +17,48 @@ import { VehicleAssignments } from '@/components/fleet/vehicle-assignments';
 interface Vehicle {
   id: string;
   licensePlate: string;
-  brand: string;
+  make: string; // Corresponde ao campo 'make' do backend
   model: string;
   year: number;
-  capacityKg: number;
-  capacityM3: number;
-  fuelType: 'gasolina' | 'diesel' | 'eletrico' | 'hibrido';
-  status: 'ativo' | 'manutencao' | 'inativo';
-  insuranceExpiry: string;
-  inspectionExpiry: string;
+  vin?: string;
+  type: string; // truck, van, car
+  capacity?: string; // Campo único do backend (decimal)
+  fuelType: string; // Corresponde ao campo 'fuel_type' do backend
+  status: string; // available, in_use, maintenance, out_of_service
   driverId?: string;
-  gpsDeviceId?: string;
-  isGpsActive: boolean;
+  currentLocation?: any; // JSON do backend
+  lastGpsUpdate?: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 interface VehicleFormData {
   licensePlate: string;
-  brand: string;
+  make: string;
   model: string;
   year: number;
-  capacityKg: number;
-  capacityM3: number;
-  fuelType: 'gasolina' | 'diesel' | 'eletrico' | 'hibrido';
-  status: 'ativo' | 'manutencao' | 'inativo';
-  insuranceExpiry: string;
-  inspectionExpiry: string;
+  vin?: string;
+  type: string;
+  capacity?: string;
+  fuelType: string;
+  status: string;
   driverId?: string;
-  gpsDeviceId?: string;
-  isGpsActive: boolean;
+  isActive: boolean;
 }
 
 const initialFormData: VehicleFormData = {
   licensePlate: '',
-  brand: '',
+  make: '',
   model: '',
   year: new Date().getFullYear(),
-  capacityKg: 0,
-  capacityM3: 0,
+  vin: '',
+  type: 'truck',
+  capacity: '0',
   fuelType: 'diesel',
-  status: 'ativo',
-  insuranceExpiry: '',
-  inspectionExpiry: '',
-  driverId: '',
-  gpsDeviceId: '',
-  isGpsActive: false
+  status: 'available',
+  driverId: 'none',
+  isActive: true
 };
 
 interface User {
@@ -120,14 +116,20 @@ export default function FleetPage() {
     e.preventDefault();
     
     try {
+      // Preparar dados para envio, convertendo "none" para null
+      const submitData = {
+        ...formData,
+        driverId: formData.driverId === 'none' ? null : formData.driverId
+      };
+      
       if (editingVehicle) {
-        await apiRequest('PUT', `/api/fleet/vehicles/${editingVehicle.id}`, formData);
+        await apiRequest('PUT', `/api/fleet/vehicles/${editingVehicle.id}`, submitData);
         toast({
           title: "Sucesso",
           description: "Veículo atualizado com sucesso.",
         });
       } else {
-        await apiRequest('POST', '/api/fleet/vehicles', formData);
+        await apiRequest('POST', '/api/fleet/vehicles', submitData);
         toast({
           title: "Sucesso",
           description: "Veículo criado com sucesso.",
@@ -151,18 +153,16 @@ export default function FleetPage() {
     setEditingVehicle(vehicle);
     setFormData({
       licensePlate: vehicle.licensePlate,
-      brand: vehicle.brand,
+      make: vehicle.make,
       model: vehicle.model,
       year: vehicle.year,
-      capacityKg: vehicle.capacityKg,
-      capacityM3: vehicle.capacityM3,
+      vin: vehicle.vin || '',
+      type: vehicle.type,
+      capacity: vehicle.capacity || '',
       fuelType: vehicle.fuelType,
       status: vehicle.status,
-      insuranceExpiry: vehicle.insuranceExpiry.split('T')[0],
-      inspectionExpiry: vehicle.inspectionExpiry.split('T')[0],
-      driverId: vehicle.driverId || '',
-      gpsDeviceId: vehicle.gpsDeviceId || '',
-      isGpsActive: vehicle.isGpsActive || false
+      driverId: vehicle.driverId || 'none',
+      isActive: vehicle.isActive
     });
     setIsDialogOpen(true);
   };
@@ -188,7 +188,7 @@ export default function FleetPage() {
 
   const filteredVehicles = vehicles.filter(vehicle => {
     const matchesSearch = vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         vehicle.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          vehicle.model.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || vehicle.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -196,20 +196,21 @@ export default function FleetPage() {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      ativo: { label: 'Ativo', variant: 'default' as const },
-      manutencao: { label: 'Manutenção', variant: 'secondary' as const },
-      inativo: { label: 'Inativo', variant: 'outline' as const }
+      available: { label: 'Disponível', variant: 'default' as const },
+      in_use: { label: 'Em Uso', variant: 'secondary' as const },
+      maintenance: { label: 'Manutenção', variant: 'secondary' as const },
+      out_of_service: { label: 'Fora de Serviço', variant: 'outline' as const }
     };
-    const config = statusMap[status as keyof typeof statusMap] || statusMap.ativo;
+    const config = statusMap[status as keyof typeof statusMap] || statusMap.available;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const getFuelTypeLabel = (fuelType: string) => {
     const fuelMap = {
-      gasolina: 'Gasolina',
+      gasoline: 'Gasolina',
       diesel: 'Diesel',
-      eletrico: 'Elétrico',
-      hibrido: 'Híbrido'
+      electric: 'Elétrico',
+      hybrid: 'Híbrido'
     };
     return fuelMap[fuelType as keyof typeof fuelMap] || fuelType;
   };
@@ -220,9 +221,9 @@ export default function FleetPage() {
     setIsDialogOpen(true);
   };
 
-  const activeVehicles = vehicles.filter(v => v.status === 'ativo').length;
-  const maintenanceVehicles = vehicles.filter(v => v.status === 'manutencao').length;
-  const inactiveVehicles = vehicles.filter(v => v.status === 'inativo').length;
+  const activeVehicles = vehicles.filter(v => v.status === 'available').length;
+  const maintenanceVehicles = vehicles.filter(v => v.status === 'maintenance').length;
+  const inactiveVehicles = vehicles.filter(v => v.status === 'out_of_service').length;
 
   return (
     <div className="p-6">
@@ -305,9 +306,10 @@ export default function FleetPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
-                <SelectItem value="ativo">Ativo</SelectItem>
-                <SelectItem value="manutencao">Manutenção</SelectItem>
-                <SelectItem value="inativo">Inativo</SelectItem>
+                <SelectItem value="available">Disponível</SelectItem>
+                <SelectItem value="in_use">Em Uso</SelectItem>
+                <SelectItem value="maintenance">Manutenção</SelectItem>
+                <SelectItem value="out_of_service">Fora de Serviço</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -335,10 +337,10 @@ export default function FleetPage() {
                     <TableRow>
                       <TableHead>Matrícula</TableHead>
                       <TableHead>Veículo</TableHead>
+                      <TableHead>Tipo</TableHead>
                       <TableHead>Capacidade</TableHead>
                       <TableHead>Combustível</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Seguro</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -348,23 +350,22 @@ export default function FleetPage() {
                         <TableCell className="font-mono">{vehicle.licensePlate}</TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{vehicle.brand} {vehicle.model}</div>
+                            <div className="font-medium">{vehicle.make} {vehicle.model}</div>
                             <div className="text-sm text-muted-foreground">Ano {vehicle.year}</div>
                           </div>
                         </TableCell>
                         <TableCell>
+                          <div className="text-sm capitalize">
+                            {vehicle.type}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <div className="text-sm">
-                            <div>{vehicle.capacityKg}kg</div>
-                            <div className="text-muted-foreground">{vehicle.capacityM3}m³</div>
+                            {vehicle.capacity}
                           </div>
                         </TableCell>
                         <TableCell>{getFuelTypeLabel(vehicle.fuelType)}</TableCell>
                         <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {new Date(vehicle.insuranceExpiry).toLocaleDateString('pt-PT')}
-                          </div>
-                        </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button
@@ -428,24 +429,25 @@ export default function FleetPage() {
               
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})}>
+                <Select value={formData.status && typeof formData.status === 'string' ? formData.status : 'available'} onValueChange={(value) => setFormData({...formData, status: value})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="manutencao">Em Manutenção</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
+                    <SelectItem value="available">Disponível</SelectItem>
+                    <SelectItem value="in_use">Em Uso</SelectItem>
+                    <SelectItem value="maintenance">Em Manutenção</SelectItem>
+                    <SelectItem value="out_of_service">Fora de Serviço</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="brand">Marca *</Label>
+                <Label htmlFor="make">Marca *</Label>
                 <Input
-                  id="brand"
-                  value={formData.brand}
-                  onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                  id="make"
+                  value={formData.make}
+                  onChange={(e) => setFormData({...formData, make: e.target.value})}
                   required
                 />
               </div>
@@ -473,73 +475,74 @@ export default function FleetPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fuelType">Combustível</Label>
-                <Select value={formData.fuelType} onValueChange={(value: any) => setFormData({...formData, fuelType: value})}>
+                <Label htmlFor="vin">VIN</Label>
+                <Input
+                  id="vin"
+                  value={formData.vin || ''}
+                  onChange={(e) => setFormData({...formData, vin: e.target.value})}
+                  placeholder="Número de identificação do veículo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="type">Tipo</Label>
+                <Select value={formData.type && typeof formData.type === 'string' ? formData.type : 'truck'} onValueChange={(value) => setFormData({...formData, type: value})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="diesel">Diesel</SelectItem>
-                    <SelectItem value="gasolina">Gasolina</SelectItem>
-                    <SelectItem value="eletrico">Elétrico</SelectItem>
-                    <SelectItem value="hibrido">Híbrido</SelectItem>
+                    <SelectItem value="truck">Camião</SelectItem>
+                    <SelectItem value="van">Carrinha</SelectItem>
+                    <SelectItem value="car">Carro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="capacityKg">Capacidade (kg)</Label>
+                <Label htmlFor="capacity">Capacidade</Label>
                 <Input
-                  id="capacityKg"
-                  type="number"
-                  value={formData.capacityKg}
-                  onChange={(e) => setFormData({...formData, capacityKg: parseFloat(e.target.value)})}
-                  min="0"
-                  step="0.1"
+                  id="capacity"
+                  value={formData.capacity || ''}
+                  onChange={(e) => setFormData({...formData, capacity: e.target.value})}
+                  placeholder="Ex: 1000kg, 5m³"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="capacityM3">Capacidade (m³)</Label>
-                <Input
-                  id="capacityM3"
-                  type="number"
-                  value={formData.capacityM3}
-                  onChange={(e) => setFormData({...formData, capacityM3: parseFloat(e.target.value)})}
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="insuranceExpiry">Validade do Seguro</Label>
-                <Input
-                  id="insuranceExpiry"
-                  type="date"
-                  value={formData.insuranceExpiry}
-                  onChange={(e) => setFormData({...formData, insuranceExpiry: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="inspectionExpiry">Validade da Inspeção</Label>
-                <Input
-                  id="inspectionExpiry"
-                  type="date"
-                  value={formData.inspectionExpiry}
-                  onChange={(e) => setFormData({...formData, inspectionExpiry: e.target.value})}
-                />
+                <Label htmlFor="fuelType">Combustível</Label>
+                <Select value={formData.fuelType && typeof formData.fuelType === 'string' ? formData.fuelType : 'diesel'} onValueChange={(value) => setFormData({...formData, fuelType: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diesel">Diesel</SelectItem>
+                    <SelectItem value="gasoline">Gasolina</SelectItem>
+                    <SelectItem value="electric">Elétrico</SelectItem>
+                    <SelectItem value="hybrid">Híbrido</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="driverId">Motorista Atribuído</Label>
-                <Select value={formData.driverId || ''} onValueChange={(value) => setFormData({...formData, driverId: value})}>
+                <Select value={formData.driverId && typeof formData.driverId === 'string' ? formData.driverId : 'none'} onValueChange={(value) => setFormData({...formData, driverId: value})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um motorista" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum motorista</SelectItem>
-                    {users.map((user) => (
+                    <SelectItem value="none">Nenhum motorista</SelectItem>
+                    {(users || []).filter(user => 
+                      user && 
+                      user.id && 
+                      typeof user.id === 'string' && 
+                      user.id.trim() !== '' &&
+                      user.username && 
+                      typeof user.username === 'string' &&
+                      user.username.trim() !== '' &&
+                      user.email &&
+                      typeof user.email === 'string' &&
+                      user.email.trim() !== ''
+                    ).map((user) => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.username} - {user.email}
                       </SelectItem>
@@ -548,25 +551,15 @@ export default function FleetPage() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="gpsDeviceId">ID do Dispositivo GPS</Label>
-                <Input
-                  id="gpsDeviceId"
-                  value={formData.gpsDeviceId || ''}
-                  onChange={(e) => setFormData({...formData, gpsDeviceId: e.target.value})}
-                  placeholder="ID ou código do dispositivo GPS"
-                />
-              </div>
-
               <div className="space-y-2 flex items-center gap-2">
                 <input
                   type="checkbox"
-                  id="isGpsActive"
-                  checked={formData.isGpsActive}
-                  onChange={(e) => setFormData({...formData, isGpsActive: e.target.checked})}
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
                   className="h-4 w-4"
                 />
-                <Label htmlFor="isGpsActive">GPS Ativo</Label>
+                <Label htmlFor="isActive">Veículo Ativo</Label>
               </div>
             </div>
 

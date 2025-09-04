@@ -1,12 +1,12 @@
-import { db } from '../../db';
+import { db } from '../../../database/db';
 import { 
   shipments, orders, orderItems, products, users,
-  type Shipment, type InsertShipment, type Order, type OrderItem, type Product
+  type Shipment, type InsertShipment, type Order, type OrderItem, type Product, type User
 } from '@shared/schema';
 import { desc, eq, sql, and } from 'drizzle-orm';
 
 export class ShippingModel {
-  static async getShipments(): Promise<Array<Shipment & { order?: any | null; user?: any | null }>> {
+  static async getShipments(): Promise<Array<Shipment & { order?: Order | null; user?: User | null }>> {
     const results = await db.select({
       id: shipments.id,
       shipmentNumber: shipments.shipmentNumber,
@@ -18,6 +18,7 @@ export class ShippingModel {
       estimatedDelivery: shipments.estimatedDelivery,
       actualDelivery: shipments.actualDelivery,
       userId: shipments.userId,
+      vehicleId: shipments.vehicleId,
       createdAt: shipments.createdAt,
       order: orders,
       user: users
@@ -38,6 +39,7 @@ export class ShippingModel {
       estimatedDelivery: row.estimatedDelivery,
       actualDelivery: row.actualDelivery,
       userId: row.userId,
+      vehicleId: row.vehicleId,
       createdAt: row.createdAt,
       order: row.order || null,
       user: row.user || null
@@ -49,7 +51,7 @@ export class ShippingModel {
     return result[0];
   }
 
-  static async getShipmentByTrackingNumber(trackingNumber: string): Promise<(Shipment & { order?: any | null; orderItems?: Array<OrderItem & { product: Product }> }) | undefined> {
+  static async getShipmentByTrackingNumber(trackingNumber: string): Promise<(Shipment & { order?: Order | null; orderItems?: Array<OrderItem & { product: Product }> }) | undefined> {
     const shipmentResults = await db.select({
       id: shipments.id,
       shipmentNumber: shipments.shipmentNumber,
@@ -61,6 +63,7 @@ export class ShippingModel {
       estimatedDelivery: shipments.estimatedDelivery,
       actualDelivery: shipments.actualDelivery,
       userId: shipments.userId,
+      vehicleId: shipments.vehicleId,
       createdAt: shipments.createdAt,
       order: orders
     })
@@ -110,6 +113,7 @@ export class ShippingModel {
       carrier: shipment.carrier,
       trackingNumber: shipment.trackingNumber,
       shippingAddress: shipment.shippingAddress,
+      vehicleId: shipment.vehicleId,
       estimatedDelivery: shipment.estimatedDelivery,
       actualDelivery: shipment.actualDelivery,
       userId: shipment.userId,

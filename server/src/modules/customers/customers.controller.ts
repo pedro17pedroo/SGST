@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { CustomerModel } from './customers.model';
-import { insertCustomerSchema } from '../../../shared/schema';
+import { insertCustomerSchema } from '../../../../shared/schema';
 import { z } from 'zod';
 
 const updateCustomerSchema = insertCustomerSchema.partial();
@@ -101,17 +101,6 @@ export class CustomerController {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
 
-      // Verificar se o número do cliente já existe (se fornecido)
-      if (customerData.customerNumber) {
-        const exists = await CustomerModel.checkCustomerNumberExists(customerData.customerNumber);
-        if (exists) {
-          return res.status(400).json({ 
-            message: "Número do cliente já existe",
-            error: "CUSTOMER_NUMBER_EXISTS"
-          });
-        }
-      }
-
       // Verificar se o email já existe (se fornecido)
       if (customerData.email) {
         const emailExists = await CustomerModel.checkEmailExists(customerData.email);
@@ -153,16 +142,7 @@ export class CustomerController {
         return res.status(404).json({ message: "Cliente não encontrado" });
       }
 
-      // Verificar se o número do cliente já existe (se sendo alterado)
-      if (customerData.customerNumber && customerData.customerNumber !== existingCustomer.customerNumber) {
-        const exists = await CustomerModel.checkCustomerNumberExists(customerData.customerNumber);
-        if (exists) {
-          return res.status(400).json({ 
-            message: "Número do cliente já existe",
-            error: "CUSTOMER_NUMBER_EXISTS"
-          });
-        }
-      }
+      // Número do cliente é gerado automaticamente e não pode ser alterado
 
       // Verificar se o email já existe (se sendo alterado)
       if (customerData.email && customerData.email !== existingCustomer.email) {

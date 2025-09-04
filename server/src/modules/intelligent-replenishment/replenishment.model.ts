@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../../../database/db';
 // TODO: Descomentar quando as tabelas de replenishment forem criadas
 // import { 
 //   replenishmentRules, 
@@ -8,7 +8,7 @@ import { db } from '../../db';
 //   suppliers,
 //   warehouses
 // } from '../../../shared/schema';
-import { products, inventory, suppliers, warehouses } from '../../../shared/schema';
+import { products, inventory, suppliers, warehouses } from '../../../../shared/schema';
 import { eq, and, desc, sql, lt, lte, gte } from 'drizzle-orm';
 // import type { 
 //   InsertReplenishmentRule,
@@ -17,9 +17,78 @@ import { eq, and, desc, sql, lt, lte, gte } from 'drizzle-orm';
 
 // TODO: Reativar toda a classe quando as tabelas necessárias forem criadas
 export class IntelligentReplenishmentModel {
-  static async placeholder() {
+  static async placeholder(): Promise<null> {
     console.log('IntelligentReplenishmentModel temporariamente desabilitado durante migração para MySQL');
     return null;
+  }
+
+  // Métodos temporários para evitar erros até as tabelas serem criadas
+  static async createReplenishmentRule(data: any): Promise<any> {
+    throw new Error('Replenishment rules not implemented yet - tables missing');
+  }
+
+  static async getAllReplenishmentRules(warehouseId?: string): Promise<any[]> {
+    return [];
+  }
+
+  static async getReplenishmentRuleById(id: string): Promise<any | null> {
+    return null;
+  }
+
+  static async updateReplenishmentRule(id: string, data: any): Promise<any> {
+    throw new Error('Replenishment rules not implemented yet - tables missing');
+  }
+
+  static async deleteReplenishmentRule(id: string): Promise<any> {
+    throw new Error('Replenishment rules not implemented yet - tables missing');
+  }
+
+  static async generateDemandForecast(productId: string, warehouseId: string, forecastDays: number = 30): Promise<any[]> {
+    return [];
+  }
+
+  static async getAllDemandForecasts(productId?: string, warehouseId?: string): Promise<any[]> {
+    return [];
+  }
+
+  static async getDemandForecastById(id: string): Promise<any | null> {
+    return null;
+  }
+
+  static async checkStockoutRisks(warehouseId?: string): Promise<any[]> {
+    return [];
+  }
+
+  static async generateReplenishmentOrders(warehouseId?: string): Promise<any[]> {
+    return [];
+  }
+
+  static async getReplenishmentStats(warehouseId?: string): Promise<{
+    totalRules: number;
+    activeRules: number;
+    pendingOrders: number;
+    totalValue: number;
+  }> {
+    return {
+      totalRules: 0,
+      activeRules: 0,
+      pendingOrders: 0,
+      totalValue: 0
+    };
+  }
+
+  static async getAdvancedAnalytics(warehouseId?: string): Promise<{
+    demandTrends: any[];
+    seasonalPatterns: any[];
+    supplierPerformance: any[];
+    recommendations: any[];
+  }> {
+    return {
+      demandTrends: [],
+      seasonalPatterns: [],
+      supplierPerformance: [],
+      recommendations: []
+    };
   }
 }
 

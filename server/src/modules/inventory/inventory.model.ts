@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../../../database/db';
 import { 
   inventory, products, warehouses, categories,
   type Inventory, type InsertInventory, type Product, type Warehouse
@@ -32,7 +32,7 @@ export class InventoryModel {
         .having(sql`COALESCE(sum(${inventory.quantity}), 0) < ${products.minStockLevel}`)
         .orderBy(desc(products.createdAt));
 
-      return results.map(row => ({
+      return results.map((row: any) => ({
         ...row,
         category: row.category || null
       }));
@@ -57,7 +57,7 @@ export class InventoryModel {
       .where(eq(inventory.warehouseId, warehouseId))
       .orderBy(desc(inventory.lastUpdated));
 
-    return results.map(row => ({
+    return results.map((row: any) => ({
       id: row.id,
       productId: row.productId,
       warehouseId: row.warehouseId,
@@ -83,7 +83,7 @@ export class InventoryModel {
       .where(eq(inventory.productId, productId))
       .orderBy(desc(inventory.lastUpdated));
 
-    return results.map(row => ({
+    return results.map((row: any) => ({
       id: row.id,
       productId: row.productId,
       warehouseId: row.warehouseId,
@@ -137,7 +137,7 @@ export class InventoryModel {
       .innerJoin(warehouses, eq(inventory.warehouseId, warehouses.id))
       .orderBy(desc(inventory.lastUpdated));
 
-    return results.map(row => ({
+    return results.map((row: any) => ({
       id: row.id,
       productId: row.productId,
       warehouseId: row.warehouseId,

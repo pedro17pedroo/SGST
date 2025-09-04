@@ -1,11 +1,17 @@
 import { Storage } from "./storage/index";
+import { db } from "../database/db";
+import { eq, desc, and, sql } from "drizzle-orm";
+import {
+  users, products, warehouses, barcodeScans, productLocations, categories,
+  type User, type Product, type Warehouse, type BarcodeScan, type ProductLocation
+} from "../../shared/schema";
 import type {
-  User, InsertUser, Category, InsertCategory, Supplier, InsertSupplier,
-  Warehouse, InsertWarehouse, Product, InsertProduct, Inventory, InsertInventory,
+  InsertUser, Category, InsertCategory, Supplier, InsertSupplier,
+  InsertWarehouse, InsertProduct, Inventory, InsertInventory,
   StockMovement, InsertStockMovement, Order, InsertOrder, OrderItem, InsertOrderItem,
-  Shipment, InsertShipment, ProductLocation, InsertProductLocation,
+  Shipment, InsertShipment, InsertProductLocation,
   InventoryCount, InsertInventoryCount, InventoryCountItem, InsertInventoryCountItem,
-  BarcodeScan, InsertBarcodeScan,
+  InsertBarcodeScan,
   PickingList, InsertPickingList, PickingListItem, InsertPickingListItem,
   Vehicle, InsertVehicle, VehicleMaintenance, InsertVehicleMaintenance,
   GpsTracking, InsertGpsTracking, Geofence, InsertGeofence,
@@ -63,6 +69,31 @@ export interface IStorage {
   // Order Items
   getOrderItems(orderId: string): Promise<Array<OrderItem & { product: Product }>>;
   createOrderItem(item: InsertOrderItem): Promise<OrderItem>;
+  
+  // Barcode Scanning
+  getBarcodeScans(limit?: number): Promise<BarcodeScan[]>;
+  createBarcodeScan(scan: InsertBarcodeScan): Promise<BarcodeScan>;
+  getBarcodeScansByProduct(productId: string): Promise<BarcodeScan[]>;
+  findProductByBarcode(barcode: string): Promise<Product | undefined>;
+  updateProductLastScanned(productId: string, userId: string): Promise<void>;
+ updateBarcodeScanLocation(scanId: string, locationData: any): Promise<BarcodeScan>;
+  getLastProductLocation(productId: string): Promise<any>;
+  
+  // Batch Management
+  getBatches(filters: { warehouseId?: string; productId?: string; status?: string; expiryAlert?: boolean }): Promise<any[]>;
+  getBatchById(id: string): Promise<any>;
+  getBatchByNumber(batchNumber: string): Promise<any>;
+  createBatch(data: any): Promise<any>;
+  updateBatch(id: string, data: any): Promise<any>;
+  deleteBatch(id: string): Promise<void>;
+  addProductsToBatch(batchId: string, data: any): Promise<any>;
+  removeProductFromBatch(batchId: string, productId: string): Promise<void>;
+  getBatchExpiryAlerts(batchId: string): Promise<any[]>;
+  getExpiringProducts(daysAhead: number, warehouseId?: string): Promise<any[]>;
+  getExpiredProducts(warehouseId?: string): Promise<any[]>;
+  extendBatchExpiry(batchIds: string[], data: any): Promise<any>;
+  getBatchHistory(batchNumber: string): Promise<any[]>;
+  getBatchLocation(batchNumber: string): Promise<any>;
 }
 
 // Implementation class that delegates to the modular storage
@@ -190,12 +221,141 @@ export class StorageImpl implements IStorage {
     return storage.orders.createOrderItem(item);
   }
 
+  // Barcode Scanning
+  async getBarcodeScans(limit: number = 100): Promise<BarcodeScan[]> {
+    return await db
+      .select()
+      .from(barcodeScans)
+      .orderBy(desc(barcodeScans.createdAt))
+      .limit(limit);
+  }
+
+  async createBarcodeScan(scan: InsertBarcodeScan): Promise<BarcodeScan> {
+    await db.insert(barcodeScans).values(scan);
+    const [insertedScan] = await db.select().from(barcodeScans)
+      .where(and(
+        eq(barcodeScans.scannedCode, scan.scannedCode),
+        eq(barcodeScans.userId, scan.userId)
+      ))
+      .orderBy(desc(barcodeScans.createdAt))
+      .limit(1);
+    return insertedScan;
+  }
+
+  async getBarcodeScansByProduct(productId: string): Promise<BarcodeScan[]> {
+    return await db
+      .select()
+      .from(barcodeScans)
+      .where(eq(barcodeScans.productId, productId))
+      .orderBy(desc(barcodeScans.createdAt));
+  }
+
+  async findProductByBarcode(barcode: string): Promise<Product | undefined> {
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.barcode, barcode));
+    return product || undefined;
+  }
+
+  async updateProductLastScanned(productId: string, userId: string): Promise<void> {
+    // Note: The products table doesn't have lastScanned fields yet
+    // For now, we'll just track this via barcode scans
+    // In a future migration, we could add lastScanned and scannedByUserId to products table
+    console.log(`Product ${productId} scanned by user ${userId}`);
+  }
+
+  async updateBarcodeScanLocation(scanId: string, locationData: any): Promise<BarcodeScan> {
+    await db
+      .update(barcodeScans)
+      .set({ 
+        locationId: locationData.locationId,
+        metadata: sql`${barcodeScans.metadata} || ${JSON.stringify(locationData)}`
+      })
+      .where(eq(barcodeScans.id, scanId));
+    const [result] = await db.select().from(barcodeScans).where(eq(barcodeScans.id, scanId));
+    return result;
+  }
+
+  async getLastProductLocation(productId: string): Promise<any> {
+    const [lastScan] = await db
+      .select()
+      .from(barcodeScans)
+      .where(eq(barcodeScans.productId, productId))
+      .orderBy(desc(barcodeScans.createdAt))
+      .limit(1);
+    return lastScan || undefined;
+  }
+
+  // Batch Management
+  async getBatches(filters: { warehouseId?: string; productId?: string; status?: string; expiryAlert?: boolean }): Promise<any[]> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async getBatchById(id: string): Promise<any> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async getBatchByNumber(batchNumber: string): Promise<any> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async createBatch(data: any): Promise<any> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async updateBatch(id: string, data: any): Promise<any> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async deleteBatch(id: string): Promise<void> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async addProductsToBatch(batchId: string, data: any): Promise<any> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async removeProductFromBatch(batchId: string, productId: string): Promise<void> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async getBatchExpiryAlerts(batchId: string): Promise<any[]> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async getExpiringProducts(daysAhead: number, warehouseId?: string): Promise<any[]> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async getExpiredProducts(warehouseId?: string): Promise<any[]> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async extendBatchExpiry(batchIds: string[], data: any): Promise<any> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async getBatchHistory(batchNumber: string): Promise<any[]> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
+  async getBatchLocation(batchNumber: string): Promise<any> {
+    throw new Error("Batch management module not implemented yet");
+  }
+
   // Placeholder methods for features not yet implemented in modules
   // These throw errors to indicate they need implementation
   
   // Categories
   async getCategories(): Promise<Category[]> {
-    throw new Error("Categories module not implemented yet");
+    try {
+      const result = await db.select().from(categories);
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar categorias:', error);
+      throw new Error('Falha ao buscar categorias da base de dados');
+    }
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
@@ -229,19 +389,50 @@ export class StorageImpl implements IStorage {
 
   // Warehouses
   async getWarehouses(): Promise<Warehouse[]> {
-    throw new Error("Warehouses module not implemented yet");
+    try {
+      return await db.select().from(warehouses).orderBy(desc(warehouses.createdAt));
+    } catch (error) {
+      console.error('Erro ao buscar armazéns:', error);
+      throw new Error('Falha ao buscar armazéns');
+    }
   }
 
   async createWarehouse(warehouse: InsertWarehouse): Promise<Warehouse> {
-    throw new Error("Warehouses module not implemented yet");
+    try {
+      const [newWarehouse] = await db.insert(warehouses).values(warehouse).returning();
+      return newWarehouse;
+    } catch (error) {
+      console.error('Erro ao criar armazém:', error);
+      throw new Error('Falha ao criar armazém');
+    }
   }
 
   async updateWarehouse(id: string, warehouse: Partial<InsertWarehouse>): Promise<Warehouse> {
-    throw new Error("Warehouses module not implemented yet");
+    try {
+      const [updatedWarehouse] = await db
+        .update(warehouses)
+        .set(warehouse)
+        .where(eq(warehouses.id, id))
+        .returning();
+      
+      if (!updatedWarehouse) {
+        throw new Error('Armazém não encontrado');
+      }
+      
+      return updatedWarehouse;
+    } catch (error) {
+      console.error('Erro ao atualizar armazém:', error);
+      throw new Error('Falha ao atualizar armazém');
+    }
   }
 
   async deleteWarehouse(id: string): Promise<void> {
-    throw new Error("Warehouses module not implemented yet");
+    try {
+      await db.delete(warehouses).where(eq(warehouses.id, id));
+    } catch (error) {
+      console.error('Erro ao deletar armazém:', error);
+      throw new Error('Falha ao deletar armazém');
+    }
   }
 
   // All other methods that were in the original file but not yet modularized

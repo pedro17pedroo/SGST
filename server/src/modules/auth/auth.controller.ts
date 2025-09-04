@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
-import { UserModel } from '../users/user.model';
-import { z } from 'zod';
+import { Request, Response } from "express";
+import bcryptjs from "bcryptjs";
+import { UserModel } from "../users/user.model";
+import { z } from "zod";
 
 const loginSchema = z.object({
-  username: z.string().min(3, "Nome de utilizador deve ter pelo menos 3 caracteres"),
+  username: z.string().min(1, "Username é obrigatório"),
   password: z.string().min(1, "Password é obrigatória"),
 });
 
@@ -36,7 +36,7 @@ export class AuthController {
       }
 
       // Verificar password
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await bcryptjs.compare(password, user.password);
       
       if (!isValidPassword) {
         return res.status(401).json({ 
@@ -67,6 +67,74 @@ export class AuthController {
 
     } catch (error) {
       console.error('Error durante login:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Dados inválidos", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Erro interno do servidor", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  static async loginWithToken(req: Request, res: Response) {
+    try {
+      const { username, password } = loginSchema.parse(req.body);
+
+      // Buscar utilizador por username
+      const user = await UserModel.getByUsername(username);
+      
+      if (!user) {
+        return res.status(401).json({ 
+          message: "Credenciais inválidas",
+          error: "INVALID_CREDENTIALS"
+        });
+      }
+
+      if (!user.isActive) {
+        return res.status(401).json({ 
+          message: "Conta desativada. Contacte o administrador.",
+          error: "ACCOUNT_DISABLED"
+        });
+      }
+
+      // Verificar password
+      const isValidPassword = await bcryptjs.compare(password, user.password);
+      
+      if (!isValidPassword) {
+        return res.status(401).json({ 
+          message: "Credenciais inválidas",
+          error: "INVALID_CREDENTIALS"
+        });
+      }
+
+      // Token JWT removido - usando sessões em vez de JWT
+
+      const userResponse = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive
+      };
+
+      // Verificar se GPS é obrigatório para este utilizador
+      const requiresGPS = ['operator', 'driver'].includes(user.role);
+
+      res.json({
+        message: "Login realizado com sucesso",
+        user: userResponse,
+        token,
+        requiresGPS
+      });
+
+    } catch (error) {
+      console.error('Error durante login com token:', error);
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -224,7 +292,7 @@ export class AuthController {
       }
 
       // Verificar password atual
-      const isValidCurrentPassword = await bcrypt.compare(currentPassword, user.password);
+      const isValidCurrentPassword = await bcryptjs.compare(currentPassword, user.password);
       
       if (!isValidCurrentPassword) {
         return res.status(400).json({ 
@@ -235,7 +303,7 @@ export class AuthController {
 
       // Hash da nova password
       const saltRounds = 12;
-      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+      const hashedNewPassword = await bcryptjs.hash(newPassword, saltRounds);
 
       // Atualizar password
       await UserModel.update(sessionUser.id, { 

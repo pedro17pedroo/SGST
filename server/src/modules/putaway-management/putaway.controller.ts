@@ -71,11 +71,11 @@ export class PutawayManagementController {
       const { id } = req.params;
       const rule = await PutawayManagementModel.getPutawayRuleById(id);
       
-      if (!rule || rule.length === 0) {
+      if (!rule) {
         return res.status(404).json({ message: "Regra de putaway não encontrada" });
       }
       
-      res.json(rule[0]);
+      res.json(rule);
     } catch (error) {
       console.error('Error fetching putaway rule:', error);
       res.status(500).json({ 
@@ -195,11 +195,11 @@ export class PutawayManagementController {
       const { id } = req.params;
       const task = await PutawayManagementModel.getPutawayTaskById(id);
       
-      if (!task || task.length === 0) {
+      if (!task) {
         return res.status(404).json({ message: "Tarefa de putaway não encontrada" });
       }
       
-      res.json(task[0]);
+      res.json(task);
     } catch (error) {
       console.error('Error fetching putaway task:', error);
       res.status(500).json({ 
@@ -333,11 +333,11 @@ export class PutawayManagementController {
       const { id } = req.params;
       const pallet = await PutawayManagementModel.getSsccPalletById(id);
       
-      if (!pallet || pallet.length === 0) {
+      if (!pallet) {
         return res.status(404).json({ message: "Palete SSCC não encontrado" });
       }
       
-      res.json(pallet[0]);
+      res.json(pallet);
     } catch (error) {
       console.error('Error fetching SSCC pallet:', error);
       res.status(500).json({ 
@@ -369,7 +369,7 @@ export class PutawayManagementController {
         expiryDate: parsed.expiryDate ? new Date(parsed.expiryDate) : undefined
       };
       
-      const item = await PutawayManagementModel.addItemToPallet(data);
+      const item = await PutawayManagementModel.addItemToPallet(palletId, data);
       
       res.status(201).json({
         message: "Item adicionado ao palete com sucesso",

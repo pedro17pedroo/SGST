@@ -1,63 +1,69 @@
 import { Router } from 'express';
 import { FleetController } from './fleet.controller';
+import { requireAuth, requireRole } from '../auth/auth.middleware';
 
 const router = Router();
 
-// TODO: Reativar rotas quando FleetController for restaurado
+// Middleware de autenticação para todas as rotas de fleet
+router.use(requireAuth);
+
 // ===== VEHICLE MANAGEMENT =====
 // Vehicles CRUD
-router.get('/vehicles', FleetController.placeholder);
-router.get('/vehicles/:id', FleetController.placeholder);
-router.post('/vehicles', FleetController.placeholder);
-router.put('/vehicles/:id', FleetController.placeholder);
-router.delete('/vehicles/:id', FleetController.placeholder);
+router.get('/vehicles', FleetController.getVehicles);
+router.get('/vehicles/:id', FleetController.getVehicle);
+router.post('/vehicles', FleetController.createVehicle);
+router.put('/vehicles/:id', FleetController.updateVehicle);
+router.delete('/vehicles/:id', FleetController.deleteVehicle);
 
 // Vehicle status and filtering
-router.get('/vehicles/status/:status', FleetController.placeholder);
-router.get('/vehicles/available', FleetController.placeholder);
+router.get('/vehicles/status/:status', FleetController.getVehiclesByStatus);
+router.get('/vehicles/available', FleetController.getAvailableVehicles);
 
 // ===== VEHICLE MAINTENANCE =====
-router.get('/vehicles/:id/maintenance', FleetController.placeholder);
-router.post('/vehicles/:id/maintenance', FleetController.placeholder);
-router.put('/maintenance/:id', FleetController.placeholder);
-router.get('/maintenance/upcoming', FleetController.placeholder);
+router.get('/vehicles/:id/maintenance', FleetController.getVehicleMaintenance);
+router.post('/vehicles/:id/maintenance', FleetController.createVehicleMaintenance);
+router.put('/maintenance/:id', FleetController.updateMaintenance);
+router.get('/maintenance/upcoming', FleetController.getUpcomingMaintenance);
 
 // ===== GPS TRACKING =====
-router.post('/gps/track', FleetController.placeholder);
-router.get('/vehicles/:id/location', FleetController.placeholder);
-router.get('/vehicles/:id/location/history', FleetController.placeholder);
-router.get('/vehicles/locations/all', FleetController.placeholder);
-router.put('/vehicles/:id/gps/status', FleetController.placeholder);
+router.post('/gps/track', FleetController.trackGPS);
+router.get('/vehicles/:id/location', FleetController.getVehicleLocation);
+router.get('/vehicles/:id/location/history', FleetController.getVehicleLocationHistory);
+router.get('/vehicles/locations/all', FleetController.getAllVehicleLocations);
+router.put('/vehicles/:id/gps/status', FleetController.updateGPSStatus);
 
 // ===== VEHICLE ASSIGNMENTS =====
-router.get('/assignments', FleetController.placeholder);
-router.get('/assignments/:id', FleetController.placeholder);
-router.post('/assignments', FleetController.placeholder);
-router.put('/assignments/:id', FleetController.placeholder);
+router.get('/assignments', FleetController.getAssignments);
+router.get('/assignments/:id', FleetController.getAssignment);
+router.post('/assignments', FleetController.createAssignment);
+router.put('/assignments/:id', FleetController.updateAssignment);
 
 // Assignment queries
-router.get('/vehicles/:id/assignments/active', FleetController.placeholder);
-router.get('/drivers/:id/assignments/active', FleetController.placeholder);
+router.get('/vehicles/:id/assignments/active', FleetController.getVehicleActiveAssignments);
+router.get('/drivers/:id/assignments/active', FleetController.getDriverActiveAssignments);
 
 // ===== GEOFENCING =====
 // Geofences CRUD
-router.get('/geofences', FleetController.placeholder);
-router.get('/geofences/:id', FleetController.placeholder);
-router.post('/geofences', FleetController.placeholder);
-router.put('/geofences/:id', FleetController.placeholder);
-router.delete('/geofences/:id', FleetController.placeholder);
-router.get('/geofences/active', FleetController.placeholder);
+router.get('/geofences', FleetController.getGeofences);
+router.get('/geofences/:id', FleetController.getGeofence);
+router.post('/geofences', FleetController.createGeofence);
+router.put('/geofences/:id', FleetController.updateGeofence);
+router.delete('/geofences/:id', FleetController.deleteGeofence);
+router.get('/geofences/active', FleetController.getActiveGeofences);
 
 // Geofence alerts
-router.get('/geofences/alerts', FleetController.placeholder);
-router.post('/geofences/alerts', FleetController.placeholder);
-router.put('/geofences/alerts/:id/acknowledge', FleetController.placeholder);
-router.get('/geofences/alerts/active', FleetController.placeholder);
+router.get('/geofences/alerts', FleetController.getGeofenceAlerts);
+router.post('/geofences/alerts', FleetController.createGeofenceAlert);
+router.put('/geofences/alerts/:id/acknowledge', FleetController.acknowledgeGeofenceAlert);
+router.get('/geofences/alerts/active', FleetController.getActiveGeofenceAlerts);
 
 // ===== GPS SESSIONS =====
-router.post('/gps/sessions', FleetController.placeholder);
-router.put('/gps/sessions/:id', FleetController.placeholder);
-router.get('/gps/sessions/active', FleetController.placeholder);
-router.put('/gps/sessions/:id/end', FleetController.placeholder);
+router.post('/gps/sessions', FleetController.createGPSSession);
+router.put('/gps/sessions/:id', FleetController.updateGPSSession);
+router.get('/gps/sessions/active', FleetController.getActiveGPSSessions);
+router.put('/gps/sessions/:id/end', FleetController.endGPSSession);
+
+// ===== FLEET STATISTICS =====
+router.get('/stats', FleetController.getFleetStats);
 
 export { router as fleetRoutes };

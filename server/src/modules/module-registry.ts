@@ -22,9 +22,7 @@ import { initializePickingPackingModule } from './picking_packing';
 import { initializeBatchManagementModule } from './batch_management';
 import { initializeInventoryAlertsModule } from './inventory_alerts';
 import { initializeOfflineSyncModule } from './offline_sync';
-import { initializeComputerVisionModule } from './computer_vision';
 import { initializeRTLSModule } from './rtls_hybrid';
-import computerVisionModule from './computer-vision';
 import smartReceivingModule from './smart-receiving';
 import putawayManagementModule from './putaway-management';
 import intelligentReplenishmentModule from './intelligent-replenishment';
@@ -33,10 +31,13 @@ import { greenETAModule } from './green-eta';
 import tripleLedgerModule from './triple-ledger';
 import autoSlottingModule from './auto-slotting';
 import { initializeAngolaOperationsModule } from './angola_operations';
+import { angolaIntegrationsModule } from './angola_integrations';
+import { voiceARModule } from './voice_ar';
 import { fleetManagementModule } from './fleet_management/fleet.module';
 import { rolesModule } from './roles/role.module';
 import { permissionsModule } from './permissions/permission.module';
-import { gpsModule } from './gps/gps.module';
+import { ediModule } from './edi';
+import { anomalyFraudModule } from './anomaly-fraud-detection';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -57,7 +58,7 @@ export class ModuleRegistry {
     this.modules.set('orders', ordersModule);
     this.modules.set('shipping', shippingModule);
     this.modules.set('public_tracking', publicTrackingModule);
-    this.modules.set('computer_vision', computerVisionModule);
+    // this.modules.set('computer_vision', computerVisionModule); // Module not available
     this.modules.set('smart_receiving', smartReceivingModule);
     this.modules.set('putaway_management', putawayManagementModule);
     this.modules.set('intelligent_replenishment', intelligentReplenishmentModule);
@@ -66,9 +67,13 @@ export class ModuleRegistry {
     this.modules.set('triple_ledger', tripleLedgerModule);
     this.modules.set('auto_slotting', autoSlottingModule);
     this.modules.set('fleet_management', fleetManagementModule);
+    this.modules.set('angola_integrations', angolaIntegrationsModule);
+    this.modules.set('voice_ar', voiceARModule);
     this.modules.set('roles', rolesModule);
     this.modules.set('permissions', permissionsModule);
-    this.modules.set('gps_tracking', gpsModule);
+    this.modules.set('edi', ediModule);
+    this.modules.set('anomaly_fraud_detection', anomalyFraudModule);
+    // this.modules.set('gps_tracking', gpsModule); // Module not available
     
     // Temporary direct registration for barcode scanning
     this.modules.set('barcode_scanning', {
@@ -192,7 +197,7 @@ export class ModuleRegistry {
         enabled: true
       },
       register: async (app: Express) => {
-        initializeComputerVisionModule(app);
+        // initializeComputerVisionModule(app); // Module not available
         console.log('✓ Módulo Computer Vision Edge registrado');
       }
     });

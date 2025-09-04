@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, MapPin, Package, Settings, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, MapPin, Package, Edit, Trash2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,46 +12,39 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertWarehouseSchema, type Warehouse } from "@shared/schema";
+import { type Warehouse } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
 
-const warehouseFormSchema = insertWarehouseSchema.extend({
-  type: z.enum(["central", "regional", "local"]).default("local"),
-  zones: z.string().optional(),
-  capacity: z.string().optional(),
-});
-
-type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
+// Simple form data type without zod validation to avoid compatibility issues
+type WarehouseFormData = {
+  name: string;
+  type: string;
+  address?: string;
+  isActive: boolean;
+};
 
 function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   
   const form = useForm<WarehouseFormData>({
-    resolver: zodResolver(warehouseFormSchema),
     defaultValues: {
       name: "",
       address: "",
       isActive: true,
       type: "local",
-      zones: "",
-      capacity: "",
     },
   });
 
   // Reset form values when warehouse changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (warehouse) {
       form.reset({
         name: warehouse.name || "",
         address: warehouse.address || "",
         isActive: warehouse.isActive ?? true,
-        type: "local",
-        zones: "",
-        capacity: "",
+        type: warehouse.type as "central" | "regional" | "local" || "local",
       });
     } else {
       form.reset({
@@ -59,8 +52,6 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
         address: "",
         isActive: true,
         type: "local",
-        zones: "",
-        capacity: "",
       });
     }
   }, [warehouse, form]);
@@ -112,6 +103,16 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
   });
 
   const onSubmit = (data: WarehouseFormData) => {
+    // Basic validation
+    if (!data.name || data.name.trim() === "") {
+      toast({
+        title: "Erro de validação",
+        description: "Nome do armazém é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (warehouse) {
       updateMutation.mutate(data);
     } else {
@@ -192,42 +193,7 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="zones"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zonas (opcional)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Ex: A1-A10, B1-B20"
-                        {...field}
-                        data-testid="input-warehouse-zones"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="capacity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Capacidade (opcional)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Ex: 10000 m², 5000 paletes"
-                        {...field}
-                        data-testid="input-warehouse-capacity"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+
 
             <FormField
               control={form.control}

@@ -11,19 +11,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertStockMovementSchema, type Product, type Warehouse, type Inventory } from "@shared/schema";
+import { type Product, type Warehouse, type Inventory } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
 
-const movementFormSchema = insertStockMovementSchema.extend({
-  type: z.enum(["in", "out", "transfer"]),
-  quantity: z.number().min(1, "Quantidade deve ser maior que 0"),
-  reason: z.string().min(1, "Motivo é obrigatório"),
-});
+interface StockMovement {
+  id: string;
+  productId: string;
+  warehouseId: string;
+  type: "in" | "out" | "transfer";
+  quantity: number;
+  reason: string;
+  createdAt: string;
+  product?: Product;
+  warehouse?: Warehouse;
+}
 
-type MovementFormData = z.infer<typeof movementFormSchema>;
+type MovementFormData = {
+  productId: string;
+  warehouseId: string;
+  type: "in" | "out" | "transfer";
+  quantity: number;
+  reason: string;
+};
 
 function StockMovementDialog({ trigger }: { trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -38,7 +48,6 @@ function StockMovementDialog({ trigger }: { trigger: React.ReactNode }) {
   });
 
   const form = useForm<MovementFormData>({
-    resolver: zodResolver(movementFormSchema),
     defaultValues: {
       type: "in",
       quantity: 1,
@@ -50,11 +59,11 @@ function StockMovementDialog({ trigger }: { trigger: React.ReactNode }) {
 
   const createMovement = useMutation({
     mutationFn: async (data: MovementFormData) => {
-      const response = await apiRequest("POST", "/api/stock-movements", data);
+      const response = await apiRequest("POST", "/api/inventory/stock-movements", data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/stock-movements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/stock-movements"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inventory/low-stock"] });
       setOpen(false);
       form.reset();
@@ -73,6 +82,40 @@ function StockMovementDialog({ trigger }: { trigger: React.ReactNode }) {
   });
 
   const onSubmit = (data: MovementFormData) => {
+    // Validação manual básica
+    if (!data.productId) {
+      toast({
+        title: "Erro",
+        description: "Produto é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!data.warehouseId) {
+      toast({
+        title: "Erro",
+        description: "Armazém é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!data.reason) {
+      toast({
+        title: "Erro",
+        description: "Motivo é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (data.quantity <= 0) {
+      toast({
+        title: "Erro",
+        description: "Quantidade deve ser maior que 0.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createMovement.mutate(data);
   };
 
@@ -243,7 +286,7 @@ function LowStockAlert({ product }: { product: Product & { stock: number } }) {
   );
 }
 
-function MovementCard({ movement }: { movement: any }) {
+function MovementCard({ movement }: { movement: StockMovement }) {
   const getMovementIcon = (type: string) => {
     switch (type) {
       case "in":
@@ -325,11 +368,11 @@ export default function Inventory() {
     queryKey: ["/api/inventory/low-stock"],
   });
 
-  const { data: recentMovements = [], isLoading: isLoadingMovements } = useQuery({
-    queryKey: ["/api/stock-movements"],
+  const { data: recentMovements = [], isLoading: isLoadingMovements } = useQuery<StockMovement[]>({
+    queryKey: ["/api/inventory/stock-movements"],
   });
 
-  const filteredMovements = recentMovements.filter((movement: any) =>
+  const filteredMovements = recentMovements.filter((movement: StockMovement) =>
     movement.product?.name.toLowerCase().includes(search.toLowerCase()) ||
     movement.warehouse?.name.toLowerCase().includes(search.toLowerCase()) ||
     movement.reason.toLowerCase().includes(search.toLowerCase())

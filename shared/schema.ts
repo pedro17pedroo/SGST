@@ -61,6 +61,7 @@ export const suppliers = mysqlTable("suppliers", {
 export const warehouses = mysqlTable("warehouses", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
   name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull().default("local"), // central, regional, local
   address: text("address"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -81,6 +82,27 @@ export const products = mysqlTable("products", {
   minStockLevel: int("min_stock_level").default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Batches table - Gestão de Lotes FIFO/FEFO
+export const batches = mysqlTable("batches", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  batchNumber: varchar("batch_number", { length: 100 }).notNull().unique(),
+  productId: varchar("product_id", { length: 36 }).notNull().references(() => products.id),
+  warehouseId: varchar("warehouse_id", { length: 36 }).notNull().references(() => warehouses.id),
+  manufacturingDate: timestamp("manufacturing_date").notNull(),
+  expiryDate: timestamp("expiry_date").notNull(),
+  quantity: int("quantity").notNull().default(0),
+  remainingQuantity: int("remaining_quantity").notNull().default(0),
+  supplierBatchRef: varchar("supplier_batch_ref", { length: 100 }),
+  qualityStatus: varchar("quality_status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected, quarantine
+  status: varchar("status", { length: 50 }).notNull().default("active"), // active, consumed, expired, recalled
+  notes: text("notes"),
+  fifoPosition: int("fifo_position").notNull().default(0), // Para ordenação FIFO
+  location: varchar("location", { length: 100 }), // Localização específica no armazém
+  userId: varchar("user_id", { length: 36 }).references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Inventory table
@@ -392,6 +414,61 @@ export const userRoles = mysqlTable("user_roles", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Digital Twin - Warehouse Zones table
+export const warehouseZones = mysqlTable("warehouse_zones", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  warehouseId: varchar("warehouse_id", { length: 36 }).notNull().references(() => warehouses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // picking, storage, receiving, shipping, staging
+  coordinates: json("coordinates"), // {x, y, width, height, z?, floor?}
+  capacity: json("capacity"), // {maxItems, maxWeight, maxVolume}
+  currentUtilization: json("current_utilization"), // {items, weight, volume, percentage}
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Digital Twin - Warehouse Layout table
+export const warehouseLayout = mysqlTable("warehouse_layout", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  warehouseId: varchar("warehouse_id", { length: 36 }).notNull().references(() => warehouses.id),
+  layoutName: varchar("layout_name", { length: 100 }).notNull(),
+  version: varchar("version", { length: 20 }).default("1.0"),
+  layoutData: json("layout_data").notNull(), // Complete 3D/2D layout configuration
+  dimensions: json("dimensions"), // Layout dimensions
+  metadata: json("metadata"), // Additional layout information
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Digital Twin - Simulations table
+export const digitalTwinSimulations = mysqlTable("digital_twin_simulations", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  warehouseId: varchar("warehouse_id", { length: 36 }).notNull().references(() => warehouses.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // picking_optimization, layout_analysis, capacity_planning
+  parameters: json("parameters"), // Simulation input parameters
+  results: json("results"), // Simulation output results
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, running, completed, failed
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  userId: varchar("user_id", { length: 36 }).references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Digital Twin - Real-time Visualization table
+export const realTimeVisualization = mysqlTable("real_time_visualization", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  warehouseId: varchar("warehouse_id", { length: 36 }).notNull().references(() => warehouses.id),
+  entityType: varchar("entity_type", { length: 50 }).notNull(), // worker, vehicle, equipment, product
+  entityId: varchar("entity_id", { length: 36 }).notNull(),
+  position: json("position"), // {x, y, z?, floor?}
+  status: varchar("status", { length: 50 }).notNull(), // active, idle, moving, working
+  metadata: json("metadata"), // Additional entity information
+  timestamp: timestamp("timestamp").defaultNow(),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
@@ -438,6 +515,22 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   productLocations: many(productLocations),
   inventoryCountItems: many(inventoryCountItems),
   barcodeScans: many(barcodeScans),
+  batches: many(batches),
+}));
+
+export const batchesRelations = relations(batches, ({ one }) => ({
+  product: one(products, {
+    fields: [batches.productId],
+    references: [products.id],
+  }),
+  warehouse: one(warehouses, {
+    fields: [batches.warehouseId],
+    references: [warehouses.id],
+  }),
+  user: one(users, {
+    fields: [batches.userId],
+    references: [users.id],
+  }),
 }));
 
 export const inventoryRelations = relations(inventory, ({ one }) => ({
@@ -587,8 +680,12 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
+  customerNumber: true, // Será gerado automaticamente pelo backend
   createdAt: true,
   updatedAt: true,
+}).extend({
+  creditLimit: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
+  discount: z.union([z.string(), z.number()]).transform(val => String(val)).optional(),
 });
 
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({
@@ -604,6 +701,27 @@ export const insertWarehouseSchema = createInsertSchema(warehouses).omit({
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
+}).extend({
+  price: z.number().positive("Preço deve ser positivo"),
+  weight: z.number().positive("Peso deve ser positivo").optional(),
+  minStockLevel: z.number().int().min(0, "Nível mínimo de stock deve ser positivo").optional(),
+});
+
+// Schema específico para atualização de produtos (omite campos únicos como SKU)
+export const updateProductSchema = insertProductSchema.omit({
+  sku: true, // SKU não deve ser alterado após criação
+  barcode: true, // Código de barras também não deve ser alterado
+}).partial();
+
+export const insertBatchSchema = createInsertSchema(batches).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  manufacturingDate: z.string().transform(val => new Date(val)),
+  expiryDate: z.string().transform(val => new Date(val)),
+  quantity: z.number().int().positive("Quantidade deve ser positiva"),
+  remainingQuantity: z.number().int().min(0, "Quantidade restante deve ser positiva").optional(),
 });
 
 export const insertInventorySchema = createInsertSchema(inventory).omit({
@@ -650,6 +768,7 @@ export const insertPermissionSchema = createInsertSchema(permissions).omit({
 
 export const insertPickingListSchema = createInsertSchema(pickingLists).omit({
   id: true,
+  pickNumber: true, // Gerado automaticamente pelo modelo
   createdAt: true,
 });
 
@@ -717,6 +836,29 @@ export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
   createdAt: true,
 });
 
+export const insertWarehouseZoneSchema = createInsertSchema(warehouseZones).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWarehouseLayoutSchema = createInsertSchema(warehouseLayout).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDigitalTwinSimulationSchema = createInsertSchema(digitalTwinSimulations).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+  createdAt: true,
+});
+
+export const insertRealTimeVisualizationSchema = createInsertSchema(realTimeVisualization).omit({
+  id: true,
+  timestamp: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -730,6 +872,8 @@ export type Warehouse = typeof warehouses.$inferSelect;
 export type InsertWarehouse = z.infer<typeof insertWarehouseSchema>;
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Batch = typeof batches.$inferSelect;
+export type InsertBatch = z.infer<typeof insertBatchSchema>;
 export type Inventory = typeof inventory.$inferSelect;
 export type InsertInventory = z.infer<typeof insertInventorySchema>;
 export type StockMovement = typeof stockMovements.$inferSelect;
@@ -774,3 +918,11 @@ export type RolePermission = typeof rolePermissions.$inferSelect;
 export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 export type UserRole = typeof userRoles.$inferSelect;
 export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type WarehouseZone = typeof warehouseZones.$inferSelect;
+export type InsertWarehouseZone = z.infer<typeof insertWarehouseZoneSchema>;
+export type WarehouseLayout = typeof warehouseLayout.$inferSelect;
+export type InsertWarehouseLayout = z.infer<typeof insertWarehouseLayoutSchema>;
+export type DigitalTwinSimulation = typeof digitalTwinSimulations.$inferSelect;
+export type InsertDigitalTwinSimulation = z.infer<typeof insertDigitalTwinSimulationSchema>;
+export type RealTimeVisualization = typeof realTimeVisualization.$inferSelect;
+export type InsertRealTimeVisualization = z.infer<typeof insertRealTimeVisualizationSchema>;

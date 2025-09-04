@@ -1,7 +1,5 @@
-import { DatabaseStorage } from '../../storage.js';
-import type { InsertBarcodeScan, BarcodeScan, Product } from '../../../shared/schema.js';
-
-const storage = new DatabaseStorage();
+import storage from '../../storage.js';
+import type { InsertBarcodeScan, BarcodeScan, Product } from '../../storage/types.js';
 
 export class BarcodeScanningModel {
   static async getBarcodeScans(limit?: number) {

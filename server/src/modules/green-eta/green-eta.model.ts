@@ -1,5 +1,5 @@
 import { eq, and, desc, gte, lte } from "drizzle-orm";
-import { db } from "../../db";
+import { db } from "../../../database/db";
 
 export interface CarbonMetrics {
   shipmentId: string;

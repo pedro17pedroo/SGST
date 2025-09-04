@@ -1,6 +1,4 @@
-import { DatabaseStorage } from '../../storage';
-
-const storage = new DatabaseStorage();
+import storage from '../../storage.js';
 
 export class BatchManagementModel {
   static async getBatches(filters: {

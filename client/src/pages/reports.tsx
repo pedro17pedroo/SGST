@@ -8,6 +8,67 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// Interfaces para tipagem dos dados
+interface InventoryTurnoverItem {
+  productName: string;
+  sku: string;
+  categoryName?: string;
+  avgStock: number;
+  totalSold: number;
+  turnoverRatio: number;
+}
+
+interface ObsoleteInventoryItem {
+  productName: string;
+  sku: string;
+  warehouseName: string;
+  currentStock: number;
+  unitPrice: number;
+  totalValue: number;
+  daysWithoutMovement: number;
+}
+
+interface ProductPerformanceItem {
+  productName: string;
+  sku: string;
+  categoryName?: string;
+  totalSales: number;
+  totalRevenue: number;
+}
+
+interface StockValuationItem {
+  productName: string;
+  categoryName?: string;
+  warehouseName: string;
+  currentStock: number;
+  unitPrice: number;
+  totalRetailValue: number;
+}
+
+interface StockValuationSummary {
+  totalProducts: number;
+  totalUnits: number;
+  totalRetailValue: number;
+  totalPotentialProfit: number;
+}
+
+interface StockValuationData {
+  summary: StockValuationSummary;
+  items: StockValuationItem[];
+}
+
+interface SupplierPerformanceItem {
+  supplierName: string;
+  totalOrders: number;
+  totalValue: number;
+  totalAmount: number;
+  avgOrderAmount: number;
+  averageDeliveryTime: number;
+  onTimeDeliveryRate: number;
+  deliveryRate: number;
+  productVariety: number;
+}
+
 // Helper function to format currency
 const formatCurrency = (value: number) => {
   return `${value.toLocaleString('pt-AO')} AOA`;
@@ -40,11 +101,8 @@ export default function Reports() {
   const [dateRange, setDateRange] = useState("30");
 
   // Real API queries for reports
-  const { data: dashboardStats } = useQuery({
-    queryKey: ["/api/dashboard/stats"],
-  });
 
-  const { data: inventoryTurnover, isLoading: isLoadingTurnover } = useQuery({
+  const { data: inventoryTurnover, isLoading: isLoadingTurnover } = useQuery<InventoryTurnoverItem[]>({
     queryKey: ["/api/reports/inventory-turnover", dateRange],
     queryFn: () => {
       const endDate = new Date();
@@ -60,7 +118,7 @@ export default function Reports() {
     },
   });
 
-  const { data: obsoleteInventory, isLoading: isLoadingObsolete } = useQuery({
+  const { data: obsoleteInventory, isLoading: isLoadingObsolete } = useQuery<ObsoleteInventoryItem[]>({
     queryKey: ["/api/reports/obsolete-inventory", dateRange],
     queryFn: () => {
       const params = new URLSearchParams({
@@ -72,7 +130,7 @@ export default function Reports() {
     },
   });
 
-  const { data: productPerformance, isLoading: isLoadingPerformance } = useQuery({
+  const { data: productPerformance, isLoading: isLoadingPerformance } = useQuery<ProductPerformanceItem[]>({
     queryKey: ["/api/reports/product-performance", dateRange],
     queryFn: () => {
       const endDate = new Date();
@@ -89,11 +147,11 @@ export default function Reports() {
     },
   });
 
-  const { data: stockValuation, isLoading: isLoadingValuation } = useQuery({
+  const { data: stockValuation, isLoading: isLoadingValuation } = useQuery<StockValuationData>({
     queryKey: ["/api/reports/stock-valuation"],
   });
 
-  const { data: supplierPerformance, isLoading: isLoadingSuppliers } = useQuery({
+  const { data: supplierPerformance, isLoading: isLoadingSuppliers } = useQuery<SupplierPerformanceItem[]>({
     queryKey: ["/api/reports/supplier-performance", dateRange],
     queryFn: () => {
       const endDate = new Date();
@@ -109,9 +167,7 @@ export default function Reports() {
     },
   });
 
-  const { data: warehouseEfficiency, isLoading: isLoadingWarehouse } = useQuery({
-    queryKey: ["/api/reports/warehouse-efficiency"],
-  });
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,27 +178,27 @@ export default function Reports() {
           <p className="text-muted-foreground">
             Análise detalhada de desempenho e tendências
           </p>
-        <div className="flex gap-2">
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Últimos 7 dias</SelectItem>
-              <SelectItem value="30">Últimos 30 dias</SelectItem>
-              <SelectItem value="90">Últimos 3 meses</SelectItem>
-              <SelectItem value="365">Último ano</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button data-testid="button-export">
-            <Download className="mr-2 h-4 w-4" />
-            Exportar
-          </Button>
+          <div className="flex gap-2">
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 3 meses</SelectItem>
+                <SelectItem value="365">Último ano</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button data-testid="button-export">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ReportCard
           title="Valor Total do Stock"
           value={stockValuation?.summary ? formatCurrency(stockValuation.summary.totalRetailValue) : "Carregando..."}
@@ -166,15 +222,15 @@ export default function Reports() {
         />
         <ReportCard
           title="Fornecedores Ativos"
-          value={supplierPerformance?.length?.toString() || "Carregando..."}
+          value={Array.isArray(supplierPerformance) ? supplierPerformance.length.toString() : "Carregando..."}
           change="Total de fornecedores"
           icon={FileText}
           color="orange"
         />
       </div>
 
-      {/* Main Content - Tabs for different report types */}
-      <Tabs defaultValue="turnover" className="space-y-4">
+        {/* Main Content - Tabs for different report types */}
+        <Tabs defaultValue="turnover" className="space-y-4">
         <TabsList>
           <TabsTrigger value="turnover" data-testid="tab-turnover">Rotatividade</TabsTrigger>
           <TabsTrigger value="obsolete" data-testid="tab-obsolete">Stock Obsoleto</TabsTrigger>
@@ -201,24 +257,24 @@ export default function Reports() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-blue-600">Produtos Analisados</div>
-                      <div className="text-2xl font-bold text-blue-900">{inventoryTurnover?.length || 0}</div>
+                      <div className="text-2xl font-bold text-blue-900">{Array.isArray(inventoryTurnover) ? inventoryTurnover.length : 0}</div>
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-green-600">Alta Rotatividade</div>
                       <div className="text-2xl font-bold text-green-900">
-                        {inventoryTurnover?.filter(item => item.turnoverRatio > 2).length || 0}
+                        {Array.isArray(inventoryTurnover) ? inventoryTurnover.filter((item: InventoryTurnoverItem) => item.turnoverRatio > 2).length : 0}
                       </div>
                     </div>
                     <div className="bg-yellow-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-yellow-600">Média Rotatividade</div>
                       <div className="text-2xl font-bold text-yellow-900">
-                        {inventoryTurnover?.filter(item => item.turnoverRatio >= 1 && item.turnoverRatio <= 2).length || 0}
+                        {Array.isArray(inventoryTurnover) ? inventoryTurnover.filter((item: InventoryTurnoverItem) => item.turnoverRatio >= 1 && item.turnoverRatio <= 2).length : 0}
                       </div>
                     </div>
                     <div className="bg-red-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-red-600">Baixa Rotatividade</div>
                       <div className="text-2xl font-bold text-red-900">
-                        {inventoryTurnover?.filter(item => item.turnoverRatio < 1).length || 0}
+                        {Array.isArray(inventoryTurnover) ? inventoryTurnover.filter((item: InventoryTurnoverItem) => item.turnoverRatio < 1).length : 0}
                       </div>
                     </div>
                   </div>
@@ -235,7 +291,7 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {inventoryTurnover?.slice(0, 10).map((item, index) => (
+                        {Array.isArray(inventoryTurnover) ? inventoryTurnover.slice(0, 10).map((item: InventoryTurnoverItem, index: number) => (
                           <tr key={index} className="border-b hover:bg-gray-50">
                             <td className="p-2">{item.productName}</td>
                             <td className="p-2 text-sm text-gray-600">{item.sku}</td>
@@ -248,7 +304,7 @@ export default function Reports() {
                               </Badge>
                             </td>
                           </tr>
-                        ))}
+                        )) : []}
                       </tbody>
                     </table>
                   </div>
@@ -276,18 +332,18 @@ export default function Reports() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-red-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-red-600">Produtos Obsoletos</div>
-                      <div className="text-2xl font-bold text-red-900">{obsoleteInventory?.length || 0}</div>
+                      <div className="text-2xl font-bold text-red-900">{Array.isArray(obsoleteInventory) ? obsoleteInventory.length : 0}</div>
                     </div>
                     <div className="bg-orange-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-orange-600">Valor Total</div>
                       <div className="text-2xl font-bold text-orange-900">
-                        {formatCurrency(obsoleteInventory?.reduce((sum, item) => sum + (item.totalValue || 0), 0) || 0)}
+                        {formatCurrency(Array.isArray(obsoleteInventory) ? obsoleteInventory.reduce((sum: number, item: ObsoleteInventoryItem) => sum + (item.totalValue || 0), 0) : 0)}
                       </div>
                     </div>
                     <div className="bg-yellow-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-yellow-600">Unidades</div>
                       <div className="text-2xl font-bold text-yellow-900">
-                        {obsoleteInventory?.reduce((sum, item) => sum + (item.currentStock || 0), 0) || 0}
+                        {Array.isArray(obsoleteInventory) ? obsoleteInventory.reduce((sum: number, item: ObsoleteInventoryItem) => sum + (item.currentStock || 0), 0) : 0}
                       </div>
                     </div>
                   </div>
@@ -305,7 +361,7 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {obsoleteInventory?.map((item, index) => (
+                        {Array.isArray(obsoleteInventory) ? obsoleteInventory.map((item: ObsoleteInventoryItem, index: number) => (
                           <tr key={index} className="border-b hover:bg-gray-50">
                             <td className="p-2">{item.productName}</td>
                             <td className="p-2 text-sm text-gray-600">{item.sku}</td>
@@ -319,7 +375,7 @@ export default function Reports() {
                               </Badge>
                             </td>
                           </tr>
-                        ))}
+                        )) : []}
                       </tbody>
                     </table>
                   </div>
@@ -348,18 +404,18 @@ export default function Reports() {
                     <div className="bg-green-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-green-600">Receita Total</div>
                       <div className="text-2xl font-bold text-green-900">
-                        {formatCurrency(productPerformance?.reduce((sum, item) => sum + (item.totalRevenue || 0), 0) || 0)}
+                        {formatCurrency(Array.isArray(productPerformance) ? productPerformance.reduce((sum: number, item: ProductPerformanceItem) => sum + (item.totalRevenue || 0), 0) : 0)}
                       </div>
                     </div>
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-blue-600">Unidades Vendidas</div>
                       <div className="text-2xl font-bold text-blue-900">
-                        {productPerformance?.reduce((sum, item) => sum + (item.totalSales || 0), 0) || 0}
+                        {Array.isArray(productPerformance) ? productPerformance.reduce((sum: number, item: ProductPerformanceItem) => sum + (item.totalSales || 0), 0) : 0}
                       </div>
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-purple-600">Produtos Ativos</div>
-                      <div className="text-2xl font-bold text-purple-900">{productPerformance?.length || 0}</div>
+                      <div className="text-2xl font-bold text-purple-900">{Array.isArray(productPerformance) ? productPerformance.length : 0}</div>
                     </div>
                   </div>
                   <div className="overflow-x-auto">
@@ -374,7 +430,7 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {productPerformance?.map((item, index) => (
+                        {Array.isArray(productPerformance) ? productPerformance.map((item: ProductPerformanceItem, index: number) => (
                           <tr key={index} className="border-b hover:bg-gray-50">
                             <td className="p-2">{item.productName}</td>
                             <td className="p-2 text-sm text-gray-600">{item.sku}</td>
@@ -382,7 +438,7 @@ export default function Reports() {
                             <td className="p-2 text-right">{item.totalSales || 0}</td>
                             <td className="p-2 text-right font-semibold">{formatCurrency(item.totalRevenue || 0)}</td>
                           </tr>
-                        ))}
+                        )) : []}
                       </tbody>
                     </table>
                   </div>
@@ -442,7 +498,7 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {stockValuation?.items?.slice(0, 15).map((item, index) => (
+                        {stockValuation?.items?.slice(0, 15).map((item: StockValuationItem, index: number) => (
                           <tr key={index} className="border-b hover:bg-gray-50">
                             <td className="p-2">{item.productName}</td>
                             <td className="p-2">{item.categoryName || 'Sem categoria'}</td>
@@ -479,24 +535,24 @@ export default function Reports() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-blue-600">Fornecedores Ativos</div>
-                      <div className="text-2xl font-bold text-blue-900">{supplierPerformance?.length || 0}</div>
+                      <div className="text-2xl font-bold text-blue-900">{Array.isArray(supplierPerformance) ? supplierPerformance.length : 0}</div>
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-green-600">Total de Encomendas</div>
                       <div className="text-2xl font-bold text-green-900">
-                        {supplierPerformance?.reduce((sum, item) => sum + (item.totalOrders || 0), 0) || 0}
+                        {Array.isArray(supplierPerformance) ? supplierPerformance.reduce((sum: number, item: SupplierPerformanceItem) => sum + (item.totalOrders || 0), 0) : 0}
                       </div>
                     </div>
                     <div className="bg-yellow-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-yellow-600">Valor Total</div>
                       <div className="text-2xl font-bold text-yellow-900">
-                        {formatCurrency(supplierPerformance?.reduce((sum, item) => sum + (item.totalAmount || 0), 0) || 0)}
+                        {formatCurrency(Array.isArray(supplierPerformance) ? supplierPerformance.reduce((sum: number, item: SupplierPerformanceItem) => sum + (item.totalAmount || 0), 0) : 0)}
                       </div>
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg">
                       <div className="text-sm font-medium text-purple-600">Taxa Média de Entrega</div>
                       <div className="text-2xl font-bold text-purple-900">
-                        {(supplierPerformance?.reduce((sum, item) => sum + (item.deliveryRate || 0), 0) / (supplierPerformance?.length || 1) || 0).toFixed(1)}%
+                        {Array.isArray(supplierPerformance) && supplierPerformance.length > 0 ? (supplierPerformance.reduce((sum: number, item: SupplierPerformanceItem) => sum + (item.deliveryRate || 0), 0) / supplierPerformance.length).toFixed(1) : "0.0"}%
                       </div>
                     </div>
                   </div>
@@ -513,7 +569,7 @@ export default function Reports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {supplierPerformance?.map((item, index) => (
+                        {Array.isArray(supplierPerformance) ? supplierPerformance.map((item: SupplierPerformanceItem, index: number) => (
                           <tr key={index} className="border-b hover:bg-gray-50">
                             <td className="p-2">{item.supplierName}</td>
                             <td className="p-2 text-right">{item.totalOrders || 0}</td>
@@ -526,7 +582,7 @@ export default function Reports() {
                             </td>
                             <td className="p-2 text-right">{item.productVariety || 0} produtos</td>
                           </tr>
-                        ))}
+                        )) : []}
                       </tbody>
                     </table>
                   </div>
@@ -535,7 +591,7 @@ export default function Reports() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
       </div>
     </div>
   );

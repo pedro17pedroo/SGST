@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
@@ -24,10 +24,10 @@ interface BarcodeScan {
     name: string;
   } | null;
   scanPurpose: string;
-  user: {
+  user?: {
     id: string;
     username: string;
-  };
+  } | null;
   createdAt: string;
 }
 
@@ -96,10 +96,7 @@ export default function ScannerPage() {
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
         supportedScanTypes: [
-          Html5QrcodeScanType.QR_CODE,
-          Html5QrcodeScanType.CODE_128,
-          Html5QrcodeScanType.EAN_8,
-          Html5QrcodeScanType.EAN_13
+          Html5QrcodeScanType.SCAN_TYPE_CAMERA
         ] as Html5QrcodeScanType[],
         rememberLastUsedCamera: true,
         showTorchButtonIfSupported: true,
@@ -268,7 +265,7 @@ export default function ScannerPage() {
                         )}
                         <div className="flex items-center space-x-1">
                           <User className="w-3 h-3" />
-                          <span>{scan.user.username}</span>
+                          <span>{scan.user?.username || 'Usuário não encontrado'}</span>
                         </div>
                         <span>
                           {new Date(scan.createdAt).toLocaleString('pt-PT')}

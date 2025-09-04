@@ -1,0 +1,16 @@
+HTTP/2 200 
+server: nginx/1.24.0 (Ubuntu)
+date: Thu, 04 Sep 2025 06:47:48 GMT
+content-type: application/json; charset=utf-8
+content-length: 198
+access-control-allow-origin: https://gstock.tatusolutions.com
+vary: Origin
+access-control-allow-credentials: true
+access-control-expose-headers: X-Total-Count,X-Page-Count,X-Rate-Limit-Remaining
+x-frame-options: DENY
+x-content-type-options: nosniff
+x-xss-protection: 1; mode=block
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none';
+x-rate-limit-remaining: 39
+etag: W/"c6-CQ9j2pJcoIbgW7GQisH8QEuvMVo"
+

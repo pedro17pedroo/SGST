@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,7 +43,7 @@ const productSchema = z.object({
   minStockLevel: z.string().optional(),
 });
 
-type ProductForm = z.infer<typeof productSchema>;
+type ProductFormData = z.infer<typeof productSchema>;
 
 interface Product {
   id: string;
@@ -68,7 +68,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<ProductForm>({
+  const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: product?.name || "",
@@ -84,7 +84,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   });
 
   // Reset form values when product changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (product) {
       form.reset({
         name: product.name || "",
@@ -143,7 +143,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: ProductForm) => updateProduct(product!.id, data),
+    mutationFn: (data: ProductFormData) => updateProduct(product!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
@@ -163,7 +163,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     },
   });
 
-  const onSubmit = (data: ProductForm) => {
+  const onSubmit = (data: ProductFormData) => {
     const formattedData = {
       ...data,
       price: data.price,

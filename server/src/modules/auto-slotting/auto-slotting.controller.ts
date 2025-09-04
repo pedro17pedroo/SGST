@@ -121,10 +121,12 @@ export class AutoSlottingController {
   // Slotting Rules
   static async getSlottingRules(req: Request, res: Response) {
     try {
-      const { warehouseId, isActive } = req.query;
+      const { warehouseId, isActive, limit = 50, offset = 0 } = req.query;
       const rules = await AutoSlottingModel.getSlottingRules({
         warehouseId: warehouseId as string,
-        isActive: isActive === 'true'
+        isActive: isActive === 'true',
+        limit: Number(limit),
+        offset: Number(offset)
       });
       res.json(rules);
     } catch (error) {
@@ -199,10 +201,12 @@ export class AutoSlottingController {
   // ML Models
   static async getMlModels(req: Request, res: Response) {
     try {
-      const { modelType, status } = req.query;
+      const { modelType, status, limit = 50, offset = 0 } = req.query;
       const models = await AutoSlottingModel.getMlModels({
         modelType: modelType as string,
-        status: status as string
+        status: status as string,
+        limit: Number(limit),
+        offset: Number(offset)
       });
       res.json(models);
     } catch (error) {

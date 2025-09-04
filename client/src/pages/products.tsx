@@ -5,10 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Power, PowerOff } from "lucide-react";
 import { ProductForm } from "@/components/products/product-form";
-import { useToast } from "@/hooks/use-toast";
-import { deleteProduct } from "@/lib/api";
+
+import { deactivateProduct, activateProduct } from "@/lib/api";
+import Swal from "sweetalert2";
 
 interface Product {
   id: string;
@@ -34,29 +35,66 @@ export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
+    queryFn: async () => {
+      // Demo data for now - replace with actual API call
+      const response = await fetch('/api/products');
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+      return response.json();
+    },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteProduct,
+  const deactivateMutation = useMutation({
+    mutationFn: deactivateProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/top-products"] });
-      toast({
-        title: "Produto eliminado",
-        description: "O produto foi eliminado com sucesso.",
+      Swal.fire({
+        title: 'Sucesso!',
+        text: 'O produto foi desativado com sucesso.',
+        icon: 'success',
+        confirmButtonColor: '#10b981',
+        timer: 2000,
+        showConfirmButton: false
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao eliminar produto.",
-        variant: "destructive",
+      Swal.fire({
+        title: 'Erro!',
+        text: error.message || 'Erro ao desativar produto.',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
+    },
+  });
+
+  const activateMutation = useMutation({
+    mutationFn: activateProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/top-products"] });
+      Swal.fire({
+        title: 'Sucesso!',
+        text: 'O produto foi ativado com sucesso.',
+        icon: 'success',
+        confirmButtonColor: '#10b981',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    },
+    onError: (error: any) => {
+      Swal.fire({
+        title: 'Erro!',
+        text: error.message || 'Erro ao ativar produto.',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
       });
     },
   });
@@ -71,9 +109,39 @@ export default function Products() {
     setShowForm(true);
   };
 
-  const handleDelete = (productId: string) => {
-    if (confirm("Tem certeza que deseja eliminar este produto?")) {
-      deleteMutation.mutate(productId);
+  const handleDeactivate = async (productId: string) => {
+    const result = await Swal.fire({
+      title: 'Desativar Produto',
+      text: 'Tem certeza que deseja desativar este produto?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sim, desativar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
+      deactivateMutation.mutate(productId);
+    }
+  };
+
+  const handleActivate = async (productId: string) => {
+    const result = await Swal.fire({
+      title: 'Ativar Produto',
+      text: 'Tem certeza que deseja ativar este produto?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sim, ativar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
+      activateMutation.mutate(productId);
     }
   };
 
@@ -201,15 +269,29 @@ export default function Products() {
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleDelete(product.id)}
-                              disabled={deleteMutation.isPending}
-                              data-testid={`delete-product-${product.id}`}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {product.isActive ? (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleDeactivate(product.id)}
+                                disabled={deactivateMutation.isPending}
+                                data-testid={`deactivate-product-${product.id}`}
+                                title="Desativar produto"
+                              >
+                                <PowerOff className="w-4 h-4 text-destructive" />
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleActivate(product.id)}
+                                disabled={activateMutation.isPending}
+                                data-testid={`activate-product-${product.id}`}
+                                title="Ativar produto"
+                              >
+                                <Power className="w-4 h-4 text-green-600" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>

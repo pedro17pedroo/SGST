@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import { PickingPackingController } from './picking-packing.controller';
+import { requireAuth } from '../auth/auth.middleware';
 
 const router = Router();
+
+// Aplicar middleware de autenticação a todas as rotas
+router.use(requireAuth);
 
 // Picking Lists Management
 router.get('/picking-lists', PickingPackingController.getPickingLists);

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Edit, Truck, Package, Calendar, MapPin, User as UserIcon } from "lucide-react";
+import { Plus, Search, Edit, Truck, Package, Calendar, MapPin } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,16 +12,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertShipmentSchema, type Shipment, type Order, type Vehicle } from "@shared/schema";
+import { type Shipment, type Order } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
 import { z } from "zod";
 
-const shipmentFormSchema = insertShipmentSchema.extend({
-  shipmentNumber: z.string().min(1, "Número do envio é obrigatório"),
-  status: z.enum(["preparing", "shipped", "in_transit", "delivered", "cancelled"]).default("preparing"),
+// Schema personalizado para o formulário de envios
+const shipmentFormSchema = z.object({
+  shipmentNumber: z.string().optional(),
+  orderId: z.string().min(1, "Pedido é obrigatório"),
+  vehicleId: z.string().min(1, "Veículo é obrigatório"),
+  status: z.string().min(1, "Status é obrigatório"),
+  carrier: z.string().optional(),
+  trackingNumber: z.string().optional(),
+  shippingAddress: z.string().optional(),
   estimatedDelivery: z.string().optional(),
-  vehicleId: z.string().optional(),
 });
 
 type ShipmentFormData = z.infer<typeof shipmentFormSchema>;
@@ -34,9 +40,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
     queryKey: ["/api/orders"],
   });
   
-  const { data: vehicles = [] } = useQuery<Vehicle[]>({
-    queryKey: ["/api/vehicles"],
-  });
+  // Removido: query de veículos agora é feita pelo VehicleCombobox
   
   const form = useForm<ShipmentFormData>({
     resolver: zodResolver(shipmentFormSchema),
@@ -53,7 +57,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
   });
 
   // Reset form values when shipment changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (shipment) {
       form.reset({
         shipmentNumber: shipment.shipmentNumber || `SHP-${Date.now()}`,
@@ -81,11 +85,11 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
 
   const createMutation = useMutation({
     mutationFn: async (data: ShipmentFormData) => {
-      const response = await apiRequest("POST", "/api/shipments", data);
+      const response = await apiRequest("POST", "/api/shipping", data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shipments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shipping"] });
       setOpen(false);
       form.reset();
       toast({
@@ -104,11 +108,11 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
 
   const updateMutation = useMutation({
     mutationFn: async (data: ShipmentFormData) => {
-      const response = await apiRequest("PUT", `/api/shipments/${shipment?.id}`, data);
+      const response = await apiRequest("PUT", `/api/shipping/${shipment?.id}`, data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shipments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shipping"] });
       setOpen(false);
       form.reset();
       toast({
@@ -154,7 +158,8 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                     <FormControl>
                       <Input 
                         placeholder="SHP-001" 
-                        {...field} 
+                        {...field}
+                        value={field.value as string}
                         data-testid="input-shipment-number"
                       />
                     </FormControl>
@@ -169,7 +174,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value as string}>
                       <FormControl>
                         <SelectTrigger data-testid="select-shipment-status">
                           <SelectValue placeholder="Estado do envio" />
@@ -220,20 +225,14 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Veículo</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-vehicle">
-                        <SelectValue placeholder="Selecione o veículo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {vehicles.filter(vehicle => vehicle.status === 'ativo').map((vehicle) => (
-                        <SelectItem key={vehicle.id} value={vehicle.id}>
-                          {vehicle.licensePlate} - {vehicle.brand} {vehicle.model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <VehicleCombobox
+                      value={(field.value as string) || ""}
+                      onValueChange={field.onChange}
+                      placeholder="Selecione o veículo"
+                      disabled={form.formState.isSubmitting}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -248,10 +247,10 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                     <FormLabel>Transportadora</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Nome da transportadora" 
-                        {...field} 
-                        value={field.value || ""}
-                        data-testid="input-carrier"
+                          placeholder="Nome da transportadora" 
+                          {...field}
+                          value={(field.value as string) || ""}
+                          data-testid="input-carrier"
                       />
                     </FormControl>
                     <FormMessage />
@@ -343,8 +342,6 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
 }
 
 function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | null } }) {
-  const { toast } = useToast();
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "preparing": return "bg-yellow-100 text-yellow-800";
@@ -447,7 +444,7 @@ export default function Shipping() {
   const [search, setSearch] = useState("");
   
   const { data: shipments = [], isLoading } = useQuery<Array<Shipment & { order?: Order | null }>>({
-    queryKey: ["/api/shipments"],
+    queryKey: ["/api/shipping"],
   });
 
   const filteredShipments = shipments.filter((shipment: Shipment) =>

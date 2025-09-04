@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,24 +17,11 @@ import {
   CheckCircle, 
   AlertCircle, 
   XCircle,
-  User,
-  LogIn,
-  Building,
-  Eye,
-  EyeOff,
-  Lock
+  Building
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth-context";
 
 interface TrackingInfo {
   trackingNumber: string;
@@ -55,15 +43,7 @@ interface TrackingInfo {
   }>;
 }
 
-const loginSchema = z.object({
-  username: z.string().min(3, "Nome de utilizador deve ter pelo menos 3 caracteres"),
-  password: z.string().min(6, "Palavra-passe deve ter pelo menos 6 caracteres"),
-  acceptTerms: z.boolean().refine(val => val === true, {
-    message: "Deve aceitar os termos e condições para continuar",
-  }),
-});
 
-type LoginFormData = z.infer<typeof loginSchema>;
 
 function getStatusInfo(status: string) {
   const statusMap = {
@@ -133,11 +113,7 @@ async function fetchTrackingInfo(trackingNumber: string): Promise<TrackingInfo> 
 export default function CustomerPortal() {
   const [trackingNumber, setTrackingNumber] = useState("");
   const [searchTriggered, setSearchTriggered] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoginLoading, setIsLoginLoading] = useState(false);
-  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const { login } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: trackingInfo, isLoading, error, refetch } = useQuery({
     queryKey: ['customer-tracking', trackingNumber],
@@ -146,14 +122,7 @@ export default function CustomerPortal() {
     retry: false
   });
 
-  const loginForm = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      acceptTerms: false,
-    },
-  });
+
 
   const handleTrackingSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,49 +137,7 @@ export default function CustomerPortal() {
     setSearchTriggered(false);
   };
 
-  const onLoginSubmit = async (data: LoginFormData) => {
-    setIsLoginLoading(true);
-    
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password
-        }),
-      });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Login realizado com sucesso",
-          description: `Bem-vindo, ${result.user.username}!`,
-        });
-        setLoginDialogOpen(false);
-        login(result.user);
-      } else {
-        toast({
-          title: "Erro de login",
-          description: result.message || "Credenciais inválidas",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast({
-        title: "Erro de conexão",
-        description: "Não foi possível conectar ao servidor. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoginLoading(false);
-    }
-  };
 
   const statusInfo = trackingInfo ? getStatusInfo(trackingInfo.status) : null;
   const StatusIcon = statusInfo?.icon || Clock;
@@ -236,10 +163,12 @@ export default function CustomerPortal() {
                 Disponível 24/7
               </div>
               <ThemeToggle />
-              <Button variant="default" className="flex items-center gap-2" onClick={() => window.location.href = '/register'}>
-                <LogIn className="w-4 h-4" />
-                Entrar
-              </Button>
+              <Button 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                  onClick={() => setLocation('/login')}
+                >
+                  Entrar
+                </Button>
             </div>
           </div>
         </div>

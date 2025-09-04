@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../../../database/db';
 import { warehouses, type Warehouse, type InsertWarehouse } from '@shared/schema';
 import { desc, eq } from 'drizzle-orm';
 

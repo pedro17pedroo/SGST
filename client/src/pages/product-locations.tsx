@@ -17,10 +17,12 @@ import { z } from "zod";
 const productLocationSchema = z.object({
   productId: z.string().min(1, "Produto é obrigatório"),
   warehouseId: z.string().min(1, "Armazém é obrigatório"),
-  zone: z.string().optional(),
-  shelf: z.string().optional(),
-  bin: z.string().optional(),
+  zone: z.string().default(""),
+  shelf: z.string().default(""),
+  bin: z.string().default(""),
 });
+
+type ProductLocationFormData = z.infer<typeof productLocationSchema>;
 
 interface ProductLocation {
   id: string;
@@ -65,8 +67,8 @@ export default function ProductLocationsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof productLocationSchema>>({
-    resolver: zodResolver(productLocationSchema),
+  const form = useForm<ProductLocationFormData>({
+    resolver: zodResolver(productLocationSchema as any),
     defaultValues: {
       productId: "",
       warehouseId: "",
@@ -196,9 +198,9 @@ export default function ProductLocationsPage() {
   };
 
   const filteredLocations = locations?.filter(location => 
-    location.product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    location.product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    location.warehouse.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (location.product?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+    (location.product?.sku?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+    (location.warehouse?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
     formatLocationCode(location).toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
@@ -433,11 +435,11 @@ export default function ProductLocationsPage() {
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground" data-testid={`product-name-${location.id}`}>
-                              {location.product.name}
+                              {location.product?.name || 'Produto não encontrado'}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              SKU: {location.product.sku}
-                              {location.product.barcode && (
+                              SKU: {location.product?.sku || 'N/A'}
+                              {location.product?.barcode && (
                                 <span className="ml-2">| {location.product.barcode}</span>
                               )}
                             </p>
@@ -448,7 +450,7 @@ export default function ProductLocationsPage() {
                         <div className="flex items-center space-x-2">
                           <MapPin className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm text-foreground" data-testid={`warehouse-name-${location.id}`}>
-                            {location.warehouse.name}
+                            {location.warehouse?.name || 'Armazém não encontrado'}
                           </span>
                         </div>
                       </td>

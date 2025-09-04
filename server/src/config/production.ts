@@ -3,17 +3,32 @@ import { Express } from 'express';
 
 // Configuração de CORS para produção
 function getAllowedOrigins(): string[] {
-  const origins = [];
+  const origins: string[] = [];
   
   // Adicionar URL do frontend
   if (process.env.FRONTEND_URL) {
     origins.push(process.env.FRONTEND_URL);
+    console.log('🌐 CORS: Adicionado FRONTEND_URL:', process.env.FRONTEND_URL);
   }
   
   // Adicionar origem CORS adicional
   if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== process.env.FRONTEND_URL) {
     origins.push(process.env.CORS_ORIGIN);
+    console.log('🌐 CORS: Adicionado CORS_ORIGIN:', process.env.CORS_ORIGIN);
   }
+  
+  // Domínios específicos de produção conhecidos
+  const productionDomains = [
+    'https://gstock.tatusolutions.com',
+    'https://gstock-api.tatusolutions.com'
+  ];
+  
+  productionDomains.forEach(domain => {
+    if (!origins.includes(domain)) {
+      origins.push(domain);
+      console.log('🌐 CORS: Adicionado domínio de produção:', domain);
+    }
+  });
   
   // Adicionar localhost para desenvolvimento
   if (process.env.NODE_ENV === 'development') {
@@ -23,8 +38,10 @@ function getAllowedOrigins(): string[] {
   // Fallback para produção
   if (origins.length === 0) {
     origins.push('https://seu-dominio-frontend.com');
+    console.log('🌐 CORS: Usando fallback domain');
   }
   
+  console.log('🌐 CORS: Origens permitidas:', origins);
   return origins;
 }
 
@@ -33,15 +50,20 @@ export const corsConfig = {
     const allowedOrigins = getAllowedOrigins();
     
     // Permitir requests sem origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('🌐 CORS: Request sem origin - permitido');
+      return callback(null, true);
+    }
     
     // Verificar se a origem está na lista permitida
     if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS: Origem permitida: ${origin}`);
       return callback(null, true);
     }
     
     // Log da tentativa de acesso não autorizada
     console.warn(`🚫 CORS: Origem não permitida: ${origin}`);
+    console.warn(`🚫 CORS: Origens permitidas: ${allowedOrigins.join(', ')}`);
     return callback(new Error('Não permitido pelo CORS'), false);
   },
   credentials: true,

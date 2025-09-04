@@ -5,7 +5,9 @@ import { z } from 'zod';
 export class UserController {
   static async getUsers(req: Request, res: Response) {
     try {
+      console.log('🔍 UserController.getUsers() chamado');
       const users = await UserModel.getAll();
+      console.log(`📊 Controller recebeu: ${users.length} usuários`);
       res.json(users);
     } catch (error) {
       console.error('Error fetching users:', error);

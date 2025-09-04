@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { Settings as SettingsIcon, Database, Bell, Shield, User, Building, Package2 } from "lucide-react";
+import { Settings as SettingsIcon, Database, Bell, Shield, Building } from "lucide-react";
 import { ModuleManagement } from "@/components/settings/module-management";
 
 export default function Settings() {

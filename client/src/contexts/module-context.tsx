@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { FrontendModuleManager, FrontendModuleConfig } from '../config/modules';
 
 interface ModuleContextValue {

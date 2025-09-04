@@ -19,4 +19,11 @@ router.get('/warehouse/:warehouseId', InventoryController.getInventoryByWarehous
 router.get('/product/:productId', InventoryController.getProductInventory);
 router.put('/product/:productId/warehouse/:warehouseId', requireRole(['admin', 'manager', 'operator']), InventoryController.updateInventory);
 
+// Rotas para stock movements
+router.get('/stock-movements', InventoryController.getStockMovements);
+router.post('/stock-movements', requireRole(['admin', 'manager', 'operator']), InventoryController.createStockMovement);
+
+// Rotas para warehouse zones
+router.get('/warehouse-zones', InventoryController.getWarehouseZones);
+
 export default router;

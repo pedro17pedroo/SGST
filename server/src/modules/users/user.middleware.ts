@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../../types/auth';
 
 // Middleware específico do módulo de utilizadores
 export function validateUserRole(allowedRoles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // Esta implementação seria expandida com autenticação real
-    const userRole = (req as any).user?.role || 'operator';
+    const userRole = req.user?.role || 'operator';
     
     if (!allowedRoles.includes(userRole)) {
       return res.status(403).json({

@@ -28,10 +28,11 @@ export async function updateAndReturn<T>(
   table: any,
   id: string,
   updateData: any,
-  idField: any = 'id'
+  idField?: any
 ): Promise<T> {
-  await db.update(table).set(updateData).where(eq(idField, id));
-  const result = await db.select().from(table).where(eq(idField, id)).limit(1);
+  const field = idField || table.id;
+  await db.update(table).set(updateData).where(eq(field, id));
+  const result = await db.select().from(table).where(eq(field, id)).limit(1);
   return result[0] as T;
 }
 
@@ -78,7 +79,9 @@ export async function getSingleRecord<T>(
   query: any
 ): Promise<T | null> {
   const result = await query;
-  return result as T | null;
+  // Drizzle retorna um array, mesmo com limit(1)
+  // Precisamos verificar se há elementos e retornar o primeiro ou null
+  return Array.isArray(result) && result.length > 0 ? result[0] as T : null;
 }
 
 /**

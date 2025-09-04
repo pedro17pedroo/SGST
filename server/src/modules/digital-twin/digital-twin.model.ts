@@ -1,26 +1,16 @@
 import { eq, and, desc } from "drizzle-orm";
-import { db } from "../../db";
-// TODO: Descomentar quando as tabelas de digital twin forem criadas
-// import { 
-//   warehouseZones, 
-//   warehouseLayout, 
-//   digitalTwinSimulations, 
-//   realTimeVisualization,
-//   type InsertWarehouseZone,
-//   type InsertWarehouseLayout,
-//   type InsertDigitalTwinSimulation,
-//   type InsertRealTimeVisualization
-// } from "@shared/schema";
+import { db } from "../../../database/db";
+import { 
+  warehouseZones, 
+  warehouseLayout, 
+  digitalTwinSimulations, 
+  realTimeVisualization,
+  type InsertWarehouseZone,
+  type InsertWarehouseLayout,
+  type InsertDigitalTwinSimulation,
+  type InsertRealTimeVisualization
+} from "@shared/schema";
 
-// TODO: Reativar toda a classe quando as tabelas necessárias forem criadas
-export class DigitalTwinModel {
-  static async placeholder() {
-    console.log('DigitalTwinModel temporariamente desabilitado durante migração para MySQL');
-    return null;
-  }
-}
-
-/* TODO: Descomentar quando as tabelas de digital twin forem criadas
 export class DigitalTwinModel {
   // Warehouse Zones
   static async getWarehouseZones(warehouseId: string) {
@@ -32,17 +22,16 @@ export class DigitalTwinModel {
   }
 
   static async createWarehouseZone(zoneData: InsertWarehouseZone) {
-    const [zone] = await db.insert(warehouseZones).values(zoneData).returning();
+    const [zone] = await db.insert(warehouseZones).values(zoneData).$returningId();
     return zone;
   }
 
   static async updateWarehouseZone(id: string, zoneData: Partial<InsertWarehouseZone>) {
-    const [zone] = await db
+    await db
       .update(warehouseZones)
       .set(zoneData)
-      .where(eq(warehouseZones.id, id))
-      .returning();
-    return zone;
+      .where(eq(warehouseZones.id, id));
+    return { id };
   }
 
   static async deleteWarehouseZone(id: string) {
@@ -61,17 +50,16 @@ export class DigitalTwinModel {
   }
 
   static async createWarehouseLayout(layoutData: InsertWarehouseLayout) {
-    const [layout] = await db.insert(warehouseLayout).values(layoutData).returning();
+    const [layout] = await db.insert(warehouseLayout).values(layoutData).$returningId();
     return layout;
   }
 
   static async updateWarehouseLayout(id: string, layoutData: Partial<InsertWarehouseLayout>) {
-    const [layout] = await db
+    await db
       .update(warehouseLayout)
       .set(layoutData)
-      .where(eq(warehouseLayout.id, id))
-      .returning();
-    return layout;
+      .where(eq(warehouseLayout.id, id));
+    return { id };
   }
 
   static async deleteWarehouseLayout(id: string) {
@@ -90,7 +78,7 @@ export class DigitalTwinModel {
   }
 
   static async createSimulation(simulationData: InsertDigitalTwinSimulation) {
-    const [simulation] = await db.insert(digitalTwinSimulations).values(simulationData).returning();
+    const [simulation] = await db.insert(digitalTwinSimulations).values(simulationData).$returningId();
     return simulation;
   }
 
@@ -105,12 +93,11 @@ export class DigitalTwinModel {
       }
     }
 
-    const [simulation] = await db
+    await db
       .update(digitalTwinSimulations)
       .set(updates)
-      .where(eq(digitalTwinSimulations.id, id))
-      .returning();
-    return simulation;
+      .where(eq(digitalTwinSimulations.id, id));
+    return { id };
   }
 
   // Real-time Visualization
@@ -135,7 +122,7 @@ export class DigitalTwinModel {
   }
 
   static async updateVisualization(visualizationData: InsertRealTimeVisualization) {
-    const [visualization] = await db.insert(realTimeVisualization).values(visualizationData).returning();
+    const [visualization] = await db.insert(realTimeVisualization).values(visualizationData).$returningId();
     return visualization;
   }
 
@@ -220,4 +207,3 @@ export class DigitalTwinModel {
     return results;
   }
 }
-*/

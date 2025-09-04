@@ -50,7 +50,7 @@ export function useGPS(options: UseGPSOptions = {}) {
   });
 
   const watchId = useRef<number | null>(null);
-  const intervalId = useRef<NodeJS.Timeout | null>(null);
+  const intervalId = useRef<number | null>(null);
 
   // Verificar se GPS é obrigatório
   const checkGPSRequirement = useCallback(async () => {

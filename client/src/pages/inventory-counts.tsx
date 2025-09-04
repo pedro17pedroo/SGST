@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -71,8 +72,7 @@ export default function InventoryCountsPage() {
   const { data: counts, isLoading } = useQuery({
     queryKey: ['/api/inventory-counts'],
     queryFn: async () => {
-      const response = await fetch('/api/inventory-counts');
-      if (!response.ok) throw new Error('Failed to fetch inventory counts');
+      const response = await apiRequest('GET', '/api/inventory-counts');
       return response.json() as Promise<InventoryCount[]>;
     }
   });
@@ -81,8 +81,7 @@ export default function InventoryCountsPage() {
   const { data: warehouses } = useQuery({
     queryKey: ['/api/warehouses'],
     queryFn: async () => {
-      const response = await fetch('/api/warehouses');
-      if (!response.ok) throw new Error('Failed to fetch warehouses');
+      const response = await apiRequest('GET', '/api/warehouses');
       return response.json() as Promise<Warehouse[]>;
     }
   });
@@ -90,15 +89,10 @@ export default function InventoryCountsPage() {
   // Create count mutation
   const createCountMutation = useMutation({
     mutationFn: async (data: z.infer<typeof inventoryCountSchema>) => {
-      const response = await fetch('/api/inventory-counts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          userId: user?.id || 'anonymous-user'
-        })
-      });
-      if (!response.ok) throw new Error('Failed to create inventory count');
+      const response = await apiRequest('POST', '/api/inventory-counts', {
+         ...data,
+         userId: user?.id || 'anonymous-user'
+       });
       return response.json();
     },
     onSuccess: () => {

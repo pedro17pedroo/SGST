@@ -34,6 +34,7 @@ import {
   Calendar
 } from "lucide-react";
 import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
 
 // Quality Control Schema
 const qualityInspectionSchema = z.object({
@@ -332,7 +333,7 @@ export default function QualityControlPage() {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
-      const response = await fetch('/api/products');
+      const response = await apiRequest('GET', '/api/products');
       if (!response.ok) throw new Error('Failed to fetch products');
       return response.json() as Promise<Array<{ id: string; name: string; sku: string; }>>;
     }

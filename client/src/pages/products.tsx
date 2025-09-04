@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,10 +42,7 @@ export default function Products() {
     queryKey: ["/api/products"],
     queryFn: async () => {
       // Demo data for now - replace with actual API call
-      const response = await fetch('/api/products');
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
+      const response = await apiRequest('GET', '/api/products');
       return response.json();
     },
   });

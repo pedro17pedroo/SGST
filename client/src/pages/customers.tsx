@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { PermissionGuard } from '@/components/auth/permission-guard';
 import { Header } from '@/components/layout/header';
+import { apiRequest } from '@/lib/queryClient';
 
 // Tipo para dados do formulário
 interface CustomerFormData {
@@ -107,11 +108,7 @@ export default function CustomersPage() {
   // Mutation para criar cliente
   const createCustomerMutation = useMutation({
     mutationFn: async (data: CustomerFormData) => {
-      const response = await fetch('/api/customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('POST', '/api/customers', data);
       if (!response.ok) throw new Error('Erro ao criar cliente');
       return response.json();
     },
@@ -130,11 +127,7 @@ export default function CustomersPage() {
   // Mutation para atualizar cliente
   const updateCustomerMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: CustomerFormData }) => {
-      const response = await fetch(`/api/customers/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest('PUT', `/api/customers/${id}`, data);
       if (!response.ok) throw new Error('Erro ao atualizar cliente');
       return response.json();
     },
@@ -153,9 +146,7 @@ export default function CustomersPage() {
   // Mutation para desativar cliente
   const deactivateCustomerMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/customers/${id}/deactivate`, {
-        method: 'PUT',
-      });
+      const response = await apiRequest('PUT', `/api/customers/${id}/deactivate`);
       if (!response.ok) throw new Error('Erro ao desativar cliente');
       return response.json();
     },
@@ -172,9 +163,7 @@ export default function CustomersPage() {
   // Mutation para ativar cliente
   const activateCustomerMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/customers/${id}/activate`, {
-        method: 'PUT',
-      });
+      const response = await apiRequest('PUT', `/api/customers/${id}/activate`);
       if (!response.ok) throw new Error('Erro ao ativar cliente');
       return response.json();
     },

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface GPSPosition {
   latitude: number;
@@ -55,19 +56,13 @@ export function useGPS(options: UseGPSOptions = {}) {
   // Verificar se GPS é obrigatório
   const checkGPSRequirement = useCallback(async () => {
     try {
-      const response = await fetch('/api/gps/required', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setGPSState(prev => ({
-          ...prev,
-          isRequired: data.isRequired
-        }));
-        return data.isRequired;
-      }
-      return false;
+      const response = await apiRequest('GET', '/api/gps/required');
+      const data = await response.json();
+      setGPSState(prev => ({
+        ...prev,
+        isRequired: data.isRequired
+      }));
+      return data.isRequired;
     } catch (error) {
       console.error('Erro ao verificar requisitos GPS:', error);
       return false;
@@ -95,19 +90,7 @@ export function useGPS(options: UseGPSOptions = {}) {
         }
       };
 
-      const response = await fetch('/api/gps/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(gpsData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao enviar dados GPS');
-      }
+      const response = await apiRequest('POST', '/api/gps/update', gpsData);
 
       return await response.json();
     } catch (error) {
@@ -258,19 +241,14 @@ export function useGPS(options: UseGPSOptions = {}) {
   // Obter status GPS do servidor
   const getServerStatus = useCallback(async () => {
     try {
-      const response = await fetch('/api/gps/status', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const status = await response.json();
-        setGPSState(prev => ({
-          ...prev,
-          isRequired: status.isGPSRequired,
-          vehicleId: status.assignedVehicle?.id
-        }));
-        return status;
-      }
+      const response = await apiRequest('GET', '/api/gps/status');
+      const status = await response.json();
+      setGPSState(prev => ({
+        ...prev,
+        isRequired: status.isGPSRequired,
+        vehicleId: status.assignedVehicle?.id
+      }));
+      return status;
     } catch (error) {
       console.error('Erro ao obter status GPS:', error);
     }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ export default function ProductLocationsPage() {
   const { data: locations, isLoading } = useQuery({
     queryKey: ['/api/product-locations'],
     queryFn: async () => {
-      const response = await fetch('/api/product-locations');
+      const response = await apiRequest('GET', '/api/product-locations');
       if (!response.ok) throw new Error('Failed to fetch product locations');
       return response.json() as Promise<ProductLocation[]>;
     }
@@ -92,7 +93,7 @@ export default function ProductLocationsPage() {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
-      const response = await fetch('/api/products');
+      const response = await apiRequest('GET', '/api/products');
       if (!response.ok) throw new Error('Failed to fetch products');
       return response.json() as Promise<Product[]>;
     }
@@ -102,7 +103,7 @@ export default function ProductLocationsPage() {
   const { data: warehouses } = useQuery({
     queryKey: ['/api/warehouses'],
     queryFn: async () => {
-      const response = await fetch('/api/warehouses');
+      const response = await apiRequest('GET', '/api/warehouses');
       if (!response.ok) throw new Error('Failed to fetch warehouses');
       return response.json() as Promise<Warehouse[]>;
     }
@@ -116,11 +117,7 @@ export default function ProductLocationsPage() {
         : '/api/product-locations';
       const method = editingLocation ? 'PUT' : 'POST';
       
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest(method as 'POST' | 'PUT', url, data);
       if (!response.ok) throw new Error(`Failed to ${editingLocation ? 'update' : 'create'} location`);
       return response.json();
     },
@@ -146,9 +143,7 @@ export default function ProductLocationsPage() {
   // Delete location mutation
   const deleteLocationMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/product-locations/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await apiRequest('DELETE', `/api/product-locations/${id}`);
       if (!response.ok) throw new Error('Failed to delete location');
     },
     onSuccess: () => {

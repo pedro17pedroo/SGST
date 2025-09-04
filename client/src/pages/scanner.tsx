@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ export default function ScannerPage() {
   const { data: recentScans, isLoading } = useQuery({
     queryKey: ['/api/barcode-scans'],
     queryFn: async () => {
-      const response = await fetch('/api/barcode-scans');
+      const response = await apiRequest('GET', '/api/barcode-scans');
       if (!response.ok) throw new Error('Failed to fetch barcode scans');
       return response.json() as Promise<BarcodeScan[]>;
     }
@@ -58,13 +59,9 @@ export default function ScannerPage() {
       warehouseId?: string;
       metadata?: any;
     }) => {
-      const response = await fetch('/api/barcode-scans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          userId: user?.id || 'anonymous-user'
-        })
+      const response = await apiRequest('POST', '/api/barcode-scans', {
+        ...data,
+        userId: user?.id || 'anonymous-user'
       });
       if (!response.ok) throw new Error('Failed to create scan');
       return response.json();

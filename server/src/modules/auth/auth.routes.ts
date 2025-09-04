@@ -8,6 +8,7 @@ const router = Router();
 router.post('/login', AuthController.login);
 router.post('/login-token', AuthController.loginWithToken);
 router.post('/logout', AuthController.logout);
+router.post('/refresh-token', AuthController.refreshToken);
 
 // Rotas de perfil protegidas - requerem autenticação
 router.get('/profile', requireAuth, AuthController.getProfile);

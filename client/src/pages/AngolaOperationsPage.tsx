@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   Wifi, 
   WifiOff, 
@@ -86,12 +87,10 @@ export default function AngolaOperationsPage() {
 
   // Mutations
   const reportNetworkFailureMutation = useMutation({
-    mutationFn: (data: { duration: number; affectedOperations: string[] }) =>
-      fetch('/api/angola/network-failure', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, deviceId })
-      }).then(res => res.json()),
+    mutationFn: async (data: { duration: number; affectedOperations: string[] }) => {
+      const response = await apiRequest('POST', '/api/angola/network-failure', { ...data, deviceId });
+      return response.json();
+    },
     onSuccess: () => {
       toast({ title: 'Falha de rede registrada', description: 'Sistema de fallback ativado automaticamente' });
       queryClient.invalidateQueries();
@@ -99,36 +98,30 @@ export default function AngolaOperationsPage() {
   });
 
   const downloadMapMutation = useMutation({
-    mutationFn: (mapId: string) =>
-      fetch('/api/angola/offline-maps/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mapId, deviceId })
-      }).then(res => res.json()),
+    mutationFn: async (mapId: string) => {
+      const response = await apiRequest('POST', '/api/angola/offline-maps/download', { mapId, deviceId });
+      return response.json();
+    },
     onSuccess: () => {
       toast({ title: 'Download iniciado', description: 'Mapa offline será baixado em segundo plano' });
     }
   });
 
   const configureSMSMutation = useMutation({
-    mutationFn: (config: typeof smsConfig) =>
-      fetch('/api/angola/sms/configure', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...config, deviceId })
-      }).then(res => res.json()),
+    mutationFn: async (config: typeof smsConfig) => {
+      const response = await apiRequest('POST', '/api/angola/sms/configure', { ...config, deviceId });
+      return response.json();
+    },
     onSuccess: () => {
       toast({ title: 'SMS fallback configurado', description: 'Sistema pronto para operação offline' });
     }
   });
 
   const processSyncMutation = useMutation({
-    mutationFn: (force: boolean = false) =>
-      fetch('/api/angola/sync/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId, force })
-      }).then(res => res.json()),
+    mutationFn: async (force: boolean = false) => {
+      const response = await apiRequest('POST', '/api/angola/sync/process', { deviceId, force });
+      return response.json();
+    },
     onSuccess: (data) => {
       toast({ 
         title: 'Sincronização processada', 

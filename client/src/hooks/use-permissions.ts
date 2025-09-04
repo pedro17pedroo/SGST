@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/auth-context';
+import { apiRequest } from '../lib/queryClient';
 
 export interface Permission {
   id: string;
@@ -23,17 +24,9 @@ export function usePermissions() {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/users/${user.id}/permissions`, {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const userPermissions = await response.json();
-        setPermissions(userPermissions);
-      } else {
-        console.warn('Erro ao carregar permissões do utilizador');
-        setPermissions([]);
-      }
+      const response = await apiRequest('GET', `/users/${user.id}/permissions`);
+      const userPermissions = await response.json();
+      setPermissions(userPermissions);
     } catch (error) {
       console.error('Erro ao carregar permissões:', error);
       setPermissions([]);

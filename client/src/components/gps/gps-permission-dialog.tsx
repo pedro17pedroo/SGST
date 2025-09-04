@@ -14,6 +14,7 @@ import {
   Wifi
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface GPSPermissionDialogProps {
   isOpen: boolean;
@@ -59,9 +60,7 @@ export function GPSPermissionDialog({
 
   const loadAvailableVehicles = async () => {
     try {
-      const response = await fetch('/api/fleet/vehicles/available', {
-        credentials: 'include'
-      });
+      const response = await apiRequest('GET', '/api/fleet/vehicles/available');
       
       if (response.ok) {
         const vehicleData = await response.json();
@@ -156,17 +155,10 @@ export function GPSPermissionDialog({
   };
 
   const sendGPSUpdate = async (gpsData: any) => {
-    const response = await fetch('/api/gps/update', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        ...gpsData,
-        deviceType: 'mobile',
-        timestamp: new Date().toISOString()
-      }),
+    const response = await apiRequest('POST', '/api/gps/update', {
+      ...gpsData,
+      deviceType: 'mobile',
+      timestamp: new Date().toISOString()
     });
 
     if (!response.ok) {

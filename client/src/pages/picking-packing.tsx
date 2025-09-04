@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -189,13 +190,8 @@ export default function PickingPackingPage() {
   const { data: pickingLists, isLoading: isLoadingPicking } = useQuery({
     queryKey: ['/api/picking-lists'],
     queryFn: async () => {
-      const response = await fetch('/api/picking-lists', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch picking lists');
-      }
-      return response.json() as Promise<PickingList[]>;
+      const response = await apiRequest('GET', '/api/picking-lists');
+      return await response.json();
     }
   });
 
@@ -203,13 +199,8 @@ export default function PickingPackingPage() {
   const { data: packingTasks, isLoading: isLoadingPacking } = useQuery({
     queryKey: ['/api/packing-tasks'],
     queryFn: async () => {
-      const response = await fetch('/api/packing-tasks', {
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch packing tasks');
-      }
-      return response.json() as Promise<PackingTask[]>;
+      const response = await apiRequest('GET', '/api/packing-tasks');
+      return await response.json();
     }
   });
 
@@ -217,9 +208,8 @@ export default function PickingPackingPage() {
   const { data: warehouses } = useQuery({
     queryKey: ['/api/warehouses'],
     queryFn: async () => {
-      const response = await fetch('/api/warehouses');
-      if (!response.ok) throw new Error('Failed to fetch warehouses');
-      return response.json() as Promise<Warehouse[]>;
+      const response = await apiRequest('GET', '/api/warehouses');
+      return await response.json();
     }
   });
 
@@ -227,9 +217,8 @@ export default function PickingPackingPage() {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
-      const response = await fetch('/api/products');
-      if (!response.ok) throw new Error('Failed to fetch products');
-      return response.json() as Promise<Product[]>;
+      const response = await apiRequest('GET', '/api/products');
+      return await response.json();
     }
   });
 
@@ -239,9 +228,8 @@ export default function PickingPackingPage() {
     queryFn: async () => {
       const warehouseId = pickingForm.getValues('warehouseId');
       if (!warehouseId) return [];
-      const response = await fetch(`/api/product-locations?warehouseId=${warehouseId}`);
-      if (!response.ok) throw new Error('Failed to fetch product locations');
-      return response.json() as Promise<ProductLocation[]>;
+      const response = await apiRequest('GET', `/api/product-locations?warehouseId=${warehouseId}`);
+      return await response.json();
     },
     enabled: !!pickingForm.watch('warehouseId')
   });
@@ -249,26 +237,14 @@ export default function PickingPackingPage() {
   // Create picking list mutation
   const createPickingMutation = useMutation({
     mutationFn: async (data: z.infer<typeof pickingListSchema> & { items?: z.infer<typeof pickingListItemSchema>[] }) => {
-      const response = await fetch('/api/picking-lists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          orderNumbers: [data.orderNumber],
-          warehouseId: data.warehouseId,
-          priority: data.priority,
-          notes: data.notes,
-          pickingType: 'individual',
-          items: data.items || []
-        }),
+      return await apiRequest('POST', '/api/picking-lists', {
+        orderNumbers: [data.orderNumber],
+        warehouseId: data.warehouseId,
+        priority: data.priority,
+        notes: data.notes,
+        pickingType: 'individual',
+        items: data.items || []
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to create picking list: ${errorText}`);
-      }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/picking-lists'] });
@@ -292,19 +268,7 @@ export default function PickingPackingPage() {
   // Create packing task mutation
   const createPackingMutation = useMutation({
     mutationFn: async (data: z.infer<typeof packingSchema>) => {
-      const response = await fetch('/api/packing-tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to create packing task: ${errorText}`);
-      }
-      return response.json();
+      return await apiRequest('POST', '/api/packing-tasks', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/packing-tasks'] });
@@ -417,15 +381,7 @@ export default function PickingPackingPage() {
   // Start picking list mutation
   const startPickingMutation = useMutation({
     mutationFn: async (pickingListId: string) => {
-      const response = await fetch(`/api/picking-lists/${pickingListId}/start`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to start picking: ${errorText}`);
-      }
-      return response.json();
+      return await apiRequest('POST', `/api/picking-lists/${pickingListId}/start`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/picking-lists'] });

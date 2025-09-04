@@ -31,8 +31,14 @@ interface User {
   isActive: boolean;
 }
 
+interface AuthData {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
 interface LoginFormProps {
-  onLogin: (userData: User) => void;
+  onLogin: (authData: AuthData) => void;
 }
 
 export function LoginForm({ onLogin }: LoginFormProps) {
@@ -40,6 +46,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showGPSDialog, setShowGPSDialog] = useState(false);
   const [userInfo, setUserInfo] = useState<User | null>(null);
+  const [tempAuthData, setTempAuthData] = useState<AuthData | null>(null);
   const { toast } = useToast();
 
   const form = useForm<LoginFormData>({
@@ -70,16 +77,23 @@ export function LoginForm({ onLogin }: LoginFormProps) {
         isActive: result.user.isActive || true
       };
       
+      const authData = {
+        user: userData,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      };
+      
       // Verificar se GPS é obrigatório
       if (result.requiresGPS) {
         setUserInfo(userData);
+        setTempAuthData(authData);
         setShowGPSDialog(true);
       } else {
         toast({
           title: "Login realizado com sucesso",
           description: `Bem-vindo, ${result.user.username}!`,
         });
-        onLogin(userData);
+        onLogin(authData);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -94,13 +108,15 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   };
 
   const handleGPSSuccess = (gpsData: { latitude: number; longitude: number; accuracy: number; vehicleId?: string }) => {
-    if (userInfo) {
+    if (tempAuthData) {
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo, ${userInfo.username}! GPS ativado com precisão de ${Math.round(gpsData.accuracy)}m`,
+        description: `Bem-vindo, ${tempAuthData.user.username}! GPS ativado com precisão de ${Math.round(gpsData.accuracy)}m`,
       });
       setShowGPSDialog(false);
-      onLogin(userInfo);
+      onLogin(tempAuthData);
+      setTempAuthData(null);
+      setUserInfo(null);
     }
   };
 

@@ -1,5 +1,6 @@
 import { CRDTOperation, SyncEvent, OfflineState, ConflictResolution, SyncConfig } from '@shared/offline-types';
 import { nanoid } from 'nanoid';
+import { apiRequest } from './queryClient';
 
 class OfflineManager {
   private state: OfflineState;
@@ -187,13 +188,9 @@ class OfflineManager {
     error?: string;
   }>> {
     try {
-      const response = await fetch('/api/offline-sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          operations: operations.map(op => op.operation),
-          deviceId: this.state.deviceId
-        })
+      const response = await apiRequest('POST', '/api/offline-sync', {
+        operations: operations.map(op => op.operation),
+        deviceId: this.state.deviceId
       });
 
       if (!response.ok) {

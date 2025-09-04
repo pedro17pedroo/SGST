@@ -1,5 +1,6 @@
 // Sistema UX Hiper-Rápida - Otimização de Performance < 200ms
 import { QueryClient } from "@tanstack/react-query";
+import { apiRequest } from "./queryClient";
 
 export class PerformanceOptimizer {
   private static cache = new Map<string, any>();
@@ -19,15 +20,15 @@ export class PerformanceOptimizer {
     criticalQueries.forEach(query => {
       queryClient.prefetchQuery({
         queryKey: [query],
-        queryFn: () => fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4001'}${query}`, {
-          credentials: 'include'
-        }).then(res => {
-          if (!res.ok) {
-            console.warn(`Failed to prefetch ${query}: HTTP ${res.status}`);
-            throw new Error(`HTTP ${res.status}`);
+        queryFn: async () => {
+          try {
+            const response = await apiRequest('GET', query);
+            return await response.json();
+          } catch (error) {
+            console.warn(`Failed to prefetch ${query}: ${error}`);
+            throw error;
           }
-          return res.json();
-        }),
+        },
         staleTime: 30000, // 30 seconds
         gcTime: 60000, // 1 minute
         retry: false // Não tentar novamente em caso de erro
@@ -55,7 +56,7 @@ export class PerformanceOptimizer {
     // Fast fetch with timeout
     try {
       const response = await Promise.race([
-        fetch(url),
+        apiRequest('GET', url),
         this.timeoutPromise(150) // 150ms timeout
       ]);
 
@@ -79,7 +80,7 @@ export class PerformanceOptimizer {
   private static backgroundFetch(url: string) {
     if (this.preloadedData.has(url)) return;
 
-    const fetchPromise = fetch(url)
+    const fetchPromise = apiRequest('GET', url)
       .then(res => res.json())
       .then(data => {
         this.cache.set(url, { data, timestamp: Date.now() });
@@ -163,12 +164,14 @@ export class PerformanceOptimizer {
       queries.forEach(query => {
         queryClient.prefetchQuery({
           queryKey: [query],
-          queryFn: () => fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${query}`, {
-            credentials: 'include'
-          }).then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-          }),
+          queryFn: async () => {
+            try {
+              const response = await apiRequest('GET', query);
+              return await response.json();
+            } catch (error) {
+              throw error;
+            }
+          },
           staleTime: 10000
         });
       });

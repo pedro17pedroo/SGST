@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -251,8 +252,7 @@ export default function ReturnsPage() {
   const { data: suppliers } = useQuery({
     queryKey: ['/api/suppliers'],
     queryFn: async () => {
-      const response = await fetch('/api/suppliers');
-      if (!response.ok) throw new Error('Failed to fetch suppliers');
+      const response = await apiRequest('GET', '/api/suppliers');
       return response.json() as Promise<Supplier[]>;
     }
   });
@@ -261,8 +261,7 @@ export default function ReturnsPage() {
   const { data: orders } = useQuery({
     queryKey: ['/api/orders'],
     queryFn: async () => {
-      const response = await fetch('/api/orders');
-      if (!response.ok) throw new Error('Failed to fetch orders');
+      const response = await apiRequest('GET', '/api/orders');
       return response.json() as Promise<Order[]>;
     }
   });

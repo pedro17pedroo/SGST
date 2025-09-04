@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useModules } from '@/contexts/module-context';
+import { apiRequest } from '@/lib/queryClient';
 
 interface ModuleInfo {
   id: string;
@@ -23,13 +23,9 @@ export function ModuleManagement() {
 
   const fetchModules = async () => {
     try {
-      const response = await fetch('/api/modules');
-      if (response.ok) {
-        const data = await response.json();
-        setModules(data);
-      } else {
-        throw new Error('Erro ao carregar módulos');
-      }
+      const response = await apiRequest('GET', '/modules');
+      const data = await response.json();
+      setModules(data);
     } catch (error) {
       toast({
         title: "Erro",
@@ -44,33 +40,25 @@ export function ModuleManagement() {
   const toggleModule = async (moduleId: string, enable: boolean) => {
     try {
       const action = enable ? 'enable' : 'disable';
-      const response = await fetch(`/api/modules/${moduleId}/${action}`, {
-        method: 'POST'
+      const response = await apiRequest('POST', `/modules/${moduleId}/${action}`);
+      const result = await response.json();
+      toast({
+        title: "Sucesso",
+        description: result.message
       });
-
-      if (response.ok) {
-        const result = await response.json();
+      
+      // Atualizar lista de módulos
+      await fetchModules();
+      
+      // Recarregar configuração do frontend
+      await reloadConfiguration();
+      
+      if (result.note) {
         toast({
-          title: "Sucesso",
-          description: result.message
+          title: "Nota",
+          description: result.note,
+          variant: "default"
         });
-        
-        // Atualizar lista de módulos
-        await fetchModules();
-        
-        // Recarregar configuração do frontend
-        await reloadConfiguration();
-        
-        if (result.note) {
-          toast({
-            title: "Nota",
-            description: result.note,
-            variant: "default"
-          });
-        }
-      } else {
-        const error = await response.json();
-        throw new Error(error.message);
       }
     } catch (error) {
       toast({

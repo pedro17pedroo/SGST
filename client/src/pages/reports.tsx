@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, TrendingUp, Package, DollarSign, Download } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,7 @@ export default function Reports() {
 
   const { data: inventoryTurnover, isLoading: isLoadingTurnover } = useQuery<InventoryTurnoverItem[]>({
     queryKey: ["/api/reports/inventory-turnover", dateRange],
-    queryFn: () => {
+    queryFn: async () => {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - parseInt(dateRange));
@@ -114,25 +115,27 @@ export default function Reports() {
         endDate: endDate.toISOString()
       });
       
-      return fetch(`/api/reports/inventory-turnover?${params}`).then(res => res.json());
+      const response = await apiRequest('GET', `/api/reports/inventory-turnover?${params}`);
+      return await response.json();
     },
   });
 
   const { data: obsoleteInventory, isLoading: isLoadingObsolete } = useQuery<ObsoleteInventoryItem[]>({
     queryKey: ["/api/reports/obsolete-inventory", dateRange],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams({
         daysWithoutMovement: dateRange,
         minValue: "1000"
       });
       
-      return fetch(`/api/reports/obsolete-inventory?${params}`).then(res => res.json());
+      const response = await apiRequest('GET', `/api/reports/obsolete-inventory?${params}`);
+      return await response.json();
     },
   });
 
   const { data: productPerformance, isLoading: isLoadingPerformance } = useQuery<ProductPerformanceItem[]>({
     queryKey: ["/api/reports/product-performance", dateRange],
-    queryFn: () => {
+    queryFn: async () => {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - parseInt(dateRange));
@@ -143,7 +146,8 @@ export default function Reports() {
         limit: "10"
       });
       
-      return fetch(`/api/reports/product-performance?${params}`).then(res => res.json());
+      const response = await apiRequest('GET', `/api/reports/product-performance?${params}`);
+      return await response.json();
     },
   });
 
@@ -153,7 +157,7 @@ export default function Reports() {
 
   const { data: supplierPerformance, isLoading: isLoadingSuppliers } = useQuery<SupplierPerformanceItem[]>({
     queryKey: ["/api/reports/supplier-performance", dateRange],
-    queryFn: () => {
+    queryFn: async () => {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - parseInt(dateRange));
@@ -163,7 +167,8 @@ export default function Reports() {
         endDate: endDate.toISOString()
       });
       
-      return fetch(`/api/reports/supplier-performance?${params}`).then(res => res.json());
+      const response = await apiRequest('GET', `/api/reports/supplier-performance?${params}`);
+      return await response.json();
     },
   });
 

@@ -51,14 +51,23 @@ export default function Register() {
 
       const result = await response.json();
       
-      // Armazenar token se "Lembrar-me" estiver marcado
-      if (data.rememberMe && result.token) {
-        localStorage.setItem('authToken', result.token);
-      }
+      const userData = {
+        id: result.user.id,
+        username: result.user.username,
+        email: result.user.email || '',
+        role: result.user.role,
+        isActive: result.user.isActive || true
+      };
+      
+      const authData = {
+        user: userData,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      };
       
       // Atualizar o estado de autenticação com os dados do utilizador
       if (result.user) {
-        login(result.user);
+        login(authData);
       }
       
       toast({

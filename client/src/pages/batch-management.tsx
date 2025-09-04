@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,8 +158,7 @@ export default function BatchManagementPage() {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
-      const response = await fetch('/api/products');
-      if (!response.ok) throw new Error('Failed to fetch products');
+      const response = await apiRequest('GET', '/api/products');
       return response.json() as Promise<Array<{ id: string; name: string; sku: string; }>>;
     }
   });
@@ -167,8 +167,7 @@ export default function BatchManagementPage() {
   const { data: warehouses } = useQuery({
     queryKey: ['/api/warehouses'],
     queryFn: async () => {
-      const response = await fetch('/api/warehouses');
-      if (!response.ok) throw new Error('Failed to fetch warehouses');
+      const response = await apiRequest('GET', '/api/warehouses');
       return response.json() as Promise<Array<{ id: string; name: string; }>>;
     }
   });
@@ -176,15 +175,10 @@ export default function BatchManagementPage() {
   // Create batch mutation
   const createBatchMutation = useMutation({
     mutationFn: async (data: BatchFormData) => {
-      const response = await fetch('/api/batches', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          createdBy: user?.id || 'anonymous-user'
-        })
+      const response = await apiRequest('POST', '/api/batches', {
+        ...data,
+        createdBy: user?.id || 'anonymous-user'
       });
-      if (!response.ok) throw new Error('Failed to create batch');
       return response.json();
     },
     onSuccess: () => {

@@ -11,9 +11,15 @@ interface User {
   isActive: boolean;
 }
 
+interface AuthData {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
 interface AuthContextType {
   user: User | null;
-  login: (userData: User) => void;
+  login: (authData: AuthData) => void;
   logout: () => Promise<void>;
   handleUnauthorized: () => void;
   isAuthenticated: boolean;
@@ -26,14 +32,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Verificar se há um utilizador guardado no localStorage
-    const savedUser = localStorage.getItem("sgst-user");
-    if (savedUser) {
+    // Verificar se há dados de autenticação guardados no localStorage
+    const savedAuthData = localStorage.getItem("sgst-user");
+    if (savedAuthData) {
       try {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        // Inicializar prefetch se já estiver autenticado
-        PerformanceOptimizer.initializeAfterAuth(queryClient);
+        const authData = JSON.parse(savedAuthData);
+        // Verificar se tem os tokens necessários
+        if (authData.user && authData.accessToken) {
+          setUser(authData.user);
+          // Inicializar prefetch se já estiver autenticado
+          PerformanceOptimizer.initializeAfterAuth(queryClient);
+        } else {
+          localStorage.removeItem("sgst-user");
+        }
       } catch {
         localStorage.removeItem("sgst-user");
       }
@@ -45,10 +56,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthHandler(handleUnauthorized);
   }, []);
 
-  const login = (userData: User) => {
-    console.log('Login chamado com dados:', userData);
-    setUser(userData);
-    localStorage.setItem("sgst-user", JSON.stringify(userData));
+  const login = (authData: AuthData) => {
+    console.log('Login chamado com dados:', authData.user);
+    setUser(authData.user);
+    localStorage.setItem("sgst-user", JSON.stringify(authData));
     
     // Inicializar prefetch após autenticação
     PerformanceOptimizer.initializeAfterAuth(queryClient);

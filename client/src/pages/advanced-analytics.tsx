@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -113,7 +114,7 @@ function AIAnalyticsSection() {
   const { data: demandForecast, isLoading: isLoadingForecast } = useQuery({
     queryKey: ['/api/analytics/demand-forecast'],
     queryFn: async () => {
-      const response = await fetch('/api/analytics/demand-forecast');
+      const response = await apiRequest('GET', '/api/analytics/demand-forecast');
       if (!response.ok) throw new Error('Failed to fetch demand forecast');
       return response.json();
     }
@@ -123,7 +124,7 @@ function AIAnalyticsSection() {
   const { data: turnoverAnalysis, isLoading: isLoadingTurnover } = useQuery({
     queryKey: ['/api/analytics/turnover-analysis'],
     queryFn: async () => {
-      const response = await fetch('/api/analytics/turnover-analysis');
+      const response = await apiRequest('GET', '/api/analytics/turnover-analysis');
       if (!response.ok) throw new Error('Failed to fetch turnover analysis');
       return response.json();
     }

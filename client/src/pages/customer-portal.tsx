@@ -22,6 +22,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { apiRequest } from "@/lib/queryClient";
 
 interface TrackingInfo {
   trackingNumber: string;
@@ -100,7 +101,7 @@ function getStatusInfo(status: string) {
 }
 
 async function fetchTrackingInfo(trackingNumber: string): Promise<TrackingInfo> {
-  const response = await fetch(`/api/public/track/${encodeURIComponent(trackingNumber)}`);
+  const response = await apiRequest('GET', `/api/public/track/${encodeURIComponent(trackingNumber)}`);
   
   if (!response.ok) {
     const errorData = await response.json();

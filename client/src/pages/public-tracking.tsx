@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Search, Package, MapPin, Calendar, Truck, Clock, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { apiRequest } from "@/lib/queryClient";
 
 interface TrackingInfo {
   trackingNumber: string;
@@ -85,7 +86,7 @@ function getStatusInfo(status: string) {
 }
 
 async function fetchTrackingInfo(trackingNumber: string): Promise<TrackingInfo> {
-  const response = await fetch(`/api/public/track/${encodeURIComponent(trackingNumber)}`);
+  const response = await apiRequest('GET', `/api/public/track/${encodeURIComponent(trackingNumber)}`);
   
   if (!response.ok) {
     const errorData = await response.json();

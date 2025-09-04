@@ -1,60 +1,87 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../../types/auth';
+import { verifyToken, extractTokenFromHeader, isAccessToken } from '../../config/jwt';
+import { UserModel } from '../users/user.model';
 
-// Middleware para verificar autenticação
+// Middleware para verificar autenticação JWT
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  console.log('🔐 === MIDDLEWARE requireAuth INICIADO ===');
+  console.log('🔐 === MIDDLEWARE requireAuth JWT INICIADO ===');
   console.log('🔐 URL:', req.method, req.url);
-  console.log('🔐 Session ID:', req.sessionID);
-  console.log('🔐 Session Store:', req.session);
-  console.log('🔐 Session Cookie:', req.headers.cookie);
-  console.log('🔐 User-Agent:', req.headers['user-agent']);
-  console.log('🔐 Origin:', req.headers.origin);
-  console.log('🔐 Referer:', req.headers.referer);
+  console.log('🔐 Authorization Header:', req.headers.authorization);
   
-  const sessionUser = (req.session as any)?.user;
-  console.log('🔐 Session User:', sessionUser);
-  console.log('🔐 Session exists:', !!req.session);
-  console.log('🔐 Session.user exists:', !!(req.session as any)?.user);
+  // Extrair token do header Authorization
+  const token = extractTokenFromHeader(req.headers.authorization);
   
-  if (!sessionUser) {
-    console.log('❌ Usuário não autenticado - retornando 401');
+  if (!token) {
+    console.log('❌ Token JWT não fornecido - retornando 401');
     return res.status(401).json({
-      message: 'Acesso negado. Faça login para continuar.',
-      error: 'NOT_AUTHENTICATED'
+      message: 'Acesso negado. Token de autenticação necessário.',
+      error: 'NO_TOKEN_PROVIDED'
     });
   }
   
-  console.log('✅ Usuário autenticado:', sessionUser.email || sessionUser.username);
-  // Adicionar utilizador ao request para usar noutros middlewares
-  (req as AuthenticatedRequest).user = sessionUser;
-  console.log('🔐 === MIDDLEWARE requireAuth CONCLUÍDO - PASSANDO PARA PRÓXIMO ===');
+  // Verificar e decodificar token
+  const payload = verifyToken(token);
+  
+  if (!payload) {
+    console.log('❌ Token JWT inválido ou expirado - retornando 401');
+    return res.status(401).json({
+      message: 'Token inválido ou expirado. Faça login novamente.',
+      error: 'INVALID_TOKEN'
+    });
+  }
+  
+  // Verificar se é um access token
+  if (!isAccessToken(payload)) {
+    console.log('❌ Token não é do tipo access - retornando 401');
+    return res.status(401).json({
+      message: 'Tipo de token inválido.',
+      error: 'INVALID_TOKEN_TYPE'
+    });
+  }
+  
+  console.log('✅ Token JWT válido para usuário:', payload.email);
+  
+  // Adicionar dados do usuário ao request
+  (req as AuthenticatedRequest).user = {
+    id: payload.userId,
+    email: payload.email,
+    role: payload.role,
+    username: payload.email, // Fallback para compatibilidade
+    password: '', // Não incluir senha por segurança
+    isActive: true, // Assumir ativo se token é válido
+    createdAt: null // Não necessário para autenticação
+  };
+  
+  console.log('🔐 === MIDDLEWARE requireAuth JWT CONCLUÍDO - PASSANDO PARA PRÓXIMO ===');
   next();
 }
 
 // Middleware para verificar roles específicos
 export function requireRole(allowedRoles: string[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const sessionUser = (req.session as any)?.user;
-    
-    if (!sessionUser) {
-      return res.status(401).json({
-        message: 'Acesso negado. Faça login para continuar.',
-        error: 'NOT_AUTHENTICATED'
-      });
-    }
-    
-    if (!allowedRoles.includes(sessionUser.role)) {
-      return res.status(403).json({
-        message: 'Acesso negado. Permissões insuficientes.',
-        error: 'INSUFFICIENT_PERMISSIONS',
-        requiredRoles: allowedRoles,
-        userRole: sessionUser.role
-      });
-    }
-    
-    (req as AuthenticatedRequest).user = sessionUser;
-    next();
+    // Primeiro verificar autenticação JWT
+    requireAuth(req, res, () => {
+      const user = (req as AuthenticatedRequest).user;
+      
+      if (!user) {
+        return res.status(401).json({
+          message: 'Acesso negado. Faça login para continuar.',
+          error: 'NOT_AUTHENTICATED'
+        });
+      }
+      
+      if (!allowedRoles.includes(user.role)) {
+        return res.status(403).json({
+          message: 'Acesso negado. Permissões insuficientes.',
+          error: 'INSUFFICIENT_PERMISSIONS',
+          requiredRoles: allowedRoles,
+          userRole: user.role
+        });
+      }
+      
+      next();
+    });
   };
 }
 

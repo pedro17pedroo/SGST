@@ -1,8 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
-import session from "express-session";
-import { getSessionConfig } from './config/session';
 
 import { registerRoutes } from "./routes";
 // Função simples de log
@@ -32,17 +30,7 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configuração de sessões
-const isProduction = process.env.NODE_ENV === 'production';
-
-app.use(session(getSessionConfig(isProduction)));
-
-// Log da configuração de sessão para debug
-if (isProduction) {
-  log('🍪 Configuração de cookies para produção: secure=true, sameSite=none, store=Sequelize');
-} else {
-  log('🍪 Configuração de cookies para desenvolvimento: secure=false, sameSite=lax, store=Sequelize');
-}
+// JWT não requer configuração de sessões - autenticação via Authorization header
 
 app.use((req, res, next) => {
   console.log('HTTP_REQUEST_LOG:', req.method, req.path);

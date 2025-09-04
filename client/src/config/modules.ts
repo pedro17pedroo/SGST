@@ -422,12 +422,14 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
 };
 
 // Classe para gestão de módulos no frontend
+import { apiRequest } from '../lib/queryClient';
+
 export class FrontendModuleManager {
   private static enabledModules: Set<string> = new Set();
 
   static async loadModuleConfiguration(): Promise<void> {
     try {
-      const response = await fetch('/api/modules');
+      const response = await apiRequest('GET', '/api/modules');
       
       if (!response.ok) {
         throw new Error(`Erro ao carregar módulos: ${response.status}`);

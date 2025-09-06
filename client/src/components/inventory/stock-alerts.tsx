@@ -53,11 +53,11 @@ export function StockAlerts() {
   }
 
   return (
-    <Card className="p-6" data-testid="stock-alerts">
-      <div className="flex items-center justify-between mb-4">
+    <Card className="p-4 sm:p-6" data-testid="stock-alerts">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
         <div className="flex items-center space-x-2">
-          <AlertTriangle className="w-5 h-5 text-destructive" />
-          <h3 className="text-lg font-semibold text-foreground" data-testid="stock-alerts-title">
+          <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive flex-shrink-0" />
+          <h3 className="text-base sm:text-lg font-semibold text-foreground" data-testid="stock-alerts-title">
             Alertas de Stock
           </h3>
           <Badge variant="destructive" data-testid="alerts-count">
@@ -65,57 +65,57 @@ export function StockAlerts() {
           </Badge>
         </div>
         <Link href="/inventory">
-          <Button variant="outline" size="sm" data-testid="view-inventory">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" data-testid="view-inventory">
             Ver Inventário
           </Button>
         </Link>
       </div>
 
       {lowStockProducts.length === 0 ? (
-        <div className="text-center py-8" data-testid="no-alerts">
-          <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">
+        <div className="text-center py-6 sm:py-8" data-testid="no-alerts">
+          <Package className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm sm:text-base text-muted-foreground">
             Nenhum produto com stock baixo
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Todos os produtos têm níveis adequados de stock
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {lowStockProducts.map((product) => {
             const criticality = getCriticalityLevel(product.stock, product.minStockLevel);
             
             return (
               <div 
                 key={product.id}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors gap-3"
                 data-testid={`stock-alert-${product.id}`}
               >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
                     criticality.level === 'critical' ? 'bg-destructive' :
                     criticality.level === 'warning' ? 'bg-yellow-500' : 'bg-orange-500'
                   }`} />
-                  <div>
-                    <p className="font-medium text-foreground" data-testid={`product-name-${product.id}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-foreground truncate" data-testid={`product-name-${product.id}`}>
                       {product.name}
                     </p>
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
                       <span data-testid={`product-sku-${product.id}`}>SKU: {product.sku}</span>
                       {product.category && (
                         <>
-                          <span>•</span>
-                          <span data-testid={`product-category-${product.id}`}>{product.category.name}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span data-testid={`product-category-${product.id}`} className="truncate">{product.category.name}</span>
                         </>
                       )}
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-foreground" data-testid={`current-stock-${product.id}`}>
+                <div className="flex items-center justify-between sm:justify-end space-x-3 flex-shrink-0">
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs sm:text-sm font-medium text-foreground" data-testid={`current-stock-${product.id}`}>
                       Stock: {product.stock}
                     </p>
                     <p className="text-xs text-muted-foreground" data-testid={`min-stock-${product.id}`}>
@@ -123,13 +123,15 @@ export function StockAlerts() {
                     </p>
                   </div>
                   
-                  <Badge variant={criticality.color} data-testid={`criticality-${product.id}`}>
-                    {criticality.level === 'critical' ? 'Crítico' :
-                     criticality.level === 'warning' ? 'Atenção' : 'Baixo'}
-                  </Badge>
-                  
-                  <div className="flex items-center text-muted-foreground">
-                    <TrendingDown className="w-4 h-4" />
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={criticality.color} className="text-xs" data-testid={`criticality-${product.id}`}>
+                      {criticality.level === 'critical' ? 'Crítico' :
+                       criticality.level === 'warning' ? 'Atenção' : 'Baixo'}
+                    </Badge>
+                    
+                    <div className="flex items-center text-muted-foreground">
+                      <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
+                    </div>
                   </div>
                 </div>
               </div>

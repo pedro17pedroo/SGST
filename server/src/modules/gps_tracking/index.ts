@@ -7,7 +7,7 @@ export class GPSTrackingModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
-    app.use('/api', gpsTrackingRoutes);
+    app.use('/api/gps-tracking', gpsTrackingRoutes);
   }
 }
 

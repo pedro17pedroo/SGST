@@ -3,6 +3,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Melhorias para navegação mobile */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Smooth scroll para toda a aplicação */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Melhor toque em dispositivos móveis */
+  @media (hover: none) and (pointer: coarse) {
+    button, a, [role="button"] {
+      touch-action: manipulation;
+    }
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(222.2, 84%, 4.9%);
@@ -114,8 +137,19 @@
   }
 }
 
+/* Hover para tabelas - modo claro */
+.table-hover {
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+}
+
 .table-hover:hover {
-  background-color: hsl(210, 40%, 98%);
+  background-color: hsl(210, 40%, 96%);
+}
+
+/* Hover para tabelas - modo escuro */
+.dark .table-hover:hover {
+  background-color: hsl(210, 10%, 15%);
 }
 
 .chart-container {

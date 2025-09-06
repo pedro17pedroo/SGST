@@ -16,6 +16,7 @@ import { type Shipment, type Order } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
+import { LoadingState, LoadingComponents, useLoadingStates } from "@/components/ui/loading-state";
 import { z } from "zod";
 
 // Schema personalizado para o formulário de envios
@@ -443,8 +444,7 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
 export default function Shipping() {
   const [search, setSearch] = useState("");
   
-  const { data: shipments = [], isLoading } = useQuery<Array<Shipment & { order?: Order | null }>>({
-    queryKey: ["/api/shipping"],
+  const { data: shipments = [], isLoading, error } = useQuery<Array<Shipment & { order?: Order | null }>>({    queryKey: ["/api/shipping"],
   });
 
   const filteredShipments = shipments.filter((shipment: Shipment) =>
@@ -452,6 +452,8 @@ export default function Shipping() {
     (shipment.trackingNumber && shipment.trackingNumber.toLowerCase().includes(search.toLowerCase())) ||
     (shipment.carrier && shipment.carrier.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const loadingStates = useLoadingStates(filteredShipments, isLoading, error);
 
   return (
     <div className="min-h-screen bg-background">
@@ -483,49 +485,41 @@ export default function Shipping() {
         />
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="h-48">
-              <CardHeader className="animate-pulse">
-                <div className="h-6 bg-muted rounded w-3/4"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent className="animate-pulse">
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded"></div>
-                  <div className="h-4 bg-muted rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
+      <LoadingState
+        isLoading={loadingStates.isLoading}
+        error={loadingStates.error}
+        isEmpty={loadingStates.isEmpty}
+        loadingComponent={
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <LoadingComponents.Cards count={6} />
+          </div>
+        }
+        emptyComponent={
+          <div className="col-span-full text-center py-12">
+            <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum envio encontrado</h3>
+            <p className="text-muted-foreground mb-4">
+              {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro envio."}
+            </p>
+            {!search && (
+              <ShipmentDialog
+                trigger={
+                  <Button data-testid="button-add-first-shipment">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Criar Primeiro Envio
+                  </Button>
+                }
+              />
+            )}
+          </div>
+        }
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredShipments.map((shipment: Shipment & { order?: Order | null }) => (
             <ShipmentCard key={shipment.id} shipment={shipment} />
           ))}
-          {filteredShipments.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum envio encontrado</h3>
-              <p className="text-muted-foreground mb-4">
-                {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro envio."}
-              </p>
-              {!search && (
-                <ShipmentDialog
-                  trigger={
-                    <Button data-testid="button-add-first-shipment">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Criar Primeiro Envio
-                    </Button>
-                  }
-                />
-              )}
-            </div>
-          )}
         </div>
-      )}
+      </LoadingState>
       </div>
     </div>
   );

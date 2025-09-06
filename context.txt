@@ -1,0 +1,145 @@
+:4001/api/users/841ac9a5-8a8e-11f0-aefa-34b4ed86d8a9/permissions:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+hook.js:608 Erro ao carregar permissões no AuthContext: TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at auth-context.tsx:66:30
+    at auth-context.tsx:106:11
+    at commitHookEffectListMount (chunk-GNC7SI6A.js?v=3b194358:16915:34)
+    at commitPassiveMountOnFiber (chunk-GNC7SI6A.js?v=3b194358:18156:19)
+    at commitPassiveMountEffects_complete (chunk-GNC7SI6A.js?v=3b194358:18129:17)
+    at commitPassiveMountEffects_begin (chunk-GNC7SI6A.js?v=3b194358:18119:15)
+    at commitPassiveMountEffects (chunk-GNC7SI6A.js?v=3b194358:18109:11)
+    at flushPassiveEffectsImpl (chunk-GNC7SI6A.js?v=3b194358:19490:11)
+    at flushPassiveEffects (chunk-GNC7SI6A.js?v=3b194358:19447:22)
+overrideMethod @ hook.js:608Compreenda este erro
+:4001/api/dashboard/stats:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+:4001/api/inventory/summary:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+:4001/api/warehouses:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+:4001/api/products?limit=50:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+:4001/api/orders/recent:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+:4001/api/inventory/stock-alerts:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at auth-context.tsx:66:30
+    at auth-context.tsx:106:11
+    at commitHookEffectListMount (chunk-GNC7SI6A.js?v=3b194358:16915:34)
+    at commitPassiveMountOnFiber (chunk-GNC7SI6A.js?v=3b194358:18156:19)
+    at commitPassiveMountEffects_complete (chunk-GNC7SI6A.js?v=3b194358:18129:17)
+    at commitPassiveMountEffects_begin (chunk-GNC7SI6A.js?v=3b194358:18119:15)
+    at commitPassiveMountEffects (chunk-GNC7SI6A.js?v=3b194358:18109:11)
+    at flushPassiveEffectsImpl (chunk-GNC7SI6A.js?v=3b194358:19490:11)
+    at flushPassiveEffects (chunk-GNC7SI6A.js?v=3b194358:19447:22)Compreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at queryFn (performance-optimizer.ts:25:36)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a8.fetchQuery (@tanstack_react-query.js?v=3b194358:1834:15)
+    at _a8.prefetchQuery (@tanstack_react-query.js?v=3b194358:1837:17)Compreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at queryFn (performance-optimizer.ts:25:36)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a8.fetchQuery (@tanstack_react-query.js?v=3b194358:1834:15)
+    at _a8.prefetchQuery (@tanstack_react-query.js?v=3b194358:1837:17)Compreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at queryFn (performance-optimizer.ts:25:36)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a8.fetchQuery (@tanstack_react-query.js?v=3b194358:1834:15)
+    at _a8.prefetchQuery (@tanstack_react-query.js?v=3b194358:1837:17)Compreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at queryFn (performance-optimizer.ts:25:36)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a8.fetchQuery (@tanstack_react-query.js?v=3b194358:1834:15)
+    at _a8.prefetchQuery (@tanstack_react-query.js?v=3b194358:1837:17)Compreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at queryFn (performance-optimizer.ts:25:36)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a8.fetchQuery (@tanstack_react-query.js?v=3b194358:1834:15)
+    at _a8.prefetchQuery (@tanstack_react-query.js?v=3b194358:1837:17)Compreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at queryFn (performance-optimizer.ts:169:38)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a8.fetchQuery (@tanstack_react-query.js?v=3b194358:1834:15)
+    at _a8.prefetchQuery (@tanstack_react-query.js?v=3b194358:1837:17)Compreenda este erro
+favicon.ico:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+:4001/api/categories:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+:4001/api/suppliers:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at Object.getCategories (api.service.ts:194:28)
+    at queryFn (use-categories.ts:51:38)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a9.executeFetch_fn (@tanstack_react-query.js?v=3b194358:2288:51)Compreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at Object.getSuppliers (api.service.ts:282:28)
+    at queryFn (use-suppliers.ts:67:37)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a9.executeFetch_fn (@tanstack_react-query.js?v=3b194358:2288:51)Compreenda este erro
+:4001/api/products?page=1&limit=5&sortBy=name&sortOrder=asc:1  Failed to load resource: net::ERR_CONNECTION_REFUSEDCompreenda este erro
+frame_ant.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at window.fetch (frame_ant.js:2:12357)
+    at makeRequest (queryClient.ts:167:30)
+    at apiRequest (queryClient.ts:185:21)
+    at Object.getProducts (api.service.ts:111:28)
+    at queryFn (use-products.ts:69:36)
+    at Object.fetchFn [as fn] (@tanstack_react-query.js?v=3b194358:883:14)
+    at run (@tanstack_react-query.js?v=3b194358:511:49)
+    at Object.start (@tanstack_react-query.js?v=3b194358:554:9)
+    at _a4.fetch (@tanstack_react-query.js?v=3b194358:930:55)
+    at _a9.executeFetch_fn (@tanstack_react-query.js?v=3b194358:2288:51)Compreenda este erro
+error-handler.ts:206 🚨 Erro em Ativar Produto
+hook.js:608 Código: UNKNOWN_ERROR
+overrideMethod @ hook.js:608Compreenda este erro
+hook.js:608 Mensagem: Cannot read properties of undefined (reading 'name')
+overrideMethod @ hook.js:608Compreenda este erro
+hook.js:608 Detalhes: TypeError: Cannot read properties of undefined (reading 'name')
+    at Object.onSuccess (http://localhost:3000/src/hooks/api/use-products.ts?t=1757171753270:137:84)
+    at _a6.execute (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=3b194358:1286:73)
+    at async handleActivate (http://localhost:3000/src/pages/products.tsx?t=1757171753270:127:9)
+overrideMethod @ hook.js:608Compreenda este erro
+hook.js:608 Timestamp: 2025-09-06T16:06:32.705Z
+overrideMethod @ hook.js:608Compreenda este erro

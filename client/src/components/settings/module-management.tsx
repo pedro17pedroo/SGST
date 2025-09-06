@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useModules } from '@/contexts/module-context';
 import { apiRequest } from '@/lib/queryClient';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface ModuleInfo {
   id: string;
@@ -15,40 +16,40 @@ interface ModuleInfo {
   canDisable: boolean;
 }
 
-export function ModuleManagement() {
-  const [modules, setModules] = useState<ModuleInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+export const ModuleManagement = React.memo(function ModuleManagement() {
   const { toast } = useToast();
   const { reloadConfiguration } = useModules();
+  const queryClient = useQueryClient();
 
-  const fetchModules = async () => {
-    try {
-      const response = await apiRequest('GET', '/modules');
-      const data = await response.json();
-      setModules(data);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar a lista de módulos",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Buscar módulos com useQuery
+  const fetchModulesQuery = useCallback(async () => {
+    const response = await apiRequest('GET', '/api/modules');
+    if (!response.ok) throw new Error('Não foi possível carregar a lista de módulos');
+    return response.json();
+  }, []);
 
-  const toggleModule = async (moduleId: string, enable: boolean) => {
-    try {
+  const { data: modules = [], isLoading: loading, error } = useQuery({
+    queryKey: ['/api/modules'],
+    queryFn: fetchModulesQuery,
+    staleTime: 60000, // Cache por 1 minuto
+  });
+
+  // Mutation para toggle de módulos
+  const toggleModuleMutation = useMutation({
+    mutationFn: async ({ moduleId, enable }: { moduleId: string; enable: boolean }) => {
       const action = enable ? 'enable' : 'disable';
-      const response = await apiRequest('POST', `/modules/${moduleId}/${action}`);
-      const result = await response.json();
+      const response = await apiRequest('POST', `/api/modules/${moduleId}/${action}`);
+      if (!response.ok) throw new Error('Erro ao alterar módulo');
+      return response.json();
+    },
+    onSuccess: async (result) => {
       toast({
         title: "Sucesso",
         description: result.message
       });
       
-      // Atualizar lista de módulos
-      await fetchModules();
+      // Invalidar cache e recarregar dados
+      await queryClient.invalidateQueries({ queryKey: ['/api/modules'] });
       
       // Recarregar configuração do frontend
       await reloadConfiguration();
@@ -60,18 +61,30 @@ export function ModuleManagement() {
           variant: "default"
         });
       }
-    } catch (error) {
+    },
+    onError: (error) => {
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive"
       });
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchModules();
-  }, []);
+  const toggleModule = useCallback((moduleId: string, enable: boolean) => {
+    toggleModuleMutation.mutate({ moduleId, enable });
+  }, [toggleModuleMutation]);
+
+  // Mostrar erro se houver
+  React.useEffect(() => {
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a lista de módulos",
+        variant: "destructive"
+      });
+    }
+  }, [error, toast]);
 
   if (loading) {
     return (
@@ -89,8 +102,11 @@ export function ModuleManagement() {
     );
   }
 
-  const enabledModules = modules.filter(m => m.enabled);
-  const disabledModules = modules.filter(m => !m.enabled);
+  // Memoizar filtros para evitar recálculos
+  const { enabledModules, disabledModules } = useMemo(() => ({
+    enabledModules: modules.filter((m: ModuleInfo) => m.enabled),
+    disabledModules: modules.filter((m: ModuleInfo) => !m.enabled)
+  }), [modules]);
 
   return (
     <div className="space-y-6">
@@ -108,7 +124,7 @@ export function ModuleManagement() {
                 Módulos Ativos ({enabledModules.length})
               </h3>
               <div className="space-y-2">
-                {enabledModules.map((module) => (
+                {enabledModules.map((module: ModuleInfo) => (
                   <div key={module.id} className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium text-green-800 dark:text-green-200">
@@ -133,7 +149,7 @@ export function ModuleManagement() {
                 Módulos Inativos ({disabledModules.length})
               </h3>
               <div className="space-y-2">
-                {disabledModules.map((module) => (
+                {disabledModules.map((module: ModuleInfo) => (
                   <div key={module.id} className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -163,7 +179,7 @@ export function ModuleManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            {modules.map((module) => (
+            {modules.map((module: ModuleInfo) => (
               <div key={module.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium">{module.name}</h4>
@@ -189,4 +205,4 @@ export function ModuleManagement() {
       </Card>
     </div>
   );
-}
+})

@@ -1,5 +1,5 @@
-import React from 'react';
-import { usePermissions } from '../../hooks/use-permissions';
+import React, { useMemo } from 'react';
+import { useAuthPermissions } from '../../hooks/use-auth-permissions';
 import { useAuth } from '../../contexts/auth-context';
 
 interface PermissionGuardProps {
@@ -14,7 +14,7 @@ interface PermissionGuardProps {
   showForUnauthenticated?: boolean;
 }
 
-export function PermissionGuard({
+export const PermissionGuard = React.memo(function PermissionGuard({
   permission,
   permissions = [],
   requireAll = false,
@@ -25,71 +25,90 @@ export function PermissionGuard({
   fallback = null,
   showForUnauthenticated = false
 }: PermissionGuardProps) {
-  const { user, isAuthenticated } = useAuth();
-  const { hasPermission, hasAnyPermission, hasAllPermissions, hasModuleAccess, canCreate, canUpdate, canDelete } = usePermissions();
+  const { user, isAuthenticated, isReady } = useAuth();
+  const { hasPermission, hasAnyPermission, hasAllPermissions, hasModuleAccess, isLoading } = useAuthPermissions();
 
-  // Se não estiver autenticado
-  if (!isAuthenticated) {
-    return showForUnauthenticated ? <>{children}</> : <>{fallback}</>;
-  }
+  const hasAccess = useMemo(() => {
+    // Se deve mostrar para usuários não autenticados
+    if (!isAuthenticated && showForUnauthenticated) {
+      return true;
+    }
 
-  // Verificar roles se especificado
-  if (roles.length > 0) {
-    const hasRole = user && roles.includes(user.role);
-    if (!hasRole) {
-      return <>{fallback}</>;
+    // Se não está autenticado e não deve mostrar para não autenticados
+    if (!isAuthenticated) {
+      return false;
     }
-  }
 
-  // Verificar módulo e ação específica
-  if (module && action) {
-    let hasAccess = false;
-    
-    switch (action) {
-      case 'read':
-        hasAccess = hasModuleAccess(module);
-        break;
-      case 'create':
-        hasAccess = canCreate(module);
-        break;
-      case 'update':
-        hasAccess = canUpdate(module);
-        break;
-      case 'delete':
-        hasAccess = canDelete(module);
-        break;
+    // Se o sistema não está pronto (auth ou permissões carregando), não mostrar
+    if (!isReady || isLoading) {
+      return false;
     }
-    
-    if (!hasAccess) {
-      return <>{fallback}</>;
-    }
-  }
 
-  // Verificar permissão única
-  if (permission) {
-    if (!hasPermission(permission)) {
-      return <>{fallback}</>;
+    // Verificar roles se especificadas
+    if (roles && roles.length > 0) {
+      if (!user?.role || !roles.includes(user.role)) {
+        return false;
+      }
     }
-  }
 
-  // Verificar lista de permissões
-  if (permissions.length > 0) {
-    const hasRequiredPermissions = requireAll 
-      ? hasAllPermissions(permissions)
-      : hasAnyPermission(permissions);
-    
-    if (!hasRequiredPermissions) {
-      return <>{fallback}</>;
+    // Verificar módulo se especificado
+    if (module) {
+      if (!hasModuleAccess(module)) {
+        return false;
+      }
     }
+
+    // Verificar permissão específica
+    if (permission) {
+      return hasPermission(permission);
+    }
+
+    // Verificar lista de permissões
+    if (permissions && permissions.length > 0) {
+      if (requireAll) {
+        return hasAllPermissions(permissions);
+      } else {
+        return hasAnyPermission(permissions);
+      }
+    }
+
+    // Verificar permissão baseada em módulo e ação
+    if (module && action) {
+      const modulePermission = `${module}.${action}`;
+      return hasPermission(modulePermission);
+    }
+
+    // Se chegou até aqui sem especificar critérios, permitir acesso
+    return true;
+  }, [
+    isAuthenticated,
+    isReady,
+    showForUnauthenticated,
+    user?.role,
+    roles,
+    module,
+    permission,
+    permissions,
+    requireAll,
+    action,
+    isLoading,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+    hasModuleAccess
+  ]);
+
+  if (!hasAccess) {
+    return <>{fallback}</>;
   }
 
   return <>{children}</>;
-}
+});
 
 // Hook para verificar permissões em componentes
 export function usePermissionCheck() {
   const { user, isAuthenticated } = useAuth();
-  const permissions = usePermissions();
+  const permissions = useAuthPermissions();
 
   const checkPermission = (
     permission?: string,
@@ -109,19 +128,9 @@ export function usePermissionCheck() {
 
     // Verificar módulo e ação
     if (module && action) {
-      switch (action) {
-        case 'read':
-          if (!permissions.hasModuleAccess(module)) return false;
-          break;
-        case 'create':
-          if (!permissions.canCreate(module)) return false;
-          break;
-        case 'update':
-          if (!permissions.canUpdate(module)) return false;
-          break;
-        case 'delete':
-          if (!permissions.canDelete(module)) return false;
-          break;
+      const modulePermission = `${module}.${action}`;
+      if (!permissions.hasPermission(modulePermission)) {
+        return false;
       }
     }
 

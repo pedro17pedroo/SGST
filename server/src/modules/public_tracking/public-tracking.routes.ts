@@ -4,8 +4,10 @@ import { moduleGuard } from '../../middleware/module-guard';
 
 const router = Router();
 
-// Aplicar middleware de proteção do módulo
+// Aplicar middleware de proteção do módulo apenas para verificar se está ativo
 router.use(moduleGuard('public_tracking'));
+
+// NOTA: Estas rotas são PÚBLICAS - não aplicar middleware de autenticação
 
 // Rotas públicas de rastreamento (sem autenticação)
 router.get('/track/:trackingNumber', PublicTrackingController.trackShipment);

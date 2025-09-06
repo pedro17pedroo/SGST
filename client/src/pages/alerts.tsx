@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +11,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
+import { 
+  useAlerts, 
+  useCreateAlert, 
+  useAcknowledgeAlert, 
+  useResolveAlert,
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+  type Alert,
+  type NotificationPreference
+  // type AlertFormData, // Removido - não utilizado
+  // type NotificationPreferenceFormData // Removido - não utilizado
+} from "@/hooks/api/use-alerts";
 import { 
   Bell, 
   AlertTriangle, 
@@ -56,47 +67,6 @@ const notificationPreferenceSchema = z.object({
   threshold: z.any().optional(),
 });
 
-interface Alert {
-  id: string;
-  type: "low_stock" | "reorder_point" | "expiry" | "quality" | "system";
-  priority: "low" | "medium" | "high" | "critical";
-  title: string;
-  message: string;
-  status: "active" | "acknowledged" | "resolved" | "dismissed";
-  entityType?: "product" | "warehouse" | "order" | "supplier";
-  entityId?: string;
-  entityName?: string;
-  user?: {
-    id: string;
-    username: string;
-  };
-  acknowledgedBy?: {
-    id: string;
-    username: string;
-  };
-  resolvedBy?: {
-    id: string;
-    username: string;
-  };
-  metadata?: any;
-  scheduledFor?: string;
-  expiresAt?: string;
-  createdAt: string;
-  acknowledgedAt?: string;
-  resolvedAt?: string;
-}
-
-interface NotificationPreference {
-  id: string;
-  userId: string;
-  alertType: string;
-  channel: "email" | "sms" | "push" | "in_app";
-  enabled: boolean;
-  threshold?: any;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export default function AlertsPage() {
 
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
@@ -104,8 +74,7 @@ export default function AlertsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  // const { toast } = useToast();
 
   const alertForm = useForm<z.infer<typeof alertSchema>>({
     resolver: zodResolver(alertSchema),
@@ -131,188 +100,64 @@ export default function AlertsPage() {
     },
   });
 
-  // Get alerts
-  const { data: alerts, isLoading: isLoadingAlerts } = useQuery({
-    queryKey: ['/api/alerts'],
-    queryFn: async () => {
-      // Demo data for now - replace with actual API call
-      return [
-        {
-          id: 'alert-001',
-          type: 'low_stock' as const,
-          priority: 'high' as const,
-          title: 'Stock baixo detectado',
-          message: 'O produto "Smartphone Samsung Galaxy A54" está com stock baixo (2 unidades restantes)',
-          status: 'active' as const,
-          entityType: 'product' as const,
-          entityId: '1',
-          entityName: 'Smartphone Samsung Galaxy A54',
-          user: { id: 'user-001', username: 'João Admin' },
-          metadata: { currentStock: 2, minLevel: 10, productSku: 'SPH-001' },
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 'alert-002',
-          type: 'reorder_point' as const,
-          priority: 'medium' as const,
-          title: 'Ponto de recompra atingido',
-          message: 'O produto "Monitor LG 24\\" está no ponto de recompra',
-          status: 'acknowledged' as const,
-          entityType: 'product' as const,
-          entityId: '3',
-          entityName: 'Monitor LG 24" Full HD',
-          acknowledgedBy: { id: 'user-001', username: 'João Admin' },
-          metadata: { currentStock: 5, reorderPoint: 5, productSku: 'MON-003' },
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          acknowledgedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'alert-003',
-          type: 'quality' as const,
-          priority: 'critical' as const,
-          title: 'Problema de qualidade reportado',
-          message: 'Múltiplas devoluções por defeito no produto "Fones JBL Tune 510BT"',
-          status: 'active' as const,
-          entityType: 'product' as const,
-          entityId: '4',
-          entityName: 'Fones JBL Tune 510BT',
-          metadata: { returnCount: 3, defectType: 'audio_issues', productSku: 'FON-004' },
-          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'alert-004',
-          type: 'system' as const,
-          priority: 'low' as const,
-          title: 'Backup concluído',
-          message: 'Backup diário da base de dados concluído com sucesso',
-          status: 'resolved' as const,
-          resolvedBy: { id: 'system', username: 'Sistema' },
-          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-          resolvedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-        }
-      ] as Alert[];
-    }
-  });
+  // Hooks de API
+  const { data: alerts, isLoading: isLoadingAlerts } = useAlerts();
+  const { data: preferences } = useNotificationPreferences();
+  const createAlertMutation = useCreateAlert();
+  const acknowledgeAlertMutation = useAcknowledgeAlert();
+  const resolveAlertMutation = useResolveAlert();
+  const updatePreferencesMutation = useUpdateNotificationPreferences();
 
-  // Get notification preferences
-  const { data: preferences } = useQuery({
-    queryKey: ['/api/notification-preferences'],
-    queryFn: async () => {
-      // Demo data for now - replace with actual API call
-      return [
-        {
-          id: 'pref-001',
-          userId: 'user-001',
-          alertType: 'low_stock',
-          channel: 'email' as const,
-          enabled: true,
-          threshold: { minLevel: 10 },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 'pref-002',
-          userId: 'user-001',
-          alertType: 'low_stock',
-          channel: 'in_app' as const,
-          enabled: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: 'pref-003',
-          userId: 'user-001',
-          alertType: 'quality',
-          channel: 'email' as const,
-          enabled: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      ] as NotificationPreference[];
-    }
-  });
+  // Funções de manipulação
+  const handleCreateAlert = (data: z.infer<typeof alertSchema>) => {
+    createAlertMutation.mutate(data, {
+      onSuccess: () => {
+        setIsAlertDialogOpen(false);
+        alertForm.reset();
+      }
+    });
+  };
 
-  // Create alert mutation
-  const createAlertMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof alertSchema>) => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { id: 'new-alert', ...data };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
-      toast({
-        title: "Alerta criado com sucesso!",
-        description: "O alerta foi registado no sistema.",
-      });
-      setIsAlertDialogOpen(false);
-      alertForm.reset();
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Erro ao criar alerta",
-        description: error.message,
-      });
-    }
-  });
+  const handleAcknowledgeAlert = (alertId: string) => {
+    acknowledgeAlertMutation.mutate(alertId);
+  };
 
-  // Acknowledge alert mutation
-  const acknowledgeAlertMutation = useMutation({
-    mutationFn: async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
-      toast({
-        title: "Alerta reconhecido",
-        description: "O alerta foi marcado como reconhecido.",
-      });
-    },
-  });
+  const handleResolveAlert = (alertId: string) => {
+    resolveAlertMutation.mutate(alertId);
+  };
 
-  // Resolve alert mutation
-  const resolveAlertMutation = useMutation({
-    mutationFn: async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
-      toast({
-        title: "Alerta resolvido",
-        description: "O alerta foi marcado como resolvido.",
-      });
-    },
-  });
+  const handleSavePreference = (data: z.infer<typeof notificationPreferenceSchema>) => {
+    // Adaptar dados para o formato esperado pelo hook
+    const preferenceData = {
+      userId: 'current-user', // Substituir pelo ID do usuário atual
+      preferences: [data]
+    };
+    updatePreferencesMutation.mutate(preferenceData, {
+      onSuccess: () => {
+        setIsPreferencesDialogOpen(false);
+        preferenceForm.reset();
+      }
+    });
+  };
 
-  // Save notification preference mutation
-  const savePreferenceMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof notificationPreferenceSchema>) => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { id: 'new-preference', ...data };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notification-preferences'] });
-      toast({
-        title: "Preferências atualizadas!",
-        description: "As suas preferências de notificação foram guardadas.",
-      });
-      setIsPreferencesDialogOpen(false);
-      preferenceForm.reset();
-    },
-  });
+
+
+
+
+
+
+
+
+
+
+
 
   const onAlertSubmit = (data: z.infer<typeof alertSchema>) => {
-    createAlertMutation.mutate(data);
+    handleCreateAlert(data);
   };
 
   const onPreferenceSubmit = (data: z.infer<typeof notificationPreferenceSchema>) => {
-    savePreferenceMutation.mutate(data);
+    handleSavePreference(data);
   };
 
   const getPriorityIcon = (priority: string) => {
@@ -407,7 +252,8 @@ export default function AlertsPage() {
     }
   };
 
-  const filteredAlerts = alerts?.filter(alert => {
+  const alertsData = Array.isArray(alerts) ? alerts : alerts?.data || [];
+  const filteredAlerts = alertsData.filter((alert: Alert) => {
     const matchesSearch = 
       alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       alert.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -417,11 +263,11 @@ export default function AlertsPage() {
     const matchesStatus = filterStatus === "all" || alert.status === filterStatus;
 
     return matchesSearch && matchesPriority && matchesStatus;
-  }) || [];
+  });
 
-  const activeAlertsCount = alerts?.filter(a => a.status === "active").length || 0;
-  const acknowledgedAlertsCount = alerts?.filter(a => a.status === "acknowledged").length || 0;
-  const resolvedAlertsCount = alerts?.filter(a => a.status === "resolved").length || 0;
+  const activeAlertsCount = alertsData.filter((a: Alert) => a.status === "active").length;
+  const acknowledgedAlertsCount = alertsData.filter((a: Alert) => a.status === "acknowledged").length;
+  const resolvedAlertsCount = alertsData.filter((a: Alert) => a.status === "resolved").length;
 
   return (
     <div className="space-y-6 p-6">
@@ -450,7 +296,7 @@ export default function AlertsPage() {
               <div className="space-y-4">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Canais de Notificação</h3>
-                  {preferences?.map((pref) => (
+                  {(Array.isArray(preferences) ? preferences : preferences?.data || []).map((pref: NotificationPreference) => (
                     <div key={pref.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center space-x-3">
                         {getChannelIcon(pref.channel)}
@@ -536,7 +382,7 @@ export default function AlertsPage() {
                       </Button>
                       <Button 
                         type="submit" 
-                        disabled={savePreferenceMutation.isPending}
+                        disabled={updatePreferencesMutation.isPending}
                         data-testid="button-save-preferences"
                       >
                         Guardar Preferência
@@ -806,7 +652,7 @@ export default function AlertsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredAlerts.map((alert) => (
+            {filteredAlerts.map((alert: Alert) => (
               <div 
                 key={alert.id} 
                 className="border border-border rounded-lg p-4 space-y-3"
@@ -857,7 +703,7 @@ export default function AlertsPage() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => acknowledgeAlertMutation.mutate()}
+                          onClick={() => handleAcknowledgeAlert(alert.id)}
                           disabled={acknowledgeAlertMutation.isPending}
                           data-testid={`acknowledge-alert-${alert.id}`}
                         >
@@ -866,7 +712,7 @@ export default function AlertsPage() {
                         </Button>
                         <Button 
                           size="sm"
-                          onClick={() => resolveAlertMutation.mutate()}
+                          onClick={() => handleResolveAlert(alert.id)}
                           disabled={resolveAlertMutation.isPending}
                           data-testid={`resolve-alert-${alert.id}`}
                         >
@@ -878,7 +724,7 @@ export default function AlertsPage() {
                     {alert.status === 'acknowledged' && (
                       <Button 
                         size="sm"
-                        onClick={() => resolveAlertMutation.mutate()}
+                        onClick={() => handleResolveAlert(alert.id)}
                         disabled={resolveAlertMutation.isPending}
                         data-testid={`resolve-acknowledged-alert-${alert.id}`}
                       >

@@ -177,7 +177,7 @@ export function AddCustomerModal({
                 Informações Básicas
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="customerType"
@@ -227,7 +227,7 @@ export function AddCustomerModal({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="email"
@@ -263,7 +263,7 @@ export function AddCustomerModal({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="phone"
@@ -327,7 +327,7 @@ export function AddCustomerModal({
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="city"
@@ -408,18 +408,20 @@ export function AddCustomerModal({
               )}
             />
 
-            <DialogFooter>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={handleCancel}
                 disabled={createCustomerMutation.isPending}
+                className="w-full sm:w-auto order-2 sm:order-1"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={createCustomerMutation.isPending}
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
                 {createCustomerMutation.isPending ? "Criando..." : "Criar Cliente"}
               </Button>

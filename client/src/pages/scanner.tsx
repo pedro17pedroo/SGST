@@ -123,7 +123,7 @@ export default function ScannerPage() {
           });
         },
         (errorMessage) => {
-          console.log(`QR Code scanning failed: ${errorMessage}`);
+  
         }
       );
 

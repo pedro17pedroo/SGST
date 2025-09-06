@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Limpar Storage</title>
+</head>
+<body>
+    <h1>Limpando Storage...</h1>
+    <script>
+        // Limpar localStorage
+        localStorage.clear();
+        
+        // Limpar sessionStorage
+        sessionStorage.clear();
+        
+        // Limpar cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        console.log('Storage limpo!');
+        alert('Storage limpo! Redirecionando para login...');
+        
+        // Redirecionar para login
+        setTimeout(() => {
+            window.location.href = 'http://localhost:3000/login';
+        }, 1000);
+    </script>
+</body>
+</html>

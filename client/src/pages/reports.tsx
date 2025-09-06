@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
 import { FileText, TrendingUp, Package, DollarSign, Download } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { useSalesReport, useInventoryReport, usePerformanceReport } from "@/hooks/api/use-reports";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,17 +45,17 @@ interface StockValuationItem {
   totalRetailValue: number;
 }
 
-interface StockValuationSummary {
-  totalProducts: number;
-  totalUnits: number;
-  totalRetailValue: number;
-  totalPotentialProfit: number;
-}
+// interface StockValuationSummary { // Removido - não utilizado
+//   totalProducts: number;
+//   totalUnits: number;
+//   totalRetailValue: number;
+//   totalPotentialProfit: number;
+// }
 
-interface StockValuationData {
-  summary: StockValuationSummary;
-  items: StockValuationItem[];
-}
+// interface StockValuationData { // Removido - não utilizado
+//   summary: StockValuationSummary;
+//   items: StockValuationItem[];
+// }
 
 interface SupplierPerformanceItem {
   supplierName: string;
@@ -101,76 +100,44 @@ function ReportCard({ title, value, change, icon: Icon, color }: {
 export default function Reports() {
   const [dateRange, setDateRange] = useState("30");
 
-  // Real API queries for reports
+  // Parâmetros para os relatórios baseados no período selecionado - memoizados para evitar requisições infinitas
+  const reportParams = useMemo(() => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - parseInt(dateRange));
+    
+    return {
+      startDate: startDate.toISOString().split('T')[0], // Usar apenas a data, sem timestamp
+      endDate: endDate.toISOString().split('T')[0],
+      limit: 10
+    };
+  }, [dateRange]);
 
-  const { data: inventoryTurnover, isLoading: isLoadingTurnover } = useQuery<InventoryTurnoverItem[]>({
-    queryKey: ["/api/reports/inventory-turnover", dateRange],
-    queryFn: async () => {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - parseInt(dateRange));
-      
-      const params = new URLSearchParams({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString()
-      });
-      
-      const response = await apiRequest('GET', `/api/reports/inventory-turnover?${params}`);
-      return await response.json();
+  // Hooks de relatórios centralizados
+  const { data: salesReport, isLoading: isLoadingSales } = useSalesReport(reportParams);
+  const { data: inventoryReport, isLoading: isLoadingInventory } = useInventoryReport(reportParams);
+  const { data: performanceReport, isLoading: isLoadingPerformance } = usePerformanceReport(reportParams);
+
+  // Extrair dados específicos dos relatórios
+  const inventoryTurnover = inventoryReport?.data?.topMovingProducts || [];
+  const obsoleteInventory = inventoryReport?.data?.outOfStockItems || [];
+  const productPerformance = performanceReport?.data || [];
+  const stockValuation = {
+    summary: {
+      totalProducts: inventoryReport?.data?.totalProducts || 0,
+      totalUnits: inventoryReport?.data?.totalProducts || 0,
+      totalRetailValue: parseFloat(inventoryReport?.data?.totalValue?.replace(/[^0-9.-]+/g, '') || '0'),
+      totalPotentialProfit: 0
     },
-  });
+    items: []
+  };
+  const supplierPerformance = salesReport?.data?.salesByCategory || [];
 
-  const { data: obsoleteInventory, isLoading: isLoadingObsolete } = useQuery<ObsoleteInventoryItem[]>({
-    queryKey: ["/api/reports/obsolete-inventory", dateRange],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        daysWithoutMovement: dateRange,
-        minValue: "1000"
-      });
-      
-      const response = await apiRequest('GET', `/api/reports/obsolete-inventory?${params}`);
-      return await response.json();
-    },
-  });
-
-  const { data: productPerformance, isLoading: isLoadingPerformance } = useQuery<ProductPerformanceItem[]>({
-    queryKey: ["/api/reports/product-performance", dateRange],
-    queryFn: async () => {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - parseInt(dateRange));
-      
-      const params = new URLSearchParams({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        limit: "10"
-      });
-      
-      const response = await apiRequest('GET', `/api/reports/product-performance?${params}`);
-      return await response.json();
-    },
-  });
-
-  const { data: stockValuation, isLoading: isLoadingValuation } = useQuery<StockValuationData>({
-    queryKey: ["/api/reports/stock-valuation"],
-  });
-
-  const { data: supplierPerformance, isLoading: isLoadingSuppliers } = useQuery<SupplierPerformanceItem[]>({
-    queryKey: ["/api/reports/supplier-performance", dateRange],
-    queryFn: async () => {
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - parseInt(dateRange));
-      
-      const params = new URLSearchParams({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString()
-      });
-      
-      const response = await apiRequest('GET', `/api/reports/supplier-performance?${params}`);
-      return await response.json();
-    },
-  });
+  // Estados de carregamento
+  const isLoadingTurnover = isLoadingInventory;
+  const isLoadingObsolete = isLoadingInventory;
+  const isLoadingValuation = isLoadingInventory;
+  const isLoadingSuppliers = isLoadingSales;
 
 
 

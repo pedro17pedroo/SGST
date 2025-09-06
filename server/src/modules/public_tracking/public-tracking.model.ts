@@ -3,35 +3,39 @@ import {
   shipments, orders, orderItems, products,
   type Shipment, type Order, type OrderItem, type Product
 } from '../../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 
 export class PublicTrackingModel {
   static async trackShipment(trackingNumber: string): Promise<(Shipment & { order?: any | null; orderItems?: Array<OrderItem & { product: Product }> }) | undefined> {
-    const shipmentResults = await db.select({
-      id: shipments.id,
-      shipmentNumber: shipments.shipmentNumber,
-      orderId: shipments.orderId,
-      status: shipments.status,
-      carrier: shipments.carrier,
-      trackingNumber: shipments.trackingNumber,
-      shippingAddress: shipments.shippingAddress,
-      estimatedDelivery: shipments.estimatedDelivery,
-      actualDelivery: shipments.actualDelivery,
-      userId: shipments.userId,
-      vehicleId: shipments.vehicleId, // Added missing vehicleId property
-      createdAt: shipments.createdAt,
-      order: orders
-    })
+    // Use Drizzle ORM to search by both tracking_number and shipment_number
+    const shipmentData = await db.select()
       .from(shipments)
-      .leftJoin(orders, eq(shipments.orderId, orders.id))
-      .where(eq(shipments.trackingNumber, trackingNumber))
+      .where(
+        or(
+          eq(shipments.trackingNumber, trackingNumber),
+          eq(shipments.shipmentNumber, trackingNumber)
+        )
+      )
       .limit(1);
-
-    if (shipmentResults.length === 0) {
+  
+    if (!shipmentData || shipmentData.length === 0) {
       return undefined;
     }
+  
+    const shipment = shipmentData[0];
 
-    const shipment = shipmentResults[0];
+    // Get order data if there's an order
+    let orderData = null;
+    if (shipment.orderId) {
+      const orderResult = await db.select()
+        .from(orders)
+        .where(eq(orders.id, shipment.orderId))
+        .limit(1);
+      
+      if (orderResult && orderResult.length > 0) {
+        orderData = orderResult[0];
+      }
+    }
 
     // Get order items if there's an order
     let orderItemsData: Array<OrderItem & { product: Product }> = [];
@@ -45,35 +49,52 @@ export class PublicTrackingModel {
         totalPrice: orderItems.totalPrice,
         product: products
       })
-        .from(orderItems)
-        .innerJoin(products, eq(orderItems.productId, products.id))
-        .where(eq(orderItems.orderId, shipment.orderId));
-
-      orderItemsData = itemResults.map(row => ({
-        id: row.id,
-        orderId: row.orderId,
-        productId: row.productId,
-        quantity: row.quantity,
-        unitPrice: row.unitPrice,
-        totalPrice: row.totalPrice,
-        product: row.product
-      }));
+      .from(orderItems)
+      .innerJoin(products, eq(orderItems.productId, products.id))
+      .where(eq(orderItems.orderId, shipment.orderId));
+      const itemRows = itemResults as any;
+      
+      if (itemRows && itemRows.length > 0) {
+        orderItemsData = itemRows.map((row: any) => ({
+          id: row.id,
+          orderId: row.order_id,
+          productId: row.product_id,
+          quantity: row.quantity,
+          unitPrice: row.unit_price,
+          totalPrice: row.total_price,
+          product: {
+            id: row.product_id,
+            name: row.product_name,
+            sku: row.product_sku,
+            description: row.product_description,
+            price: row.product_price,
+            barcode: null,
+            weight: null,
+            dimensions: null,
+            categoryId: null,
+            supplierId: null,
+            minStockLevel: 0,
+            isActive: true,
+            createdAt: null
+          }
+        }));
+      }
     }
 
     return {
-      id: shipment.id,
-      shipmentNumber: shipment.shipmentNumber,
-      orderId: shipment.orderId,
-      status: shipment.status,
-      carrier: shipment.carrier,
-      trackingNumber: shipment.trackingNumber,
-      shippingAddress: shipment.shippingAddress,
-      estimatedDelivery: shipment.estimatedDelivery,
-      actualDelivery: shipment.actualDelivery,
-      userId: shipment.userId,
-      vehicleId: shipment.vehicleId, // Added missing vehicleId property
-      createdAt: shipment.createdAt,
-      order: shipment.order || null,
+      id: shipmentData.id,
+      shipmentNumber: shipmentData.shipment_number,
+      orderId: shipmentData.order_id,
+      vehicleId: shipmentData.vehicle_id,
+      status: shipmentData.status,
+      carrier: shipmentData.carrier,
+      trackingNumber: shipmentData.tracking_number,
+      shippingAddress: shipmentData.shipping_address,
+      estimatedDelivery: shipmentData.estimated_delivery,
+      actualDelivery: shipmentData.actual_delivery,
+      userId: shipmentData.user_id,
+      createdAt: shipmentData.created_at,
+      order: orderData,
       orderItems: orderItemsData
     };
   }
@@ -133,19 +154,26 @@ export class PublicTrackingModel {
   }
 
   static async getProductLocation(barcode: string) {
-    // Implementação temporária
-    const product = await db.select()
-      .from(products)
-      .where(eq(products.barcode, barcode))
-      .limit(1);
+    // Implementação temporária usando SQL raw
+    const productQuery = sql`
+      SELECT id, name, sku, barcode
+      FROM products 
+      WHERE barcode = ${barcode}
+      LIMIT 1
+    `;
     
-    if (product.length === 0) {
+    const productResults = await db.execute(productQuery);
+    const productRows = productResults as any;
+    
+    if (!productRows || productRows.length === 0 || !productRows[0] || productRows[0].length === 0) {
       return null;
     }
     
+    const product = productRows[0][0];
+    
     return {
       barcode,
-      productName: product[0].name,
+      productName: product.name || 'Produto sem nome',
       location: {
         warehouse: 'Armazém Principal',
         zone: 'A',
@@ -158,19 +186,26 @@ export class PublicTrackingModel {
   }
 
   static async getProductJourney(barcode: string) {
-    // Implementação temporária
-    const product = await db.select()
-      .from(products)
-      .where(eq(products.barcode, barcode))
-      .limit(1);
+    // Implementação temporária usando SQL raw
+    const productQuery = sql`
+      SELECT id, name, sku, barcode
+      FROM products 
+      WHERE barcode = ${barcode}
+      LIMIT 1
+    `;
     
-    if (product.length === 0) {
+    const productResults = await db.execute(productQuery);
+    const productRows = productResults as any;
+    
+    if (!productRows || productRows.length === 0 || !productRows[0] || productRows[0].length === 0) {
       return null;
     }
     
+    const product = productRows[0][0];
+    
     return {
       barcode,
-      productName: product[0].name,
+      productName: product.name || 'Produto sem nome',
       journey: [
         {
           stage: 'received',

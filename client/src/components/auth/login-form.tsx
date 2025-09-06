@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Lock, User, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GPSPermissionDialog } from "@/components/gps/gps-permission-dialog";
-import { apiRequest } from "@/lib/queryClient";
+import { useLogin } from "@/hooks/api/use-auth";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Nome de utilizador deve ter pelo menos 3 caracteres"),
@@ -43,7 +43,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Loading state removed as it's not being used
   const [showGPSDialog, setShowGPSDialog] = useState(false);
   const [userInfo, setUserInfo] = useState<User | null>(null);
   const [tempAuthData, setTempAuthData] = useState<AuthData | null>(null);
@@ -58,52 +58,29 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-    
-    try {
-      const response = await apiRequest('POST', '/api/auth/login', {
-        username: data.username,
-        password: data.password
-      });
+  const loginMutation = useLogin();
 
-      const result = await response.json();
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      const response = await loginMutation.mutateAsync({
+        email: data.username,
+        password: data.password,
+      });
       
-      const userData = { 
-        id: result.user.id,
-        username: result.user.username, 
-        email: result.user.email || '',
-        role: result.user.role,
-        isActive: result.user.isActive || true
-      };
-      
-      const authData = {
-        user: userData,
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken
-      };
-      
-      // Verificar se GPS é obrigatório
-      if (result.requiresGPS) {
-        setUserInfo(userData);
+      if (response.success && response.data) {
+        const authData = response.data;
+        setUserInfo(authData.user);
         setTempAuthData(authData);
         setShowGPSDialog(true);
       } else {
-        toast({
-          title: "Login realizado com sucesso",
-          description: `Bem-vindo, ${result.user.username}!`,
-        });
-        onLogin(authData);
+        throw new Error(response.message || "Erro ao fazer login");
       }
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
       toast({
-        title: "Erro de conexão",
-        description: "Não foi possível conectar ao servidor. Tente novamente.",
+        title: "Erro de autenticação",
+        description: error.message || "Credenciais inválidas. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -159,9 +136,11 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                       <div className="relative">
                         <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
+                          {...field}
+                          type="text"
                           placeholder="Digite o seu nome de utilizador"
                           className="pl-10"
-                          {...field}
+                          disabled={loginMutation.isPending}
                           data-testid="input-username"
                         />
                       </div>
@@ -185,6 +164,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                           placeholder="Digite a sua palavra-passe"
                           className="pl-10 pr-10"
                           {...field}
+                          disabled={loginMutation.isPending}
                           data-testid="input-password"
                         />
                         <Button
@@ -193,6 +173,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                           size="sm"
                           className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
+                          disabled={loginMutation.isPending}
                           data-testid="button-toggle-password"
                         >
                           {showPassword ? (
@@ -217,6 +198,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        disabled={loginMutation.isPending}
                         data-testid="checkbox-accept-terms"
                       />
                     </FormControl>
@@ -241,10 +223,10 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isLoading}
+                disabled={loginMutation.isPending}
                 data-testid="button-login"
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {loginMutation.isPending ? "Entrando..." : "Entrar"}
               </Button>
             </form>
           </Form>

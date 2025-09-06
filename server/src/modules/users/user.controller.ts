@@ -160,7 +160,16 @@ export class UserController {
   static async getUserPermissions(req: Request, res: Response) {
     try {
       const { id } = req.params;
+      console.log('🔍 REQUISIÇÃO DE PERMISSÕES:', {
+        userId: id,
+        timestamp: new Date().toISOString()
+      });
       const permissions = await UserModel.getUserPermissions(id);
+      console.log('🔍 PERMISSÕES ENCONTRADAS:', {
+        userId: id,
+        permissionsCount: permissions.length,
+        permissions: permissions.map(p => p.name)
+      });
       res.json(permissions);
     } catch (error) {
       console.error('Error fetching user permissions:', error);

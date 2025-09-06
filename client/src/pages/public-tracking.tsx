@@ -87,12 +87,6 @@ function getStatusInfo(status: string) {
 
 async function fetchTrackingInfo(trackingNumber: string): Promise<TrackingInfo> {
   const response = await apiRequest('GET', `/api/public/track/${encodeURIComponent(trackingNumber)}`);
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Erro ao buscar informações de rastreamento');
-  }
-  
   return response.json();
 }
 

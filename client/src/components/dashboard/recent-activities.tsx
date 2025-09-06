@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Truck, AlertTriangle, Calendar } from "lucide-react";
+import { Plus, Truck, AlertTriangle, Calendar, Activity as ActivityIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { LoadingState, EmptyState, LoadingComponents } from "@/components/ui/loading-state";
 
 interface Activity {
   id: string;
@@ -106,41 +107,42 @@ export function RecentActivities({ activities, isLoading }: RecentActivitiesProp
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" data-testid="recent-activities">
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4" data-testid="activities-title">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6" data-testid="recent-activities">
+      <Card className="p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4" data-testid="activities-title">
           Atividades Recentes
         </h3>
-        <div className="space-y-4">
-          {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center space-x-3 pb-3 border-b border-border last:border-0 animate-pulse">
-                <div className="w-8 h-8 bg-muted rounded-full"></div>
-                <div className="flex-1 space-y-1">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
-              </div>
-            ))
-          ) : activities.length > 0 ? (
-            activities.slice(0, 5).map((activity) => {
+        <LoadingState
+          isLoading={isLoading}
+          isEmpty={activities.length === 0}
+          loadingComponent={<LoadingComponents.Activities count={3} />}
+          emptyComponent={
+            <EmptyState 
+              title="Nenhuma atividade recente"
+              description="Não há atividades para exibir no momento."
+              icon={<ActivityIcon className="h-12 w-12 text-muted-foreground" />}
+            />
+          }
+        >
+          <div className="space-y-3 sm:space-y-4">
+            {activities.slice(0, 5).map((activity) => {
               const Icon = getActivityIcon(activity.type);
               const iconColor = getActivityColor(activity.type);
 
               return (
                 <div 
                   key={activity.id} 
-                  className="flex items-center space-x-3 pb-3 border-b border-border last:border-0"
+                  className="flex items-start space-x-3 pb-3 border-b border-border last:border-0"
                   data-testid={`activity-${activity.id}`}
                 >
-                  <div className={`w-8 h-8 ${iconColor} rounded-full flex items-center justify-center`}>
-                    <Icon className="text-sm" />
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 ${iconColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground" data-testid={`activity-description-${activity.id}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-foreground break-words" data-testid={`activity-description-${activity.id}`}>
                       {activity.type === "in" ? "Entrada" : "Saída"} de {activity.quantity}x "{activity.product.name}"
                     </p>
-                    <p className="text-xs text-muted-foreground" data-testid={`activity-time-${activity.id}`}>
+                    <p className="text-xs text-muted-foreground mt-1" data-testid={`activity-time-${activity.id}`}>
                       {formatDistanceToNow(new Date(activity.createdAt), { 
                         addSuffix: true, 
                         locale: ptBR 
@@ -149,23 +151,19 @@ export function RecentActivities({ activities, isLoading }: RecentActivitiesProp
                   </div>
                 </div>
               );
-            })
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8" data-testid="no-activities">
-              Nenhuma atividade recente
-            </p>
-          )}
-        </div>
-        <Button variant="ghost" className="w-full mt-4" data-testid="view-all-activities">
+            })}
+          </div>
+        </LoadingState>
+        <Button variant="ghost" className="w-full mt-3 sm:mt-4" data-testid="view-all-activities">
           Ver todas as atividades
         </Button>
       </Card>
 
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4" data-testid="alerts-title">
+      <Card className="p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4" data-testid="alerts-title">
           Alertas Importantes
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {mockAlerts.map((alert) => {
             const Icon = alert.icon;
             const styles = getAlertStyles(alert.type);
@@ -173,13 +171,13 @@ export function RecentActivities({ activities, isLoading }: RecentActivitiesProp
             return (
               <div 
                 key={alert.id} 
-                className={`p-4 ${styles.container} border rounded-lg`}
+                className={`p-3 sm:p-4 ${styles.container} border rounded-lg`}
                 data-testid={`alert-${alert.id}`}
               >
                 <div className="flex items-start space-x-3">
-                  <Icon className={`${styles.icon} mt-1`} />
-                  <div>
-                    <p className="text-sm font-medium text-foreground" data-testid={`alert-title-${alert.id}`}>
+                  <Icon className={`${styles.icon} mt-1 w-4 h-4 flex-shrink-0`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-foreground" data-testid={`alert-title-${alert.id}`}>
                       {alert.title}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1" data-testid={`alert-description-${alert.id}`}>
@@ -187,7 +185,7 @@ export function RecentActivities({ activities, isLoading }: RecentActivitiesProp
                     </p>
                     {alert.action && (
                       <button 
-                        className={`text-xs ${styles.action} font-medium mt-2`}
+                        className={`text-xs ${styles.action} font-medium mt-2 hover:underline`}
                         data-testid={`alert-action-${alert.id}`}
                       >
                         {alert.action}

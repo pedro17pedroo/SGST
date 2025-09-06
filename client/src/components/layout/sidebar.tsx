@@ -29,10 +29,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useModules } from "@/contexts/module-context";
-import { PermissionGuard } from "@/components/auth/permission-guard";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile.tsx";
 import { useState, useEffect } from "react";
 
 // Mapeamento de ícones para usar com os módulos
@@ -66,6 +66,8 @@ export function Sidebar() {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   
+  // Debug removido para melhor performance
+  
   // Fechar sidebar mobile ao navegar
   useEffect(() => {
     setIsOpen(false);
@@ -77,6 +79,18 @@ export function Sidebar() {
       setIsOpen(false);
     }
   }, [isMobile]);
+
+  // Fechar sidebar com tecla Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && isMobile) {
+        setIsOpen(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, isMobile]);
 
   const getRoleBadge = (role: string) => {
     const roleConfig = {
@@ -91,7 +105,7 @@ export function Sidebar() {
     <>
       {/* Menu hambúrguer mobile */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border p-4 flex items-center justify-between">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border p-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Box className="text-primary-foreground text-sm" />
@@ -102,7 +116,8 @@ export function Sidebar() {
             variant="ghost"
             size="sm"
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2"
+            className="p-2 hover:bg-accent"
+            aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
@@ -119,13 +134,13 @@ export function Sidebar() {
       
       {/* Sidebar */}
       <aside 
-        className={`bg-card border-r border-border flex flex-col h-full z-40 ${
+        className={`bg-card border-r border-border flex flex-col h-screen z-50 ${
           isMobile 
-            ? `fixed w-80 transform transition-transform duration-300 ${
-                isOpen ? 'translate-x-0' : '-translate-x-full'
+            ? `fixed w-80 transform transition-all duration-300 ease-in-out ${
+                isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'
               } top-16` 
-            : 'w-72 fixed'
-        }`} 
+            : 'w-72 fixed left-0 top-0'
+        }`}
         data-testid="sidebar"
       >
       {/* Header fixo - Logo e nome da empresa */}
@@ -147,53 +162,32 @@ export function Sidebar() {
           <div className="flex items-center justify-center py-8">
             <div className="text-sm text-muted-foreground">Carregando módulos...</div>
           </div>
-        ) : (
+        ) : enabledMenuItems && enabledMenuItems.length > 0 ? (
           enabledMenuItems.map((item) => {
             const Icon = iconMap[item.icon] || Box;
             const isActive = location === item.path || (location === "/" && item.path === "/dashboard");
             
-            // Mapear menu items para permissões de módulo
-            const getModuleForPath = (path: string): string => {
-              if (path === '/dashboard') return 'dashboard';
-              if (path === '/products') return 'products';
-              if (path === '/categories') return 'products';
-              if (path === '/inventory') return 'inventory';
-              if (path === '/orders') return 'orders';
-              if (path === '/warehouses') return 'warehouses';
-              if (path === '/suppliers') return 'suppliers';
-              if (path === '/users') return 'users';
-              if (path === '/roles') return 'roles';
-              if (path === '/fleet') return 'vehicles';
-              if (path === '/reports') return 'reports';
-              if (path === '/settings') return 'settings';
-              // Retornar o path sem a barra inicial como fallback
-              return path.substring(1);
-            };
-            
-            const module = getModuleForPath(item.path);
-            
+            // TODOS OS MENUS EXIBIDOS SEM VERIFICAÇÃO DE PERMISSÕES
             return (
-              <PermissionGuard 
+              <Link 
                 key={item.path}
-                module={module}
-                action="read"
-                fallback={null}
+                to={item.path}
+                className={`flex items-center space-x-3 px-3 py-2 rounded-md font-medium transition-colors ${
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                }`}
+                data-testid={`nav-${item.label.toLowerCase()}`}
               >
-                <Link 
-                  href={item.path}
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-md font-medium transition-colors ${
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
-                  data-testid={`nav-${item.label.toLowerCase()}`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              </PermissionGuard>
+                <Icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </Link>
             );
           })
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-sm text-muted-foreground">Nenhum menu disponível</div>
+          </div>
         )}
       </nav>
 

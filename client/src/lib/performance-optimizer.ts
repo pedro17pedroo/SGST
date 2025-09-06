@@ -25,7 +25,7 @@ export class PerformanceOptimizer {
             const response = await apiRequest('GET', query);
             return await response.json();
           } catch (error) {
-            console.warn(`Failed to prefetch ${query}: ${error}`);
+    
             throw error;
           }
         },
@@ -150,7 +150,7 @@ export class PerformanceOptimizer {
   // Preload data for predicted pages
   private static preloadPageData(path: string, queryClient: QueryClient) {
     const preloadQueries = {
-      '/products': ['/api/products?limit=20', '/api/categories', '/api/suppliers'],
+      '/products': ['/api/products?limit=20', '/api/products/categories', '/api/suppliers'],
       '/inventory': ['/api/inventory/summary', '/api/warehouses', '/api/inventory/stock-alerts'],
       '/orders': ['/api/orders/recent'],
       '/shipping': ['/api/shipping/active', '/api/shipping/carriers'],
@@ -225,10 +225,7 @@ export class PerformanceOptimizer {
           const navEntry = entry as PerformanceNavigationTiming;
           const totalTime = navEntry.loadEventEnd - navEntry.fetchStart;
           
-          console.log(`🚀 Page Load Performance: ${totalTime.toFixed(2)}ms`);
-          
           if (totalTime > 2000) {
-            console.warn('⚠️ Slow page load detected, optimizing...');
             this.performEmergencyOptimization();
           }
         }
@@ -262,13 +259,13 @@ export class PerformanceOptimizer {
     // Cleanup cache every 2 minutes
     setInterval(() => this.cleanupCache(), 120000);
     
-    console.log('🚀 UX Hiper-Rápida iniciada - Latência alvo < 200ms');
+
   }
 
   // Inicializar prefetch após autenticação
   static initializeAfterAuth(queryClient: QueryClient) {
     this.prefetchCriticalData(queryClient);
-    console.log('🔐 Prefetch iniciado após autenticação');
+
   }
 
   // Get performance metrics

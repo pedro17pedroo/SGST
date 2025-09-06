@@ -8,6 +8,8 @@ export class SettingsModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
+    app.use('/api/settings', settingsRoutes);
+    // Registrar rota de módulos diretamente em /api para compatibilidade
     app.use('/api', settingsRoutes);
     
     console.log(`✓ Módulo ${this.config.name} registrado`);

@@ -40,7 +40,7 @@ interface VehicleComboboxProps {
   className?: string
 }
 
-export function VehicleCombobox({
+export const VehicleCombobox = React.memo(function VehicleCombobox({
   value,
   onValueChange,
   onVehicleSelect,
@@ -53,39 +53,35 @@ export function VehicleCombobox({
   const [selectedVehicle, setSelectedVehicle] = React.useState<Vehicle | null>(null)
 
   // Buscar veículos disponíveis
+  const vehiclesQueryFn = React.useCallback(async () => {
+
+    const response = await apiRequest('GET', '/api/shipping/vehicles/available')
+    if (!response.ok) throw new Error('Erro ao buscar veículos')
+    const data = await response.json()
+
+    return data
+  }, [])
+
   const { data: vehicles = [], isLoading, error } = useQuery({
     queryKey: ['/api/shipping/vehicles/available'],
-    queryFn: async () => {
-      console.log('🚛 VehicleCombobox: Buscando veículos disponíveis')
-      const response = await apiRequest('GET', '/api/shipping/vehicles/available')
-      if (!response.ok) throw new Error('Erro ao buscar veículos')
-      const data = await response.json()
-      console.log('📊 VehicleCombobox: Veículos recebidos:', data)
-      return data
-    },
+    queryFn: vehiclesQueryFn,
     staleTime: 30000, // Cache por 30 segundos
   })
 
-  // Log de debug para acompanhar o estado
-  React.useEffect(() => {
-    console.log('🎯 VehicleCombobox Estado:', {
-      vehiclesCount: vehicles.length,
-      isLoading,
-      error: error?.message,
-      selectedVehicle: selectedVehicle?.licensePlate
-    })
-  }, [vehicles, isLoading, error, selectedVehicle])
+
 
   // Buscar veículo específico quando value muda
+  const currentVehicleQueryFn = React.useCallback(async () => {
+    if (!value) return null
+    
+    const response = await apiRequest('GET', `/api/fleet/vehicles/${value}`)
+    if (!response.ok) throw new Error('Erro ao buscar veículo')
+    return response.json()
+  }, [value])
+
   const { data: currentVehicle } = useQuery({
     queryKey: ['/api/fleet/vehicles', value],
-    queryFn: async () => {
-      if (!value) return null
-      
-      const response = await apiRequest('GET', `/api/fleet/vehicles/${value}`)
-      if (!response.ok) throw new Error('Erro ao buscar veículo')
-      return response.json()
-    },
+    queryFn: currentVehicleQueryFn,
     enabled: !!value && !selectedVehicle,
   })
 
@@ -233,4 +229,4 @@ export function VehicleCombobox({
       )}
     </div>
   )
-}
+})

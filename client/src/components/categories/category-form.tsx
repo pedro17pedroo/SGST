@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { createCategory, updateCategory } from "@/lib/api";
+import { useCreateCategory, useUpdateCategory } from "@/hooks/api/use-categories";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
@@ -39,13 +38,13 @@ interface Category {
 }
 
 interface CategoryFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   category?: Category;
-  onClose: () => void;
 }
 
-export function CategoryForm({ category, onClose }: CategoryFormProps) {
+export function CategoryForm({ open, onOpenChange, category }: CategoryFormProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const isEditing = !!category;
 
   const form = useForm<CategoryFormData>({
@@ -56,46 +55,46 @@ export function CategoryForm({ category, onClose }: CategoryFormProps) {
     },
   });
 
-  const createMutation = useMutation({
-    mutationFn: createCategory,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+  const createCategoryMutation = useCreateCategory();
+  
+  const handleCreateCategory = async (data: CategoryFormData) => {
+    try {
+      await createCategoryMutation.mutateAsync(data);
       toast({
         title: "Categoria criada",
         description: "A categoria foi criada com sucesso.",
       });
-      onClose();
-    },
-    onError: (error: any) => {
+      onOpenChange(false);
+      form.reset();
+    } catch (error: any) {
       toast({
         title: "Erro",
         description: error.message || "Erro ao criar categoria.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: CategoryFormData }) =>
-      updateCategory(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+  const updateCategoryMutation = useUpdateCategory();
+  
+  const handleUpdateCategory = async (data: CategoryFormData) => {
+    if (!category?.id) return;
+    
+    try {
+      await updateCategoryMutation.mutateAsync({ id: category.id, data });
       toast({
         title: "Categoria atualizada",
         description: "A categoria foi atualizada com sucesso.",
       });
-      onClose();
-    },
-    onError: (error: any) => {
+      onOpenChange(false);
+    } catch (error: any) {
       toast({
         title: "Erro",
         description: error.message || "Erro ao atualizar categoria.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   useEffect(() => {
     if (category) {
@@ -112,17 +111,17 @@ export function CategoryForm({ category, onClose }: CategoryFormProps) {
   }, [category, form]);
 
   const onSubmit = (data: CategoryFormData) => {
-    if (isEditing && category) {
-      updateMutation.mutate({ id: category.id, data });
+    if (category) {
+      handleUpdateCategory(data);
     } else {
-      createMutation.mutate(data);
+      handleCreateCategory(data);
     }
   };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending;
+  const isLoading = createCategoryMutation.isPending || updateCategoryMutation.isPending;
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
@@ -180,7 +179,7 @@ export function CategoryForm({ category, onClose }: CategoryFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={() => onOpenChange(false)}
                 disabled={isLoading}
                 data-testid="cancel-category-button"
               >

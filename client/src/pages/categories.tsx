@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Edit, Trash2, Package } from "lucide-react";
 import { CategoryForm } from "@/components/categories/category-form";
 import { useToast } from "@/hooks/use-toast";
-import { deleteCategory } from "@/lib/api";
+import { useCategories, useDeleteCategory } from "@/hooks/api/use-categories";
 
 interface Category {
   id: string;
@@ -21,30 +20,10 @@ export default function Categories() {
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: categories = [], isLoading } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteCategory(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      toast({
-        title: "Categoria eliminada",
-        description: "A categoria foi eliminada com sucesso.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao eliminar categoria.",
-        variant: "destructive",
-      });
-    },
-  });
+  const { data: categoriesResponse, isLoading } = useCategories();
+  const categories = categoriesResponse?.data || [];
+  const deleteMutation = useDeleteCategory();
 
   const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -197,15 +176,16 @@ export default function Categories() {
         </Card>
       </div>
 
-      {showForm && (
-        <CategoryForm
-          category={selectedCategory}
-          onClose={() => {
-            setShowForm(false);
+      <CategoryForm
+        open={showForm}
+        onOpenChange={(open) => {
+          setShowForm(open);
+          if (!open) {
             setSelectedCategory(undefined);
-          }}
-        />
-      )}
+          }
+        }}
+        category={selectedCategory}
+      />
     </div>
   );
 }

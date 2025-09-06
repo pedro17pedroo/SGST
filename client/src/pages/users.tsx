@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Shield, User as UserIcon, UserCheck, UserX } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,9 +15,15 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type User } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { 
+  useUsers, 
+  useCreateUser, 
+  useUpdateUser, 
+  useDeleteUser
+  // useUsersByRole // Removido - não utilizado
+} from "@/hooks/api/use-users";
 
 const userFormSchema = z.object({
   username: z.string().min(1, "Nome de usuário é obrigatório"),
@@ -104,76 +110,53 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
     }
   }, [open]);
 
-  const createMutation = useMutation({
-    mutationFn: async (data: UserFormData) => {
-      const { roleIds, ...userData } = data;
-      const response = await apiRequest("/api/users", "POST", userData);
-      const user = response as unknown as User;
-      
-      // Atribuir roles ao usuário
-      if (roleIds && Array.isArray(roleIds) && roleIds.length > 0) {
-        await apiRequest(`/api/users/${user.id}/roles`, "PUT", { roleIds: roleIds as string[] });
-      }
-      
-      return user;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+  const createUserMutation = useCreateUser();
+
+  const updateUserMutation = useUpdateUser();
+
+  const handleCreateUser = async (data: UserFormData) => {
+    try {
+      await createUserMutation.mutateAsync(data);
       setOpen(false);
       form.reset();
       toast({
         title: "Utilizador criado",
         description: "O utilizador foi criado com sucesso.",
       });
-    },
-    onError: () => {
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Não foi possível criar o utilizador.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: UserFormData) => {
-      const { password, roleIds, ...updateData } = data;
-      const userPayload = password ? { ...updateData, password } : updateData;
-      
-      const response = await apiRequest(`/api/users/${user?.id}`, "PUT", userPayload);
-      const updatedUser = response as unknown as User;
-      
-      // Atualizar roles do usuário
-      if (roleIds && Array.isArray(roleIds) && roleIds.length > 0) {
-        await apiRequest(`/api/users/${user?.id}/roles`, "PUT", { roleIds: roleIds as string[] });
-      }
-      
-      return updatedUser;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.id, "roles"] });
+  const handleUpdateUser = async (data: UserFormData) => {
+    if (!user?.id) return;
+    
+    try {
+      await updateUserMutation.mutateAsync({ id: user.id, data });
       setOpen(false);
       form.reset();
       toast({
         title: "Utilizador atualizado",
         description: "O utilizador foi atualizado com sucesso.",
       });
-    },
-    onError: () => {
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o utilizador.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   const onSubmit = (data: UserFormData) => {
     if (user) {
-      updateMutation.mutate(data);
+      handleUpdateUser(data);
     } else {
-      createMutation.mutate(data);
+      handleCreateUser(data);
     }
   };
 
@@ -333,10 +316,10 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
               </Button>
               <Button 
                 type="submit" 
-                disabled={createMutation.isPending || updateMutation.isPending}
+                disabled={createUserMutation.isPending || updateUserMutation.isPending}
                 data-testid="button-save-user"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                {createUserMutation.isPending || updateUserMutation.isPending ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </form>
@@ -348,26 +331,23 @@ function UserDialog({ user, trigger }: { user?: User; trigger: React.ReactNode }
 
 function UserCard({ user }: { user: User }) {
   const { toast } = useToast();
+  const deleteUserMutation = useDeleteUser();
 
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest(`/api/users/${user.id}`, "DELETE");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+  const handleDeleteUser = async () => {
+    try {
+      await deleteUserMutation.mutateAsync(user.id);
       toast({
         title: "Utilizador removido",
         description: "O utilizador foi removido com sucesso.",
       });
-    },
-    onError: () => {
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Não foi possível remover o utilizador.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   const getRoleLabel = (role: string) => {
     const roles = {
@@ -417,8 +397,8 @@ function UserCard({ user }: { user: User }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
+              onClick={handleDeleteUser}
+              disabled={deleteUserMutation.isPending}
               data-testid={`button-delete-${user.id}`}
             >
               <Trash2 className="h-4 w-4" />
@@ -452,9 +432,8 @@ function UserCard({ user }: { user: User }) {
 export default function Users() {
   const [search, setSearch] = useState("");
   
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["/api/users"],
-  });
+  const { data: usersResponse, isLoading } = useUsers();
+  const users = usersResponse?.data || [];
 
   const filteredUsers = users.filter((user: User) =>
     user.username.toLowerCase().includes(search.toLowerCase()) ||

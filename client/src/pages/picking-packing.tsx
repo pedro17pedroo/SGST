@@ -69,16 +69,6 @@ interface Product {
   price: number;
 }
 
-interface ProductLocation {
-  id: string;
-  productId: string;
-  warehouseId: string;
-  zone?: string;
-  shelf?: string;
-  bin?: string;
-  product: Product;
-}
-
 interface Warehouse {
   id: string;
   name: string;
@@ -121,36 +111,7 @@ interface PickingList {
   notes?: string;
 }
 
-interface PackingTask {
-  id: string;
-  pickingList: {
-    id: string;
-    orderNumber: string;
-  };
-  packageType: string;
-  status: "pending" | "in_progress" | "completed";
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  trackingNumber?: string;
-  packedBy?: {
-    id: string;
-    username: string;
-  };
-  createdAt: string;
-  completedAt?: string;
-  notes?: string;
-}
 
-interface Warehouse {
-  id: string;
-  name: string;
-  address?: string;
-  isActive: boolean;
-}
 
 export default function PickingPackingPage() {
   const [activeTab, setActiveTab] = useState("picking");
@@ -289,12 +250,8 @@ export default function PickingPackingPage() {
   });
 
   const onPickingSubmit = (data: z.infer<typeof pickingListSchema>) => {
-    console.log('onPickingSubmit chamado com dados:', data);
-    console.log('pickingItems atual:', pickingItems);
-    
     // Validar se há pelo menos um item
     if (pickingItems.length === 0) {
-      console.log('Erro: Nenhum item na lista');
       toast({
         variant: "destructive",
         title: "Erro de validação",
@@ -305,10 +262,8 @@ export default function PickingPackingPage() {
 
     // Validar se todos os itens têm produto selecionado
     const invalidItems = pickingItems.filter(item => !item.productId || item.quantityToPick <= 0);
-    console.log('Itens inválidos encontrados:', invalidItems);
     
     if (invalidItems.length > 0) {
-      console.log('Erro: Itens inválidos detectados');
       toast({
         variant: "destructive",
         title: "Erro de validação",
@@ -322,7 +277,6 @@ export default function PickingPackingPage() {
       items: pickingItems
     };
     
-    console.log('Dados finais para submissão:', submitData);
     createPickingMutation.mutate(submitData);
   };
 
@@ -419,14 +373,14 @@ export default function PickingPackingPage() {
     return parts.length > 0 ? parts.join("-") : "Sem localização";
   };
 
-  const filteredPickingLists = pickingLists?.filter(list => 
+  const filteredPickingLists = pickingLists?.filter((list: PickingList) => 
     list && list.warehouse && 
     ((list.orderNumber && list.orderNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (list.pickNumber && list.pickNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
     list.warehouse.name.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
 
-  const filteredPackingTasks = packingTasks?.filter(task => 
+  const filteredPackingTasks = packingTasks?.filter((task: any) => 
     task && task.pickingList && task.pickingList.orderNumber && task.packageType &&
     (task.pickingList.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.packageType.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -521,7 +475,7 @@ export default function PickingPackingPage() {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {warehouses?.filter(warehouse => warehouse.name).map((warehouse) => (
+                                    {warehouses?.filter((warehouse: Warehouse) => warehouse.name).map((warehouse: Warehouse) => (
                                       <SelectItem key={warehouse.id} value={warehouse.id}>
                                         {warehouse.name}
                                       </SelectItem>
@@ -681,7 +635,7 @@ export default function PickingPackingPage() {
                                   <SelectValue placeholder="Seleccione o produto" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {products?.filter(product => product.name && product.sku).map((product) => (
+                                  {products?.filter((product: Product) => product.name && product.sku).map((product: Product) => (
                                     <SelectItem key={product.id} value={product.id}>
                                       <div className="flex flex-col">
                                         <span className="font-medium">{product.name}</span>
@@ -724,9 +678,9 @@ export default function PickingPackingPage() {
                                       Sem localização específica
                                     </div>
                                   </SelectItem>
-                                  {productLocations?.filter(location => 
+                                  {productLocations?.filter((location: any) => 
                                     location.productId === item.productId
-                                  ).map((location) => (
+                                  ).map((location: any) => (
                                     <SelectItem key={location.id} value={location.id}>
                                       <div className="flex items-center">
                                         <MapPin className="w-4 h-4 mr-2 text-primary" />
@@ -785,7 +739,7 @@ export default function PickingPackingPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredPickingLists.map((list) => (
+                {filteredPickingLists.map((list: PickingList) => (
                   <div 
                     key={list.id} 
                     className="border border-border rounded-lg p-4 space-y-3"
@@ -822,7 +776,7 @@ export default function PickingPackingPage() {
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-foreground">Items ({list.items.length})</h4>
                       <div className="grid gap-2">
-                        {list.items.map((item) => (
+                        {list.items.map((item: any) => (
                           <div 
                             key={item.id} 
                             className="flex items-center justify-between p-2 bg-muted/50 rounded"
@@ -938,28 +892,20 @@ export default function PickingPackingPage() {
                             <SelectContent>
                               {(() => {
                                 // Debug: Log das listas de picking disponíveis
-                                console.log('🔍 [DEBUG] Todas as listas de picking:', pickingLists);
+                          
                                 
-                                const filteredLists = pickingLists?.filter(list => {
+                                const filteredLists = pickingLists?.filter((list: PickingList) => {
                                   const isCompleted = list.status === 'completed';
                                   const hasIdentifier = list.orderNumber || list.pickNumber;
                                   
-                                  // Debug: Log detalhado de cada lista
-                                  console.log(`📋 [DEBUG] Lista ${list.id}:`, {
-                                    status: list.status,
-                                    isCompleted,
-                                    orderNumber: list.orderNumber,
-                                    pickNumber: list.pickNumber,
-                                    hasIdentifier,
-                                    willShow: isCompleted && hasIdentifier
-                                  });
+
                                   
                                   return isCompleted && hasIdentifier;
                                 });
                                 
-                                console.log('✅ [DEBUG] Listas filtradas para dropdown:', filteredLists);
+                          
                                 
-                                return filteredLists?.map((list) => (
+                                return filteredLists?.map((list: PickingList) => (
                                   <SelectItem key={list.id} value={list.id}>
                                     {list.orderNumber || list.pickNumber}
                                   </SelectItem>
@@ -1132,7 +1078,7 @@ export default function PickingPackingPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredPackingTasks.map((task) => (
+                {filteredPackingTasks.map((task: any) => (
                   <div 
                     key={task.id} 
                     className="border border-border rounded-lg p-4 space-y-3"

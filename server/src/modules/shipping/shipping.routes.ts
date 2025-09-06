@@ -8,7 +8,10 @@ const router = Router();
 // Aplicar middleware de proteção do módulo
 router.use(moduleGuard('shipping'));
 
-// Todas as rotas requerem autenticação
+// Rota pública de rastreamento (sem autenticação)
+router.get('/track/:trackingNumber', ShippingController.trackShipment);
+
+// Aplicar autenticação para todas as outras rotas
 router.use(requireAuth);
 
 // Rotas para carriers (devem vir antes das rotas com parâmetros)
@@ -21,7 +24,6 @@ router.get('/vehicles/available', ShippingController.getAvailableVehicles);
 // Rotas dos envios
 router.get('/', ShippingController.getShipments);
 router.get('/active', ShippingController.getActiveShipments);
-router.get('/track/:trackingNumber', ShippingController.trackShipment);
 router.get('/:id', ShippingController.getShipment);
 router.post('/', ShippingController.createShipment);
 router.put('/:id', ShippingController.updateShipment);

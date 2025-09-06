@@ -31,7 +31,7 @@ interface CustomerComboboxProps {
   newlyCreatedCustomer?: Customer | null // Novo prop para cliente recém-criado
 }
 
-export function CustomerCombobox({
+export const CustomerCombobox = React.memo(function CustomerCombobox({
   value,
   onValueChange,
   onCustomerSelect,
@@ -46,43 +46,38 @@ export function CustomerCombobox({
   const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | null>(null)
 
   // Buscar clientes com base na query de pesquisa
+  const searchQueryFn = React.useCallback(async () => {
+    if (!searchQuery || searchQuery.length < 2) return []
+    
+    
+    const response = await apiRequest('GET', `/api/customers/search?q=${encodeURIComponent(searchQuery)}`)
+    if (!response.ok) throw new Error('Erro ao buscar clientes')
+    const data = await response.json()
+
+    return data
+  }, [searchQuery])
+
   const { data: customers = [], isLoading, error } = useQuery({
     queryKey: ['/api/customers/search', searchQuery],
-    queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) return []
-      
-      console.log('🔍 CustomerCombobox: Fazendo pesquisa para:', searchQuery)
-      const response = await apiRequest('GET', `/api/customers/search?q=${encodeURIComponent(searchQuery)}`)
-      if (!response.ok) throw new Error('Erro ao buscar clientes')
-      const data = await response.json()
-      console.log('📊 CustomerCombobox: Resultados recebidos:', data)
-      return data
-    },
+    queryFn: searchQueryFn,
     enabled: searchQuery.length >= 2,
     staleTime: 30000, // Cache por 30 segundos
   })
 
-  // Log de debug para acompanhar o estado
-  React.useEffect(() => {
-    console.log('🎯 CustomerCombobox Estado:', {
-      searchQuery,
-      customersCount: customers.length,
-      isLoading,
-      error: error?.message,
-      selectedCustomer: selectedCustomer?.name
-    })
-  }, [searchQuery, customers, isLoading, error, selectedCustomer])
+
 
   // Buscar cliente específico quando value muda
+  const currentCustomerQueryFn = React.useCallback(async () => {
+    if (!value) return null
+    
+    const response = await apiRequest('GET', `/api/customers/${value}`)
+    if (!response.ok) throw new Error('Erro ao buscar cliente')
+    return response.json()
+  }, [value])
+
   const { data: currentCustomer } = useQuery({
     queryKey: ['/api/customers', value],
-    queryFn: async () => {
-      if (!value) return null
-      
-      const response = await apiRequest('GET', `/api/customers/${value}`)
-      if (!response.ok) throw new Error('Erro ao buscar cliente')
-      return response.json()
-    },
+    queryFn: currentCustomerQueryFn,
     enabled: !!value && !selectedCustomer,
   })
 
@@ -103,20 +98,20 @@ export function CustomerCombobox({
     }
   }, [newlyCreatedCustomer, onValueChange, onCustomerSelect])
 
-  const handleSelect = (customer: Customer) => {
+  const handleSelect = React.useCallback((customer: Customer) => {
     setSelectedCustomer(customer)
     onValueChange(customer.id)
     onCustomerSelect?.(customer)
     setOpen(false)
     setSearchQuery("")
-  }
+  }, [onValueChange, onCustomerSelect])
 
-  const handleClear = () => {
+  const handleClear = React.useCallback(() => {
     setSelectedCustomer(null)
     onValueChange("")
     onCustomerSelect?.(null)
     setSearchQuery("")
-  }
+  }, [onValueChange, onCustomerSelect])
 
   return (
     <div className={cn("w-full", className)}>
@@ -196,41 +191,35 @@ export function CustomerCombobox({
               
               {customers.length > 0 && (
                 <CommandGroup>
-                  {(() => {
-                    console.log('🎨 CustomerCombobox: Renderizando', customers.length, 'clientes')
-                    return customers.map((customer: Customer) => {
-                      console.log('👤 CustomerCombobox: Renderizando cliente:', customer.name)
-                      return (
-                        <CommandItem
-                          key={customer.id}
-                          value={`${customer.name} ${customer.customerNumber} ${customer.email || ''} ${customer.phone || ''}`}
-                          onSelect={() => handleSelect(customer)}
-                          className="flex items-center gap-3 p-3"
-                        >
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium">{customer.name}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {customer.customerType === 'individual' ? 'Individual' : 'Empresa'}
-                              </Badge>
-                            </div>
-                            <div className="text-xs text-muted-foreground space-y-1">
-                              <div>Nº: {customer.customerNumber}</div>
-                              {customer.email && <div>Email: {customer.email}</div>}
-                              {customer.phone && <div>Tel: {customer.phone}</div>}
-                            </div>
-                          </div>
-                          <Check
-                            className={cn(
-                              "ml-auto h-4 w-4",
-                              value === customer.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                        </CommandItem>
-                      )
-                    })
-                  })()} 
+                  {customers.map((customer: Customer) => (
+                    <CommandItem
+                      key={customer.id}
+                      value={`${customer.name} ${customer.customerNumber} ${customer.email || ''} ${customer.phone || ''}`}
+                      onSelect={() => handleSelect(customer)}
+                      className="flex items-center gap-3 p-3"
+                    >
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">{customer.name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {customer.customerType === 'individual' ? 'Individual' : 'Empresa'}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          <div>Nº: {customer.customerNumber}</div>
+                          {customer.email && <div>Email: {customer.email}</div>}
+                          {customer.phone && <div>Tel: {customer.phone}</div>}
+                        </div>
+                      </div>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          value === customer.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
                 </CommandGroup>
               )}
               
@@ -269,4 +258,4 @@ export function CustomerCombobox({
       )}
     </div>
   )
-}
+})

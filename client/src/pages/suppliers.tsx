@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Building, Mail, Phone, MapPin } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Supplier } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from "@/hooks/api/use-suppliers";
 import { z } from "zod";
 
 // Schema personalizado para o formulário de fornecedores
@@ -27,7 +25,6 @@ type SupplierFormData = z.infer<typeof supplierFormSchema>;
 
 function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
   
   const form = useForm<SupplierFormData>({
     resolver: zodResolver(supplierFormSchema),
@@ -58,59 +55,28 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
     }
   }, [supplier, form]);
 
-  const createMutation = useMutation({
-    mutationFn: async (data: SupplierFormData) => {
-      const response = await apiRequest("POST", "/api/suppliers", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      setOpen(false);
-      form.reset();
-      toast({
-        title: "Fornecedor criado",
-        description: "O fornecedor foi criado com sucesso.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar o fornecedor.",
-        variant: "destructive",
-      });
-    },
-  });
+  const createMutation = useCreateSupplier();
+  const updateMutation = useUpdateSupplier();
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: SupplierFormData) => {
-      const response = await apiRequest("PUT", `/api/suppliers/${supplier?.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      setOpen(false);
-      form.reset();
-      toast({
-        title: "Fornecedor atualizado",
-        description: "O fornecedor foi atualizado com sucesso.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o fornecedor.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: SupplierFormData) => {
+  const handleSubmit = (data: SupplierFormData) => {
     if (supplier) {
-      updateMutation.mutate(data);
+      updateMutation.mutate({ id: supplier.id, data }, {
+        onSuccess: () => {
+          setOpen(false);
+          form.reset();
+        }
+      });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(data, {
+        onSuccess: () => {
+          setOpen(false);
+          form.reset();
+        }
+      });
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -122,7 +88,7 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 sm:space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -200,23 +166,23 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
               )}
             />
 
-            <div className="button-group-mobile">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-4">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setOpen(false)}
                 data-testid="button-cancel"
-                className="mobile-full"
+                className="w-full sm:w-auto order-2 sm:order-1"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
-                disabled={createMutation.isPending || updateMutation.isPending}
+                disabled={isLoading}
                 data-testid="button-save-supplier"
-                className="mobile-full"
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                {isLoading ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </form>
@@ -227,27 +193,7 @@ function SupplierDialog({ supplier, trigger }: { supplier?: Supplier; trigger: R
 }
 
 function SupplierCard({ supplier }: { supplier: Supplier }) {
-  const { toast } = useToast();
-
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("DELETE", `/api/suppliers/${supplier.id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
-      toast({
-        title: "Fornecedor removido",
-        description: "O fornecedor foi removido com sucesso.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o fornecedor.",
-        variant: "destructive",
-      });
-    },
-  });
+  const deleteMutation = useDeleteSupplier();
 
   return (
     <Card className="h-full" data-testid={`card-supplier-${supplier.id}`}>
@@ -275,7 +221,7 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => deleteMutation.mutate()}
+              onClick={() => deleteMutation.mutate(supplier.id)}
               disabled={deleteMutation.isPending}
               data-testid={`button-delete-${supplier.id}`}
             >
@@ -321,9 +267,8 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
 export default function Suppliers() {
   const [search, setSearch] = useState("");
   
-  const { data: suppliers = [], isLoading } = useQuery<Supplier[]>({
-    queryKey: ["/api/suppliers"],
-  });
+  const { data: suppliersResponse, isLoading } = useSuppliers();
+  const suppliers = suppliersResponse?.data || [];
 
   const filteredSuppliers = suppliers.filter((supplier: Supplier) =>
     supplier.name.toLowerCase().includes(search.toLowerCase()) ||

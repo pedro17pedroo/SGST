@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,7 +28,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { createProduct, updateProduct } from "@/lib/api";
+import { useCategories } from "@/hooks/api/use-categories";
+import { useSuppliers } from "@/hooks/api/use-suppliers";
+import { useCreateProduct, useUpdateProduct } from "@/hooks/api/use-products";
 
 const productSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -66,7 +67,6 @@ interface ProductFormProps {
 
 export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -112,56 +112,53 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     }
   }, [product, form]);
 
-  const { data: categories = [] } = useQuery<any[]>({
-    queryKey: ["/api/categories"],
-  });
+  const { data: categoriesResponse } = useCategories();
+  const categories = categoriesResponse?.data || [];
+  
+  const { data: suppliersResponse } = useSuppliers();
+  const suppliers = suppliersResponse?.data || [];
 
-  const { data: suppliers = [] } = useQuery<any[]>({
-    queryKey: ["/api/suppliers"],
-  });
-
-  const createMutation = useMutation({
-    mutationFn: createProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/top-products"] });
+  const createProductMutation = useCreateProduct();
+  
+  const handleCreateProduct = async (data: ProductFormData) => {
+    try {
+      await createProductMutation.mutateAsync(data);
       toast({
         title: "Produto criado",
         description: "O produto foi criado com sucesso.",
       });
       onOpenChange(false);
       form.reset();
-    },
-    onError: (error: any) => {
+    } catch (error: any) {
       toast({
         title: "Erro",
         description: error.message || "Erro ao criar produto.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
-  const updateMutation = useMutation({
-    mutationFn: (data: ProductFormData) => updateProduct(product!.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/top-products"] });
+  const updateProductMutation = useUpdateProduct();
+  
+  const handleUpdateProduct = async (data: ProductFormData) => {
+    if (!product?.id) return;
+    
+    try {
+      await updateProductMutation.mutateAsync({ id: product.id, data });
       toast({
         title: "Produto atualizado",
         description: "O produto foi atualizado com sucesso.",
       });
       onOpenChange(false);
-    },
-    onError: (error: any) => {
+      form.reset();
+    } catch (error: any) {
       toast({
         title: "Erro",
         description: error.message || "Erro ao atualizar produto.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   const onSubmit = (data: ProductFormData) => {
     const formattedData = {
@@ -174,9 +171,9 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     };
 
     if (product) {
-      updateMutation.mutate(formattedData);
+      handleUpdateProduct(formattedData);
     } else {
-      createMutation.mutate(formattedData);
+      handleCreateProduct(formattedData);
     }
   };
 
@@ -193,8 +190,8 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -243,7 +240,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="price"
@@ -279,7 +276,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="categoryId"
@@ -333,7 +330,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="weight"
@@ -374,10 +371,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               />
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-4">
               <Button 
                 type="button" 
                 variant="outline" 
+                className="w-full sm:w-auto order-2 sm:order-1"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel"
               >
@@ -385,10 +383,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               </Button>
               <Button 
                 type="submit" 
-                disabled={createMutation.isPending || updateMutation.isPending}
+                className="w-full sm:w-auto order-1 sm:order-2"
+                disabled={createProductMutation.isPending || updateProductMutation.isPending}
                 data-testid="button-submit"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Guardando..." : 
+                {createProductMutation.isPending || updateProductMutation.isPending ? "Guardando..." : 
                  product ? "Actualizar" : "Criar Produto"}
               </Button>
             </div>

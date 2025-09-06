@@ -202,7 +202,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'returns',
     name: 'Gestão de Devoluções',
     description: 'Processamento de devoluções e reembolsos',
-    enabled: false,
+    enabled: true,
     dependencies: ['orders', 'inventory'],
     routes: ['/returns'],
     menuItems: [{
@@ -218,7 +218,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'product_locations',
     name: 'Localizações de Produtos',
     description: 'Organização e localização de produtos nos armazéns',
-    enabled: false,
+    enabled: true,
     dependencies: ['products', 'warehouses'],
     routes: ['/product-locations'],
     menuItems: [{
@@ -234,7 +234,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'inventory_counts',
     name: 'Contagens de Inventário',
     description: 'Contagens cíclicas e reconciliação de stock',
-    enabled: false,
+    enabled: true,
     dependencies: ['inventory'],
     routes: ['/inventory-counts'],
     menuItems: [{
@@ -250,7 +250,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'barcode_scanning',
     name: 'Leitura de Códigos',
     description: 'Leitura de códigos de barras e QR',
-    enabled: false,
+    enabled: true,
     dependencies: ['products'],
     routes: ['/scanner'],
     menuItems: [{
@@ -266,7 +266,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'picking_packing',
     name: 'Picking & Packing',
     description: 'Listas de picking e preparação de encomendas',
-    enabled: false,
+    enabled: true,
     dependencies: ['orders', 'product_locations'],
     routes: ['/picking-packing'],
     menuItems: [{
@@ -282,7 +282,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'alerts',
     name: 'Alertas e Notificações',
     description: 'Sistema de alertas e notificações',
-    enabled: false,
+    enabled: true,
     dependencies: ['users'],
     routes: ['/alerts'],
     menuItems: [{
@@ -314,7 +314,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'quality_control',
     name: 'Controlo de Qualidade',
     description: 'Gestão de qualidade e inspeções',
-    enabled: false,
+    enabled: true,
     dependencies: ['products', 'inventory'],
     routes: ['/quality-control'],
     menuItems: [{
@@ -330,7 +330,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'reports',
     name: 'Relatórios',
     description: 'Geração de relatórios do sistema',
-    enabled: false,
+    enabled: true,
     dependencies: ['inventory', 'orders'],
     routes: ['/reports'],
     menuItems: [{
@@ -346,7 +346,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     id: 'advanced_analytics',
     name: 'Análises Avançadas',
     description: 'Análises avançadas e métricas de performance',
-    enabled: false,
+    enabled: true,
     dependencies: ['reports'],
     routes: ['/advanced-analytics'],
     menuItems: [{
@@ -423,24 +423,118 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
 
 // Classe para gestão de módulos no frontend
 import { apiRequest } from '../lib/queryClient';
+// import { usePermissions } from '../hooks/use-permissions-unified'; // Removed unused import
+
+// Tipo para listeners de mudanças de permissões
+type PermissionChangeListener = (permissions: string[]) => void;
 
 export class FrontendModuleManager {
+  private static instance: FrontendModuleManager | null = null;
   private static enabledModules: Set<string> = new Set();
+  private static initialized = false;
+  private static userPermissions: Set<string> = new Set();
+  private static isLoading: boolean = false;
+  private static loadingPromise: Promise<void> | null = null;
+  private static debounceTimer: number | null = null;
+  private static readonly DEBOUNCE_DELAY = 500; // 500ms debounce
+  private static requestCounter = 0;
+  private static lastLoadTime = 0;
+  private static readonly CACHE_DURATION = 30000; // 30 segundos
+  
+  // Sistema de listeners para mudanças de permissões
+  private static permissionChangeListeners: Set<PermissionChangeListener> = new Set();
+  private static moduleChangeListeners: Set<() => void> = new Set();
 
-  static async loadModuleConfiguration(): Promise<void> {
-    try {
-      const response = await apiRequest('GET', '/api/modules');
-      
-      if (!response.ok) {
-        throw new Error(`Erro ao carregar módulos: ${response.status}`);
-      }
-      
-      const modules = await response.json();
-      this.syncWithBackend(modules);
-    } catch (error) {
-      console.error('Erro ao carregar configuração de módulos:', error);
-      this.loadLocalConfiguration();
+  // Singleton pattern
+  public static getInstance(): FrontendModuleManager {
+    if (!FrontendModuleManager.instance) {
+      FrontendModuleManager.instance = new FrontendModuleManager();
     }
+    return FrontendModuleManager.instance;
+  }
+
+  private constructor() {
+    // Private constructor para singleton
+  }
+
+  // Inicializar automaticamente na primeira chamada
+  private static ensureInitialized(): void {
+    if (!this.initialized) {
+      this.loadLocalConfiguration();
+      this.initialized = true;
+    }
+  }
+
+  static async loadConfiguration(): Promise<void> {
+    // Verificar cache primeiro
+    const now = Date.now();
+    if (this.lastLoadTime && (now - this.lastLoadTime) < this.CACHE_DURATION) {
+      return;
+    }
+
+    // Implementar debounce
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+
+    return new Promise((resolve) => {
+      this.debounceTimer = window.setTimeout(async () => {
+        await this.loadModuleConfiguration();
+        resolve();
+      }, this.DEBOUNCE_DELAY);
+    });
+  }
+
+  private static async loadModuleConfiguration(): Promise<void> {
+    // Flag global para evitar múltiplas execuções mesmo com hot reload
+    const globalKey = '__SGST_MODULE_LOADING__';
+    if ((window as any)[globalKey]) {
+      return;
+    }
+
+    // Deduplicação de requisições - se já está a carregar, retorna a promise existente
+    if (FrontendModuleManager.isLoading && FrontendModuleManager.loadingPromise) {
+      return FrontendModuleManager.loadingPromise;
+    }
+
+    // Se já foi inicializado, não carrega novamente
+    if (FrontendModuleManager.initialized) {
+      return;
+    }
+
+    this.requestCounter++;
+    const requestId = this.requestCounter;
+    
+    (window as any)[globalKey] = true;
+    FrontendModuleManager.isLoading = true;
+    
+    FrontendModuleManager.loadingPromise = (async () => {
+      try {
+        const response = await apiRequest('GET', '/api/modules');
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao carregar módulos: ${response.status}`);
+        }
+        
+        const modules = await response.json();
+         if (Array.isArray(modules)) {
+           FrontendModuleManager.syncWithBackend(modules);
+           FrontendModuleManager.initialized = true;
+         } else {
+           FrontendModuleManager.loadLocalConfiguration();
+        }
+       } catch (error) {
+         console.error('❌ Erro ao carregar módulos do backend:', error);
+         FrontendModuleManager.loadLocalConfiguration();
+      } finally {
+        FrontendModuleManager.isLoading = false;
+        FrontendModuleManager.loadingPromise = null;
+        this.lastLoadTime = Date.now();
+        delete (window as any)[globalKey];
+      }
+    })();
+
+    return FrontendModuleManager.loadingPromise;
   }
 
   static syncWithBackend(modules: any[]): void {
@@ -470,13 +564,22 @@ export class FrontendModuleManager {
   }
 
   static isModuleEnabled(moduleId: string): boolean {
+    this.ensureInitialized();
     return this.enabledModules.has(moduleId);
   }
 
   static getEnabledModules(): FrontendModuleConfig[] {
-    return Object.values(FRONTEND_MODULE_CONFIG).filter(module => 
-      this.isModuleEnabled(module.id)
-    );
+    this.ensureInitialized();
+    const allModules = Object.values(FRONTEND_MODULE_CONFIG);
+    
+    // MOSTRAR TODOS OS MÓDULOS SEM VERIFICAR PERMISSÕES
+    // Conforme solicitado pelo usuário - exibir todos os menus sem exceções
+    const enabledModules = allModules.filter(module => module.enabled);
+    
+
+
+    
+    return enabledModules;
   }
 
   static getEnabledRoutes(): string[] {
@@ -499,5 +602,85 @@ export class FrontendModuleManager {
 
   static getModuleById(moduleId: string): FrontendModuleConfig | undefined {
     return FRONTEND_MODULE_CONFIG[moduleId];
+  }
+
+  // Métodos para gestão de listeners
+  static addPermissionChangeListener(listener: PermissionChangeListener): () => void {
+    this.permissionChangeListeners.add(listener);
+    // Retorna função para remover o listener
+    return () => {
+      this.permissionChangeListeners.delete(listener);
+    };
+  }
+
+  static addModuleChangeListener(listener: () => void): () => void {
+    this.moduleChangeListeners.add(listener);
+    // Retorna função para remover o listener
+    return () => {
+      this.moduleChangeListeners.delete(listener);
+    };
+  }
+
+  private static notifyPermissionChange(permissions: string[]): void {
+    this.permissionChangeListeners.forEach(listener => {
+      try {
+        listener(permissions);
+      } catch (error) {
+        console.error('Erro ao notificar listener de mudança de permissões:', error);
+      }
+    });
+  }
+
+  private static notifyModuleChange(): void {
+    this.moduleChangeListeners.forEach(listener => {
+      try {
+        listener();
+      } catch (error) {
+        console.error('Erro ao notificar listener de mudança de módulos:', error);
+      }
+    });
+  }
+
+  // Métodos para gestão de permissões
+  static setUserPermissions(permissions: string[]): void {
+    const previousPermissions = Array.from(this.userPermissions);
+    
+    this.userPermissions.clear();
+    permissions.forEach(permission => {
+      this.userPermissions.add(permission);
+    });
+    
+
+    
+    // Verificar se as permissões mudaram
+    const permissionsChanged = 
+      previousPermissions.length !== permissions.length ||
+      !previousPermissions.every(p => this.userPermissions.has(p));
+    
+    if (permissionsChanged) {
+
+      this.notifyPermissionChange(permissions);
+      this.notifyModuleChange();
+    }
+  }
+
+  static hasPermission(permission: string): boolean {
+    return this.userPermissions.has(permission);
+  }
+
+  static hasModulePermissions(moduleId: string): boolean {
+    const module = FRONTEND_MODULE_CONFIG[moduleId];
+    if (!module?.permissions || module.permissions.length === 0) {
+      return true; // Módulos sem permissões são sempre acessíveis
+    }
+    
+    // Verificar se o usuário tem pelo menos uma das permissões necessárias
+    const hasPermission = module.permissions.some(permission => 
+      this.userPermissions.has(permission)
+    );
+    
+
+    
+    return hasPermission;
   }
 }

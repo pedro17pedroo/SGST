@@ -33,7 +33,7 @@ export class PublicTrackingController {
             sku: item.product.sku
           },
           quantity: item.quantity
-        }))
+        })) || []
       };
       
       res.json(publicData);

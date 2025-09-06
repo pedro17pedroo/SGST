@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, Edit, Trash2, Package, Calendar, DollarSign, User as UserIcon, Building } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { type Order, type Supplier, type Customer } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useOrders, useCreateOrder, useUpdateOrder, useDeleteOrder } from "@/hooks/api/use-orders";
+import { useSuppliers } from "@/hooks/api/use-suppliers";
 import { CustomerCombobox } from "@/components/ui/customer-combobox";
 import { AddCustomerModal } from "@/components/ui/add-customer-modal";
 
@@ -28,6 +27,11 @@ type OrderFormData = {
   supplierId?: string;
   totalAmount: string;
   notes?: string;
+  items?: {
+    productId: string;
+    quantity: number;
+    unitPrice: string;
+  }[];
 };
 
 function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNode }) {
@@ -35,11 +39,8 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [newlyCreatedCustomer, setNewlyCreatedCustomer] = useState<Customer | null>(null);
-  const { toast } = useToast();
-  
-  const { data: suppliers = [] } = useQuery<Supplier[]>({
-    queryKey: ["/api/suppliers"],
-  });
+  const { data: suppliersResponse } = useSuppliers();
+  const suppliers = suppliersResponse?.data || [];
   
   const form = useForm<OrderFormData>({
     defaultValues: {
@@ -128,64 +129,37 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
     }
   }, [order, form]);
 
-  const createMutation = useMutation({
-    mutationFn: async (data: OrderFormData) => {
-      const response = await apiRequest("POST", "/api/orders", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      setOpen(false);
-      form.reset();
-      toast({
-        title: "Encomenda criada",
-        description: "A encomenda foi criada com sucesso.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar a encomenda.",
-        variant: "destructive",
-      });
-    },
-  });
+  const createMutation = useCreateOrder();
+  const updateMutation = useUpdateOrder();
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: OrderFormData) => {
-      const response = await apiRequest("PUT", `/api/orders/${order?.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      setOpen(false);
-      form.reset();
-      toast({
-        title: "Encomenda atualizada",
-        description: "A encomenda foi atualizada com sucesso.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a encomenda.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: OrderFormData) => {
+  const handleSubmit = (data: OrderFormData) => {
     const formattedData = {
       ...data,
       supplierId: data.supplierId === "none" ? undefined : data.supplierId,
+      customerId: data.customerId || "",
+      items: data.items || [],
     };
     
     if (order) {
-      updateMutation.mutate(formattedData);
+      updateMutation.mutate({ id: order.id, data: formattedData }, {
+        onSuccess: () => {
+          setOpen(false);
+          form.reset();
+        }
+      });
     } else {
-      createMutation.mutate(formattedData);
+      createMutation.mutate(formattedData, {
+        onSuccess: () => {
+          setOpen(false);
+          form.reset();
+        }
+      });
     }
   };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+
+  const onSubmit = handleSubmit;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -223,7 +197,7 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="status"
@@ -273,14 +247,14 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
 
             {/* Seleção de Cliente */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <FormLabel className="text-base font-medium">Cliente</FormLabel>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setShowAddCustomerModal(true)}
-                  className="text-xs"
+                  className="text-xs w-full sm:w-auto"
                 >
                   <Plus className="h-3 w-3 mr-1" />
                   Novo Cliente
@@ -396,21 +370,23 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
               )}
             />
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-4">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setOpen(false)}
                 data-testid="button-cancel"
+                className="w-full sm:w-auto order-2 sm:order-1"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
-                disabled={createMutation.isPending || updateMutation.isPending}
+                disabled={isLoading}
                 data-testid="button-save-order"
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                {isLoading ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </form>
@@ -428,27 +404,7 @@ function OrderDialog({ order, trigger }: { order?: Order; trigger: React.ReactNo
 }
 
 function OrderCard({ order }: { order: Order & { supplier?: Supplier | null } }) {
-  const { toast } = useToast();
-
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("DELETE", `/api/orders/${order.id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      toast({
-        title: "Encomenda removida",
-        description: "A encomenda foi removida com sucesso.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover a encomenda.",
-        variant: "destructive",
-      });
-    },
-  });
+  const deleteMutation = useDeleteOrder();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -477,74 +433,75 @@ function OrderCard({ order }: { order: Order & { supplier?: Supplier | null } })
   };
 
   return (
-    <Card className="h-full" data-testid={`card-order-${order.id}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+    <Card className="h-full hover:shadow-md transition-shadow" data-testid={`card-order-${order.id}`}>
+      <CardHeader className="pb-3 p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
               {getTypeIcon(order.type)}
             </div>
-            <div>
-              <CardTitle className="text-lg" data-testid={`text-order-number-${order.id}`}>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-sm sm:text-lg truncate" data-testid={`text-order-number-${order.id}`}>
                 {order.orderNumber}
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {order.type === "sale" ? "Venda" : "Compra"}
               </p>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-shrink-0">
             <OrderDialog
               order={order}
               trigger={
-                <Button variant="ghost" size="sm" data-testid={`button-edit-${order.id}`}>
-                  <Edit className="h-4 w-4" />
+                <Button variant="ghost" size="sm" data-testid={`button-edit-${order.id}`} className="h-8 w-8 p-0">
+                  <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               }
             />
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => deleteMutation.mutate()}
+              onClick={() => deleteMutation.mutate(order.id)}
               disabled={deleteMutation.isPending}
               data-testid={`button-delete-${order.id}`}
+              className="h-8 w-8 p-0"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Badge className={getStatusColor(order.status)}>
+      <CardContent className="p-4 sm:p-6 pt-0">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <Badge className={`${getStatusColor(order.status)} text-xs`}>
               {getStatusLabel(order.status)}
             </Badge>
-            <span className="text-lg font-semibold text-primary" data-testid={`text-order-amount-${order.id}`}>
+            <span className="text-sm sm:text-lg font-semibold text-primary truncate" data-testid={`text-order-amount-${order.id}`}>
               {Number(order.totalAmount || 0).toLocaleString()} AOA
             </span>
           </div>
           
           {order.customerName && (
-            <div className="flex items-center gap-2 text-sm">
-              <UserIcon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground" data-testid={`text-customer-${order.id}`}>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <UserIcon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate" data-testid={`text-customer-${order.id}`}>
                 {order.customerName}
               </span>
             </div>
           )}
 
           {order.supplier && (
-            <div className="flex items-center gap-2 text-sm">
-              <Building className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground" data-testid={`text-supplier-${order.id}`}>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <Building className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-muted-foreground truncate" data-testid={`text-supplier-${order.id}`}>
                 {order.supplier.name}
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 text-xs sm:text-sm">
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-muted-foreground">
               {new Date(order.createdAt || "").toLocaleDateString('pt-AO')}
             </span>
@@ -558,9 +515,8 @@ function OrderCard({ order }: { order: Order & { supplier?: Supplier | null } })
 export default function Orders() {
   const [search, setSearch] = useState("");
   
-  const { data: orders = [], isLoading } = useQuery<Array<Order & { supplier?: Supplier | null }>>({
-    queryKey: ["/api/orders"],
-  });
+  const { data: ordersResponse, isLoading } = useOrders();
+  const orders = ordersResponse?.data || [];
 
   const filteredOrders = orders.filter((order: Order) =>
     (order.orderNumber && order.orderNumber.toLowerCase().includes(search.toLowerCase())) ||
@@ -571,75 +527,76 @@ export default function Orders() {
     <div className="min-h-screen bg-background">
       <Header title="Gestão de Encomendas" breadcrumbs={["Gestão de Encomendas"]} />
       
-      <div className="px-6 py-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">
+      <div className="px-4 sm:px-6 py-4 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Gerir encomendas de vendas e compras
           </p>
-        <OrderDialog
-          trigger={
-            <Button data-testid="button-add-order">
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Encomenda
-            </Button>
-          }
-        />
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Pesquisar encomendas..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-          data-testid="input-search-orders"
-        />
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="h-48">
-              <CardHeader className="animate-pulse">
-                <div className="h-6 bg-muted rounded w-3/4"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent className="animate-pulse">
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded"></div>
-                  <div className="h-4 bg-muted rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <OrderDialog
+            trigger={
+              <Button data-testid="button-add-order" className="w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Nova Encomenda</span>
+                <span className="sm:hidden">Nova</span>
+              </Button>
+            }
+          />
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOrders.map((order: Order & { supplier?: Supplier | null }) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-          {filteredOrders.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhuma encomenda encontrada</h3>
-              <p className="text-muted-foreground mb-4">
-                {search ? "Tente ajustar os termos de pesquisa." : "Comece criando a primeira encomenda."}
-              </p>
-              {!search && (
-                <OrderDialog
-                  trigger={
-                    <Button data-testid="button-add-first-order">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Criar Primeira Encomenda
-                    </Button>
-                  }
-                />
-              )}
-            </div>
-          )}
+
+        <div className="flex items-center space-x-2">
+          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Input
+            placeholder="Pesquisar encomendas..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 sm:max-w-sm"
+            data-testid="input-search-orders"
+          />
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(8)].map((_, i) => (
+              <Card key={i} className="h-48">
+                <CardHeader className="animate-pulse p-4 sm:p-6">
+                  <div className="h-5 sm:h-6 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 sm:h-4 bg-muted rounded w-1/2"></div>
+                </CardHeader>
+                <CardContent className="animate-pulse p-4 sm:p-6">
+                  <div className="space-y-2">
+                    <div className="h-3 sm:h-4 bg-muted rounded"></div>
+                    <div className="h-3 sm:h-4 bg-muted rounded w-2/3"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {filteredOrders.map((order: Order & { supplier?: Supplier | null }) => (
+              <OrderCard key={order.id} order={order} />
+            ))}
+            {filteredOrders.length === 0 && (
+              <div className="col-span-full text-center py-8 sm:py-12">
+                <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhuma encomenda encontrada</h3>
+                <p className="text-sm sm:text-base text-muted-foreground mb-4 px-4">
+                  {search ? "Tente ajustar os termos de pesquisa." : "Comece criando a primeira encomenda."}
+                </p>
+                {!search && (
+                  <OrderDialog
+                    trigger={
+                      <Button data-testid="button-add-first-order" className="w-full sm:w-auto">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Criar Primeira Encomenda
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

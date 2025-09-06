@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getApiConfig, getApiBaseUrl, API_ENDPOINTS, RETRY_CONFIG } from '../config/api';
 
 // Global reference to auth handler - will be set by AuthProvider
 let globalAuthHandler: (() => void) | null = null;
@@ -45,7 +46,7 @@ async function refreshAccessToken(): Promise<boolean> {
 
   try {
     const baseUrl = getApiBaseUrl();
-    const response = await fetch(`${baseUrl}/api/auth/refresh-token`, {
+    const response = await fetch(`${baseUrl}${API_ENDPOINTS.auth.refreshToken}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -111,30 +112,43 @@ async function throwIfResNotOk(res: Response, retryCallback?: () => Promise<Resp
     }
     
     const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    
+    // Try to parse JSON and extract message, otherwise use full text
+    try {
+      const errorData = JSON.parse(text);
+      const errorMessage = errorData.message || text;
+      throw new Error(errorMessage);
+    } catch (parseError) {
+      // If not valid JSON, throw the original text without status code
+      throw new Error(text);
+    }
   }
 }
 
-// Get the API base URL from environment variables or default to backend port
-const getApiBaseUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    // Client-side: check for environment variable or use backend port
-    return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Função auxiliar para log de requisições (apenas em desenvolvimento)
+function logRequest(method: string, url: string, data?: unknown) {
+  const config = getApiConfig();
+  if (config.enableLogging) {
+
   }
-  // Server-side: fallback to backend port
-  return 'http://localhost:5000';
-};
+}
 
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const config = getApiConfig();
   const baseUrl = getApiBaseUrl();
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
   
+  // Log da requisição em desenvolvimento
+  logRequest(method, fullUrl, data);
+  
   const makeRequest = async (): Promise<Response> => {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+    };
     
     if (data) {
       headers['Content-Type'] = 'application/json';
@@ -146,11 +160,26 @@ export async function apiRequest(
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    return await fetch(fullUrl, {
-      method,
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), config.timeout);
+    
+    try {
+      const response = await fetch(fullUrl, {
+        method,
+        headers,
+        body: data ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Tempo limite da requisição excedido');
+      }
+      throw error;
+    }
   };
   
   const res = await makeRequest();
@@ -219,11 +248,13 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minutos em vez de Infinity
+      retry: RETRY_CONFIG.read.retry,
+      retryDelay: RETRY_CONFIG.read.retryDelay,
     },
     mutations: {
-      retry: false,
+      retry: RETRY_CONFIG.write.retry,
+      retryDelay: RETRY_CONFIG.write.retryDelay,
     },
   },
 });

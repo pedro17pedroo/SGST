@@ -1,13 +1,13 @@
 import React from "react";
 import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
 import { useBrowserLocation } from "wouter/use-browser-location";
-import "./debug-env"; // Debug das variáveis de ambiente
-import "./test-api-url"; // Teste da URL da API
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PerformanceOptimizer } from "./lib/performance-optimizer";
+import { initializeGlobalStateSync } from "./lib/global-state-sync";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { Sidebar } from "@/components/layout/sidebar";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ThemeProvider } from "@/contexts/theme-context";
@@ -15,7 +15,8 @@ import { ModuleProvider } from "@/contexts/module-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { ModuleGuard } from "@/components/layout/module-guard";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile.tsx";
+
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import Categories from "@/pages/categories";
@@ -63,10 +64,10 @@ function Router() {
   const isMobile = useIsMobile();
   
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
-      <main className={`flex-1 overflow-auto ${
-        isMobile ? 'pt-0' : 'ml-72'
+      <main className={`flex-1 overflow-auto transition-all duration-300 ${
+        isMobile ? 'pt-16 pl-0' : 'ml-72'
       }`}>
         <div className="w-full">
           <Switch>
@@ -223,9 +224,10 @@ function Router() {
 }
 
 function App() {
-  // Initialize UX Hiper-Rápida
+  // Initialize UX Hiper-Rápida e Sistema de Sincronização Global
   React.useEffect(() => {
     PerformanceOptimizer.initialize(queryClient);
+    initializeGlobalStateSync();
   }, []);
 
   return (
@@ -281,6 +283,7 @@ function App() {
                   </Route>
                 </Switch>
                 </WouterRouter>
+                <ScrollToTop />
                 <Toaster />
               </ModuleProvider>
             </AuthProvider>

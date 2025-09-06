@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+// import { useEffect } from 'react'; // Removido - não utilizado
 import { Plus, Truck, AlertTriangle, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,10 +10,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
+// import { useToast } from '@/hooks/use-toast';
+import { LoadingState, LoadingComponents, useLoadingStates } from '@/components/ui/loading-state';
 import { FleetTrackingMap } from '@/components/fleet/fleet-tracking-map';
 import { VehicleAssignments } from '@/components/fleet/vehicle-assignments';
+import { useVehicles, useCreateVehicle, useUpdateVehicle, useDeleteVehicle } from '@/hooks/api/use-fleet';
+import { useDrivers, useOperators } from '@/hooks/api/use-users';
 
 interface Vehicle {
   id: string;
@@ -61,91 +64,57 @@ const initialFormData: VehicleFormData = {
   isActive: true
 };
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-}
+// interface User { // Removido - não utilizado
+//   id: string;
+//   username: string;
+//   email: string;
+//   role: string;
+// }
 
 export default function FleetPage() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [formData, setFormData] = useState<VehicleFormData>(initialFormData);
-  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // const { toast } = useToast();
 
-  useEffect(() => {
-    fetchVehicles();
-    fetchUsers();
-  }, []); 
+  // Usar hooks centralizados
+  const { data: vehiclesResponse, isLoading: loading, error } = useVehicles();
+  const { data: driversResponse } = useDrivers();
+  const { data: operatorsResponse } = useOperators();
+  const createVehicleMutation = useCreateVehicle();
+  const updateVehicleMutation = useUpdateVehicle();
+  const deleteVehicleMutation = useDeleteVehicle();
 
-  const fetchUsers = async () => {
-    try {
-      const response = await apiRequest('GET', '/api/users');
-      const data = await response.json();
-      setUsers(data.filter((user: User) => user.role === 'driver' || user.role === 'operator'));
-    } catch (error) {
-      console.error('Erro ao carregar utilizadores:', error);
-    }
-  };
-
-  const fetchVehicles = async () => {
-    try {
-      setLoading(true);
-      const response = await apiRequest('GET', '/api/fleet/vehicles');
-      const data = await response.json();
-      setVehicles(data);
-    } catch (error) {
-      console.error('Erro ao carregar veículos:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os veículos.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Extrair dados das respostas
+  const vehicles = vehiclesResponse?.data || [];
+  const drivers = driversResponse?.data || [];
+  const operators = operatorsResponse?.data || [];
+  const users = [...drivers, ...operators];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Preparar dados para envio, convertendo "none" para null
+    const submitData = {
+      ...formData,
+      driverId: formData.driverId === 'none' ? null : formData.driverId
+    };
+    
     try {
-      // Preparar dados para envio, convertendo "none" para null
-      const submitData = {
-        ...formData,
-        driverId: formData.driverId === 'none' ? null : formData.driverId
-      };
-      
       if (editingVehicle) {
-        await apiRequest('PUT', `/api/fleet/vehicles/${editingVehicle.id}`, submitData);
-        toast({
-          title: "Sucesso",
-          description: "Veículo atualizado com sucesso.",
-        });
+        await updateVehicleMutation.mutateAsync({ id: editingVehicle.id, data: submitData });
       } else {
-        await apiRequest('POST', '/api/fleet/vehicles', submitData);
-        toast({
-          title: "Sucesso",
-          description: "Veículo criado com sucesso.",
-        });
+        await createVehicleMutation.mutateAsync(submitData);
       }
       
       setIsDialogOpen(false);
       setEditingVehicle(null);
       setFormData(initialFormData);
-      fetchVehicles();
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao salvar veículo.",
-        variant: "destructive",
-      });
+    } catch (error) {
+      // Erro já tratado pelos hooks
+      console.error('Erro ao salvar veículo:', error);
     }
   };
 
@@ -171,18 +140,10 @@ export default function FleetPage() {
     if (!confirm('Tem certeza que deseja excluir este veículo?')) return;
     
     try {
-      await apiRequest('DELETE', `/api/fleet/vehicles/${vehicleId}`);
-      toast({
-        title: "Sucesso",
-        description: "Veículo excluído com sucesso.",
-      });
-      fetchVehicles();
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao excluir veículo.",
-        variant: "destructive",
-      });
+      await deleteVehicleMutation.mutateAsync(vehicleId);
+    } catch (error) {
+      // Erro já tratado pelo hook
+      console.error('Erro ao eliminar veículo:', error);
     }
   };
 
@@ -193,6 +154,8 @@ export default function FleetPage() {
     const matchesStatus = statusFilter === 'all' || vehicle.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const loadingStates = useLoadingStates(filteredVehicles, loading, error);
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -321,17 +284,21 @@ export default function FleetPage() {
               <CardDescription>Gerencie todos os veículos da sua frota</CardDescription>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8">Carregando veículos...</div>
-              ) : filteredVehicles.length === 0 ? (
-                <div className="text-center py-8">
-                  <Truck className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-semibold text-gray-900">Nenhum veículo encontrado</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {searchTerm || statusFilter !== 'all' ? 'Tente ajustar os filtros.' : 'Comece adicionando um novo veículo.'}
-                  </p>
-                </div>
-              ) : (
+              <LoadingState
+                isLoading={loadingStates.isLoading}
+                error={loadingStates.error}
+                isEmpty={loadingStates.isEmpty}
+                loadingComponent={<LoadingComponents.Table />}
+                emptyComponent={
+                  <div className="text-center py-8">
+                    <Truck className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-semibold text-gray-900">Nenhum veículo encontrado</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {searchTerm || statusFilter !== 'all' ? 'Tente ajustar os filtros.' : 'Comece adicionando um novo veículo.'}
+                    </p>
+                  </div>
+                }
+              >
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -388,7 +355,7 @@ export default function FleetPage() {
                     ))}
                   </TableBody>
                 </Table>
-              )}
+              </LoadingState>
             </CardContent>
           </Card>
         </TabsContent>

@@ -205,16 +205,16 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     description: 'Listas de picking e preparação de encomendas',
     enabled: true,
     dependencies: ['orders', 'product_locations'],
-    routes: ['/api/picking-lists'],
-    tables: ['picking_lists', 'picking_list_items'],
-    permissions: ['picking_lists.read', 'picking_lists.write']
+    routes: ['/api/picking-lists', '/api/packing-tasks'],
+    tables: ['picking_lists', 'picking_list_items', 'packing_tasks'],
+    permissions: ['picking_lists.read', 'picking_lists.write', 'packing_tasks.read', 'packing_tasks.write']
   },
 
   alerts: {
     id: 'alerts',
     name: 'Alertas e Notificações',
     description: 'Sistema de alertas e notificações',
-    enabled: false,
+    enabled: true,
     dependencies: ['users'],
     routes: ['/api/alerts'],
     tables: ['alerts'],
@@ -227,7 +227,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     description: 'Interface pública para rastreamento de encomendas',
     enabled: true,
     dependencies: ['shipping'],
-    routes: ['/api/public/track'],
+    routes: ['/api/public'],
     tables: [],
     permissions: []
   },

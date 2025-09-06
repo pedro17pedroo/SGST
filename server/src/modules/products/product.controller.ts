@@ -5,8 +5,57 @@ import { z } from 'zod';
 export class ProductController {
   static async getProducts(req: Request, res: Response) {
     try {
-      const products = await ProductModel.getAll();
-      res.json(products);
+      // Extrair parâmetros de query
+      const {
+        page = 1,
+        limit = 5,
+        search = '',
+        category = '',
+        status = '',
+        minPrice = '',
+        maxPrice = '',
+        sortBy = 'name',
+        sortOrder = 'asc'
+      } = req.query;
+
+      // Converter para números
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
+      const minPriceNum = minPrice ? parseFloat(minPrice as string) : undefined;
+      const maxPriceNum = maxPrice ? parseFloat(maxPrice as string) : undefined;
+
+      // Validar parâmetros
+      if (pageNum < 1 || limitNum < 1 || limitNum > 100) {
+        return res.status(400).json({ 
+          message: "Parâmetros de paginação inválidos",
+          error: "Page deve ser >= 1 e limit deve estar entre 1 e 100"
+        });
+      }
+
+      // Buscar produtos com filtros e paginação
+      const result = await ProductModel.getAllWithFilters({
+        page: pageNum,
+        limit: limitNum,
+        search: search as string,
+        category: category as string,
+        status: status as string,
+        minPrice: minPriceNum,
+        maxPrice: maxPriceNum,
+        sortBy: sortBy as string,
+        sortOrder: sortOrder as 'asc' | 'desc'
+      });
+
+      res.json({
+        data: result.products,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limitNum)
+        },
+        success: true,
+        message: 'Produtos carregados com sucesso'
+      });
     } catch (error) {
       console.error('Error fetching products:', error);
       res.status(500).json({ 

@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +10,18 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+// import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth-context";
+import { 
+  useBatches, 
+  useCreateBatch, 
+  // useUpdateBatchQuality,
+  // useExpiringBatches,
+  type Batch,
+  type BatchFormData 
+} from "@/hooks/api/use-batches";
+import { useProducts } from "@/hooks/api/use-products";
+import { useWarehouses } from "@/hooks/api/use-warehouses";
 import { 
   Package, 
   Calendar, 
@@ -45,45 +53,14 @@ const batchSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Tipo inferido do schema
-type BatchFormData = z.infer<typeof batchSchema>;
-
-interface Batch {
-  id: string;
-  batchNumber: string;
-  product: {
-    id: string;
-    name: string;
-    sku: string;
-  };
-  warehouse: {
-    id: string;
-    name: string;
-  };
-  manufacturingDate: string;
-  expiryDate: string;
-  quantity: number;
-  remainingQuantity: number;
-  supplierBatchRef?: string;
-  qualityStatus: "pending" | "approved" | "rejected" | "quarantine";
-  status: "active" | "consumed" | "expired" | "recalled";
-  notes?: string;
-  fifoPosition: number;
-  daysToExpiry: number;
-  location?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export default function BatchManagementPage() {
   const [activeTab, setActiveTab] = useState("batches");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("fifo");
+  // const { user } = useAuth();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const form = useForm<BatchFormData>({
     resolver: zodResolver(batchSchema),
@@ -101,99 +78,36 @@ export default function BatchManagementPage() {
   });
 
   // Get batches with FIFO sorting
-  const { data: batches, isLoading } = useQuery({
-    queryKey: ['/api/batches', { sortBy, filterStatus }],
-    queryFn: async () => {
-      // Demo data with FIFO/FEFO logic
-      const currentDate = new Date();
-      const mockBatches: Batch[] = [
-        {
-          id: 'batch-001',
-          batchNumber: 'BTH-2025-001',
-          product: { id: '1', name: 'Smartphone Samsung Galaxy A54', sku: 'SPH-001' },
-          warehouse: { id: 'wh-001', name: 'Armazém Principal' },
-          manufacturingDate: '2024-11-15',
-          expiryDate: '2025-11-15',
-          quantity: 100,
-          remainingQuantity: 85,
-          qualityStatus: 'approved',
-          status: 'active',
-          fifoPosition: 1,
-          daysToExpiry: Math.floor((new Date('2025-11-15').getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)),
-          location: 'A1-B2-C3',
-          createdAt: '2024-11-15T10:00:00Z',
-          updatedAt: '2025-01-15T14:30:00Z',
-        },
-        {
-          id: 'batch-002',
-          batchNumber: 'BTH-2025-002',
-          product: { id: '1', name: 'Smartphone Samsung Galaxy A54', sku: 'SPH-001' },
-          warehouse: { id: 'wh-001', name: 'Armazém Principal' },
-          manufacturingDate: '2024-12-01',
-          expiryDate: '2025-12-01',
-          quantity: 150,
-          remainingQuantity: 150,
-          qualityStatus: 'approved',
-          status: 'active',
-          fifoPosition: 2,
-          daysToExpiry: Math.floor((new Date('2025-12-01').getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)),
-          location: 'A1-B2-C4',
-          createdAt: '2024-12-01T10:00:00Z',
-          updatedAt: '2024-12-01T10:00:00Z',
-        },
-      ];
-
-      // Apply FIFO/FEFO sorting
-      if (sortBy === 'fifo') {
-        return mockBatches.sort((a, b) => a.fifoPosition - b.fifoPosition);
-      } else if (sortBy === 'fefo') {
-        return mockBatches.sort((a, b) => a.daysToExpiry - b.daysToExpiry);
-      }
-      
-      return mockBatches;
-    }
-  });
+  const { data: batches, isLoading } = useBatches();
 
   // Get products for form
-  const { data: products } = useQuery({
-    queryKey: ['/api/products'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/products');
-      return response.json() as Promise<Array<{ id: string; name: string; sku: string; }>>;
-    }
-  });
+  const { data: products } = useProducts();
 
   // Get warehouses for form
-  const { data: warehouses } = useQuery({
-    queryKey: ['/api/warehouses'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/warehouses');
-      return response.json() as Promise<Array<{ id: string; name: string; }>>;
-    }
-  });
+  const { data: warehouses } = useWarehouses();
 
   // Create batch mutation
-  const createBatchMutation = useMutation({
-    mutationFn: async (data: BatchFormData) => {
-      const response = await apiRequest('POST', '/api/batches', {
-        ...data,
-        createdBy: user?.id || 'anonymous-user'
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/batches'] });
-      toast({
-        title: "Lote criado com sucesso!",
-        description: "O lote foi registado no sistema com posição FIFO automática.",
-      });
-      setIsDialogOpen(false);
-      form.reset();
-    },
-  });
+  const createBatchMutation = useCreateBatch();
+  // const updateQualityMutation = useUpdateBatchQuality();
 
   const onSubmit = (data: BatchFormData) => {
-    createBatchMutation.mutate(data);
+    createBatchMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          title: "Lote criado com sucesso!",
+          description: "O lote foi registado no sistema com posição FIFO automática.",
+        });
+        setIsDialogOpen(false);
+        form.reset();
+      },
+      onError: () => {
+        toast({
+          title: "Erro",
+          description: "Erro ao criar lote.",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -238,7 +152,8 @@ export default function BatchManagementPage() {
     }
   };
 
-  const filteredBatches = batches?.filter(batch => {
+  const batchesArray = Array.isArray(batches) ? batches : batches?.data || [];
+  const filteredBatches = batchesArray.filter((batch: Batch) => {
     const matchesSearch = 
       batch.batchNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       batch.product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -246,7 +161,7 @@ export default function BatchManagementPage() {
 
     if (filterStatus === "all") return matchesSearch;
     return matchesSearch && batch.status === filterStatus;
-  }) || [];
+  });
 
   return (
     <div className="space-y-6 p-6">
@@ -446,7 +361,7 @@ export default function BatchManagementPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {products?.map((product) => (
+                                {(Array.isArray(products) ? products : products?.data || []).map((product: any) => (
                                   <SelectItem key={product.id} value={product.id}>
                                     {product.name} ({product.sku})
                                   </SelectItem>
@@ -470,7 +385,7 @@ export default function BatchManagementPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {warehouses?.map((warehouse) => (
+                                {(Array.isArray(warehouses) ? warehouses : warehouses?.data || []).map((warehouse: any) => (
                                   <SelectItem key={warehouse.id} value={warehouse.id}>
                                     {warehouse.name}
                                   </SelectItem>
@@ -535,7 +450,7 @@ export default function BatchManagementPage() {
             {isLoading ? (
               <div className="text-center py-8">A carregar lotes...</div>
             ) : (
-              filteredBatches.map((batch) => (
+              filteredBatches.map((batch: Batch) => (
                 <Card key={batch.id} className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -592,8 +507,8 @@ export default function BatchManagementPage() {
               <h3 className="text-lg font-semibold mb-4">Alertas de Validade</h3>
               <div className="space-y-3">
                 {filteredBatches
-                  .filter(batch => batch.daysToExpiry <= 30)
-                  .map((batch) => (
+                  .filter((batch: Batch) => batch.daysToExpiry <= 30)
+                  .map((batch: Batch) => (
                     <div key={batch.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium">{batch.product.name}</p>

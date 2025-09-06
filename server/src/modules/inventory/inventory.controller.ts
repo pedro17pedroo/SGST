@@ -130,4 +130,37 @@ export class InventoryController {
       });
     }
   }
+
+  static async getStockAlerts(req: Request, res: Response) {
+    try {
+      // Obter produtos com baixo stock para gerar alertas
+      const lowStockProducts = await InventoryModel.getLowStockProducts();
+      
+      // Transformar em formato de alertas
+      const alerts = lowStockProducts.map((product: any) => ({
+        id: `alert-${product.id}`,
+        type: 'low_stock',
+        priority: product.stock <= 0 ? 'critical' : product.stock <= product.minStockLevel * 0.5 ? 'high' : 'medium',
+        title: `Stock baixo: ${product.name}`,
+        message: `Produto ${product.name} (${product.sku}) tem apenas ${product.stock} unidades em stock. Nível mínimo: ${product.minStockLevel}`,
+        productId: product.id,
+        productName: product.name,
+        currentStock: product.stock,
+        minStockLevel: product.minStockLevel,
+        createdAt: new Date().toISOString()
+      }));
+      
+      res.json({
+        success: true,
+        data: alerts,
+        total: alerts.length
+      });
+    } catch (error) {
+      console.error('Error fetching stock alerts:', error);
+      res.status(500).json({ 
+        message: "Erro ao buscar alertas de stock", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }

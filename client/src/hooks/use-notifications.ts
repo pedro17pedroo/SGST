@@ -55,18 +55,20 @@ export function useNotifications() {
   };
 
   // Simulate real-time notifications (in production, this would be WebSocket or SSE)
+  // NOTA: Desabilitado temporariamente para evitar requisições desnecessárias
   useEffect(() => {
+    // Intervalo aumentado para 5 minutos para reduzir carga
     const interval = setInterval(() => {
       const random = Math.random();
       
-      if (random < 0.1) { // 10% chance every 30 seconds
-        if (random < 0.03) {
+      if (random < 0.05) { // 5% chance every 5 minutes (reduzido de 10% a cada 30s)
+        if (random < 0.015) {
           addNotification({
             type: "warning",
             title: "Stock Baixo",
             message: "Produto XYZ está com stock abaixo do limite mínimo",
           });
-        } else if (random < 0.06) {
+        } else if (random < 0.03) {
           addNotification({
             type: "success",
             title: "Nova Encomenda",
@@ -80,10 +82,10 @@ export function useNotifications() {
           });
         }
       }
-    }, 30000); // Check every 30 seconds
+    }, 300000); // Check every 5 minutes (aumentado de 30 segundos)
 
     return () => clearInterval(interval);
-  }, []);
+  }, [addNotification]); // Adicionada dependência para evitar stale closures
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

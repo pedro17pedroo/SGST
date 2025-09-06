@@ -29,6 +29,8 @@ export default function Register() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
+  
+  // Função de login rápido removida
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

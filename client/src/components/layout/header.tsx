@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useNotifications } from "@/hooks/use-notifications";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile.tsx";
 import {
   Popover,
   PopoverContent,
@@ -32,20 +32,30 @@ export function Header({ title, breadcrumbs = [] }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-card border-b border-border px-6 backdrop-blur-sm w-full h-20" data-testid="page-header">
+    <header className={`sticky z-40 bg-card border-b border-border backdrop-blur-sm w-full h-20 ${
+      isMobile ? 'top-16 px-4' : 'top-0 px-6'
+    }`} data-testid="page-header">
       <div className="flex items-center justify-between h-full">
         <div className="flex flex-col justify-center min-w-0 flex-1">
-          {!isMobile && (
-            <nav className="text-sm text-muted-foreground" data-testid="breadcrumbs">
-              <span>SGST</span>
-              {breadcrumbs.map((crumb, index) => (
-                <span key={index}>
-                  {" / "}
-                  <span className={index === breadcrumbs.length - 1 ? "text-foreground" : ""}>
-                    {crumb}
-                  </span>
-                </span>
-              ))}
+          {breadcrumbs && breadcrumbs.length > 0 && (
+            <nav className={`text-sm text-muted-foreground ${
+              isMobile ? 'overflow-x-auto scrollbar-hide' : ''
+            }`} data-testid="breadcrumbs">
+              <div className="flex items-center space-x-2">
+                <span className="whitespace-nowrap">SGST</span>
+                {breadcrumbs.map((crumb, index) => (
+                  <div key={index} className="flex items-center space-x-2 whitespace-nowrap">
+                    <span className="text-muted-foreground/60">/</span>
+                    <span className={`${
+                      index === breadcrumbs.length - 1 
+                        ? 'text-foreground font-medium' 
+                        : isMobile ? 'text-muted-foreground/80' : ''
+                    } ${isMobile && index < breadcrumbs.length - 1 ? 'max-w-20 truncate' : ''}`}>
+                      {crumb}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </nav>
           )}
           <h2 className="text-xl lg:text-2xl font-bold text-foreground truncate" data-testid="page-title">{title}</h2>

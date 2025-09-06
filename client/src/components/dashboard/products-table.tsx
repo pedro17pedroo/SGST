@@ -1,8 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Laptop, Smartphone, Headphones } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Laptop, Smartphone, Headphones, Package } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile.tsx";
+import { LoadingState, EmptyState, LoadingComponents } from "@/components/ui/loading-state";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 interface ProductWithStock {
   id: string;
@@ -24,6 +26,15 @@ interface ProductsTableProps {
 
 export function ProductsTable({ products, isLoading }: ProductsTableProps) {
   const isMobile = useIsMobile();
+
+  return (
+    <ErrorBoundary>
+      <ProductsTableContent products={products} isLoading={isLoading} isMobile={isMobile} />
+    </ErrorBoundary>
+  );
+}
+
+function ProductsTableContent({ products, isLoading, isMobile }: ProductsTableProps & { isMobile: boolean }) {
   
   const getProductIcon = (categoryName?: string) => {
     if (!categoryName) return Laptop;
@@ -42,62 +53,50 @@ export function ProductsTable({ products, isLoading }: ProductsTableProps) {
     return { label: "Ativo", variant: "secondary" as const };
   };
 
-  if (isLoading) {
-    return (
-      <Card className="card-mobile">
-        <div className="animate-pulse">
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-5 sm:h-6 bg-muted rounded w-32 sm:w-48"></div>
-            <div className="h-4 bg-muted rounded w-24 sm:w-32"></div>
-          </div>
-          <div className="space-y-3 sm:space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className={isMobile ? "p-3 border rounded-lg space-y-2" : "flex items-center space-x-4 py-3"}>
-                {isMobile ? (
-                  <>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-muted rounded-lg"></div>
-                      <div className="flex-1 space-y-1">
-                        <div className="h-4 bg-muted rounded w-2/3"></div>
-                        <div className="h-3 bg-muted rounded w-1/2"></div>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="h-3 bg-muted rounded w-16"></div>
-                      <div className="h-6 bg-muted rounded w-12"></div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-10 h-10 bg-muted rounded-lg"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-muted rounded w-1/3"></div>
-                      <div className="h-3 bg-muted rounded w-1/4"></div>
-                    </div>
-                    <div className="h-4 bg-muted rounded w-20"></div>
-                    <div className="h-4 bg-muted rounded w-16"></div>
-                    <div className="h-4 bg-muted rounded w-24"></div>
-                    <div className="h-6 bg-muted rounded w-16"></div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="card-mobile" data-testid="products-table">
+  const loadingComponent = (
+    <Card className="card-mobile">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground" data-testid="products-table-title">
+        <div className="h-5 sm:h-6 bg-muted rounded w-32 sm:w-48 animate-pulse"></div>
+        <div className="h-4 bg-muted rounded w-24 sm:w-32 animate-pulse"></div>
+      </div>
+      <LoadingComponents.ProductList count={5} isMobile={isMobile} />
+    </Card>
+  );
+
+  const emptyComponent = (
+    <Card className="card-mobile">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base sm:text-lg font-semibold text-foreground">
           {isMobile ? "Top Produtos" : "Produtos Mais Vendidos"}
         </h3>
-        <Button variant="ghost" size={isMobile ? "sm" : "default"} className="button-mobile" data-testid="view-all-products">
+        <Button variant="ghost" size={isMobile ? "sm" : "default"} className="button-mobile">
           {isMobile ? "Ver todos" : "Ver todos os produtos →"}
         </Button>
       </div>
+      <EmptyState 
+        title="Nenhum produto encontrado"
+        description="Não há produtos para exibir no momento."
+        icon={<Package className="h-12 w-12 text-muted-foreground" />}
+      />
+    </Card>
+  );
+
+  return (
+    <LoadingState
+      isLoading={isLoading}
+      isEmpty={products.length === 0}
+      loadingComponent={loadingComponent}
+      emptyComponent={emptyComponent}
+    >
+      <Card className="card-mobile" data-testid="products-table">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground" data-testid="products-table-title">
+            {isMobile ? "Top Produtos" : "Produtos Mais Vendidos"}
+          </h3>
+          <Button variant="ghost" size={isMobile ? "sm" : "default"} className="button-mobile" data-testid="view-all-products">
+            {isMobile ? "Ver todos" : "Ver todos os produtos →"}
+          </Button>
+        </div>
       {isMobile ? (
         <div className="space-y-3">
           {products.length > 0 ? (
@@ -155,11 +154,7 @@ export function ProductsTable({ products, isLoading }: ProductsTableProps) {
                 </div>
               );
             })
-          ) : (
-            <div className="py-8 text-center text-muted-foreground" data-testid="no-products">
-              Nenhum produto encontrado
-            </div>
-          )}
+          ) : null}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -233,17 +228,12 @@ export function ProductsTable({ products, isLoading }: ProductsTableProps) {
                     </tr>
                   );
                 })
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-muted-foreground" data-testid="no-products">
-                    Nenhum produto encontrado
-                  </td>
-                </tr>
-              )}
+              ) : null}
             </tbody>
           </table>
         </div>
       )}
-    </Card>
+      </Card>
+    </LoadingState>
   );
 }

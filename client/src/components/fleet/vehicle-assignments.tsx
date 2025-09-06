@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Plus, Truck, MapPin, Calendar, Clock, User, Package, Search } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useVehicleAssignments, useCreateVehicleAssignment } from '@/hooks/api/use-fleet';
+import { useAvailableVehicles } from '@/hooks/api/use-shipping';
+import { useDrivers } from '@/hooks/api/use-users';
+import { useShipments } from '@/hooks/api/use-shipping';
 
 interface VehicleAssignment {
   id: string;
@@ -50,9 +53,7 @@ interface AssignmentFormData {
   estimatedArrival?: string;
 }
 
-export function VehicleAssignments() {
-  const [assignments, setAssignments] = useState<VehicleAssignment[]>([]);
-  const [loading, setLoading] = useState(true);
+export const VehicleAssignments = React.memo(function VehicleAssignments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -63,61 +64,28 @@ export function VehicleAssignments() {
     estimatedDeparture: '',
     estimatedArrival: ''
   });
-  const [availableVehicles, setAvailableVehicles] = useState([]);
-  const [availableShipments, setAvailableShipments] = useState([]);
-  const [availableDrivers, setAvailableDrivers] = useState([]);
   const { toast } = useToast();
+  
+  // Usar hooks centralizados
+  const { data: assignmentsResponse, isLoading: loading } = useVehicleAssignments();
+  const { data: vehiclesResponse } = useAvailableVehicles();
+  const { data: driversResponse } = useDrivers();
+  const { data: shipmentsResponse } = useShipments({ status: 'pending' });
+  const createAssignmentMutation = useCreateVehicleAssignment();
+  
+  // Extrair dados das respostas
+  const assignments = assignmentsResponse?.data || [];
+  const availableVehicles = vehiclesResponse?.data || [];
+  const availableDrivers = driversResponse?.data || [];
+  const availableShipments = shipmentsResponse?.data || [];
 
-  useEffect(() => {
-    fetchAssignments();
-    fetchAvailableResources();
-  }, []);
+  // Remover useEffect e funções de fetch - agora gerenciado pelos hooks
 
-  const fetchAssignments = async () => {
-    try {
-      setLoading(true);
-      const response = await apiRequest('GET', '/api/fleet/assignments');
-      const data = await response.json();
-      setAssignments(data);
-    } catch (error) {
-      console.error('Erro ao carregar atribuições:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as atribuições.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAvailableResources = async () => {
-    try {
-      const [vehiclesRes, shipmentsRes, driversRes] = await Promise.all([
-        apiRequest('GET', '/api/fleet/vehicles/available'),
-        apiRequest('GET', '/api/shipping?status=pending'),
-        apiRequest('GET', '/api/users?role=driver')
-      ]);
-
-      const [vehicles, shipments, drivers] = await Promise.all([
-        vehiclesRes.json(),
-        shipmentsRes.json(),
-        driversRes.json()
-      ]);
-
-      setAvailableVehicles(vehicles);
-      setAvailableShipments(shipments);
-      setAvailableDrivers(drivers);
-    } catch (error) {
-      console.error('Erro ao carregar recursos:', error);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      await apiRequest('POST', '/api/fleet/assignments', formData);
+      await createAssignmentMutation.mutateAsync(formData);
       toast({
         title: "Sucesso",
         description: "Atribuição criada com sucesso.",
@@ -131,8 +99,7 @@ export function VehicleAssignments() {
         estimatedDeparture: '',
         estimatedArrival: ''
       });
-      fetchAssignments();
-      fetchAvailableResources();
+      setIsDialogOpen(false);
     } catch (error: any) {
       toast({
         title: "Erro",
@@ -140,35 +107,30 @@ export function VehicleAssignments() {
         variant: "destructive",
       });
     }
-  };
+  }, [formData, createAssignmentMutation, toast]);
 
-  const handleUpdateStatus = async (assignmentId: string, status: string) => {
-    try {
-      await apiRequest('PUT', `/api/fleet/assignments/${assignmentId}`, { status });
-      toast({
-        title: "Sucesso",
-        description: "Status atualizado com sucesso.",
-      });
-      fetchAssignments();
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao atualizar status.",
-        variant: "destructive",
-      });
-    }
-  };
+  const handleUpdateStatus = useCallback(async () => {
+    // TODO: Implementar hook para atualizar status de atribuição
+    toast({
+      title: "Aviso",
+      description: "Funcionalidade de atualização de status será implementada em breve.",
+      variant: "default",
+    });
+  }, [toast]);
 
-  const filteredAssignments = assignments.filter(assignment => {
-    const matchesSearch = 
-      assignment.vehicle?.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.shipment?.trackingNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || assignment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Memoizar filtros para evitar recálculos
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((assignment: VehicleAssignment) => {
+      const matchesSearch = 
+        assignment.vehicle?.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assignment.shipment?.trackingNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assignment.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || assignment.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [assignments, searchTerm, statusFilter]);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = useCallback((status: string) => {
     const statusMap = {
       atribuido: { label: 'Atribuído', variant: 'outline' as const },
       carregando: { label: 'Carregando', variant: 'secondary' as const },
@@ -178,9 +140,9 @@ export function VehicleAssignments() {
     };
     const config = statusMap[status as keyof typeof statusMap] || statusMap.atribuido;
     return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
+  }, []);
 
-  const getStatusActions = (assignment: VehicleAssignment) => {
+  const getStatusActions = useCallback((assignment: VehicleAssignment) => {
     const currentStatus = assignment.status;
     const actions = [];
 
@@ -190,7 +152,7 @@ export function VehicleAssignments() {
           key="start-loading"
           size="sm"
           variant="outline"
-          onClick={() => handleUpdateStatus(assignment.id, 'carregando')}
+          onClick={() => handleUpdateStatus()}
         >
           Iniciar Carregamento
         </Button>
@@ -203,7 +165,7 @@ export function VehicleAssignments() {
           key="start-transit"
           size="sm"
           variant="outline"
-          onClick={() => handleUpdateStatus(assignment.id, 'em_transito')}
+          onClick={() => handleUpdateStatus()}
         >
           Iniciar Trânsito
         </Button>
@@ -216,7 +178,7 @@ export function VehicleAssignments() {
           key="complete"
           size="sm"
           variant="outline"
-          onClick={() => handleUpdateStatus(assignment.id, 'entregue')}
+          onClick={() => handleUpdateStatus()}
         >
           Marcar Entregue
         </Button>
@@ -229,7 +191,7 @@ export function VehicleAssignments() {
           key="cancel"
           size="sm"
           variant="destructive"
-          onClick={() => handleUpdateStatus(assignment.id, 'cancelado')}
+          onClick={() => handleUpdateStatus()}
         >
           Cancelar
         </Button>
@@ -241,11 +203,11 @@ export function VehicleAssignments() {
     ) : (
       <span className="text-muted-foreground text-sm">Sem ações</span>
     );
-  };
+  }, [handleUpdateStatus]);
 
-  const openNewAssignmentDialog = () => {
+  const openNewAssignmentDialog = useCallback(() => {
     setIsDialogOpen(true);
-  };
+  }, []);
 
   const assignedCount = assignments.filter(a => a.status === 'atribuido').length;
   const inTransitCount = assignments.filter(a => a.status === 'em_transito').length;
@@ -429,7 +391,7 @@ export function VehicleAssignments() {
           </DialogHeader>
           
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="vehicleId">Veículo *</Label>
                 <Select value={formData.vehicleId} onValueChange={(value) => setFormData({...formData, vehicleId: value})}>
@@ -499,11 +461,11 @@ export function VehicleAssignments() {
               </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto order-2 sm:order-1">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={!formData.vehicleId || !formData.shipmentId}>
+              <Button type="submit" disabled={!formData.vehicleId || !formData.shipmentId} className="w-full sm:w-auto order-1 sm:order-2">
                 Criar Atribuição
               </Button>
             </DialogFooter>
@@ -512,4 +474,4 @@ export function VehicleAssignments() {
       </Dialog>
     </div>
   );
-}
+})

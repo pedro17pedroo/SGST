@@ -38,6 +38,8 @@ import { rolesModule } from './roles/role.module';
 import { permissionsModule } from './permissions/permission.module';
 import { ediModule } from './edi';
 import { anomalyFraudModule } from './anomaly-fraud-detection';
+import reportsModule from './reports';
+import alertsModule from './alerts';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -73,6 +75,8 @@ export class ModuleRegistry {
     this.modules.set('permissions', permissionsModule);
     this.modules.set('edi', ediModule);
     this.modules.set('anomaly_fraud_detection', anomalyFraudModule);
+    this.modules.set('reports', reportsModule);
+    this.modules.set('alerts', alertsModule);
     // this.modules.set('gps_tracking', gpsModule); // Module not available
     
     // Temporary direct registration for barcode scanning
@@ -117,14 +121,9 @@ export class ModuleRegistry {
       }
     });
 
-    // Temporary direct registration for picking packing
+    // Picking & Packing Module
     this.modules.set('picking_packing', {
-      config: { 
-        id: 'picking_packing', 
-        name: 'Picking & Packing',
-        description: 'Listas de picking e preparação de encomendas',
-        enabled: true
-      },
+      config: ModuleManager.getModuleById('picking_packing')!,
       register: async (app: Express) => {
         initializePickingPackingModule(app);
         console.log('✓ Módulo Picking & Packing registrado');

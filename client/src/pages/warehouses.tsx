@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, MapPin, Package, Edit, Trash2 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +10,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LoadingState, LoadingComponents } from "@/components/ui/loading-state";
 import { useForm } from "react-hook-form";
 import { type Warehouse } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  useWarehouses, 
+  useCreateWarehouse, 
+  useUpdateWarehouse, 
+  useDeleteWarehouse 
+} from "@/hooks/api/use-warehouses";
 
 // Simple form data type without zod validation to avoid compatibility issues
 type WarehouseFormData = {
@@ -56,51 +61,47 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
     }
   }, [warehouse, form]);
 
-  const createMutation = useMutation({
-    mutationFn: async (data: WarehouseFormData) => {
-      const response = await apiRequest("POST", "/api/warehouses", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/warehouses"] });
+  const createWarehouseMutation = useCreateWarehouse();
+
+  const handleCreateWarehouse = async (data: WarehouseFormData) => {
+    try {
+      await createWarehouseMutation.mutateAsync(data);
       setOpen(false);
       form.reset();
       toast({
         title: "Armazém criado",
         description: "O armazém foi criado com sucesso.",
       });
-    },
-    onError: () => {
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Não foi possível criar o armazém.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: WarehouseFormData) => {
-      const response = await apiRequest("PUT", `/api/warehouses/${warehouse?.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/warehouses"] });
+  const updateWarehouseMutation = useUpdateWarehouse();
+
+  const handleUpdateWarehouse = async (data: WarehouseFormData) => {
+    if (!warehouse?.id) return;
+    
+    try {
+      await updateWarehouseMutation.mutateAsync({ id: warehouse.id, data });
       setOpen(false);
       form.reset();
       toast({
         title: "Armazém atualizado",
         description: "O armazém foi atualizado com sucesso.",
       });
-    },
-    onError: () => {
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o armazém.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   const onSubmit = (data: WarehouseFormData) => {
     // Basic validation
@@ -114,9 +115,9 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
     }
 
     if (warehouse) {
-      updateMutation.mutate(data);
+      handleUpdateWarehouse(data);
     } else {
-      createMutation.mutate(data);
+      handleCreateWarehouse(data);
     }
   };
 
@@ -230,10 +231,10 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
               </Button>
               <Button 
                 type="submit" 
-                disabled={createMutation.isPending || updateMutation.isPending}
+                disabled={createWarehouseMutation.isPending || updateWarehouseMutation.isPending}
                 data-testid="button-save-warehouse"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                {createWarehouseMutation.isPending || updateWarehouseMutation.isPending ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </form>
@@ -245,26 +246,23 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
 
 function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
   const { toast } = useToast();
+  const deleteWarehouseMutation = useDeleteWarehouse();
 
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("DELETE", `/api/warehouses/${warehouse.id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/warehouses"] });
+  const handleDeleteWarehouse = async () => {
+    try {
+      await deleteWarehouseMutation.mutateAsync(warehouse.id);
       toast({
         title: "Armazém removido",
         description: "O armazém foi removido com sucesso.",
       });
-    },
-    onError: () => {
+    } catch (error) {
       toast({
         title: "Erro",
         description: "Não foi possível remover o armazém.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  };
 
   return (
     <Card className="h-full" data-testid={`card-warehouse-${warehouse.id}`}>
@@ -292,8 +290,8 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
+              onClick={handleDeleteWarehouse}
+              disabled={deleteWarehouseMutation.isPending}
               data-testid={`button-delete-${warehouse.id}`}
             >
               <Trash2 className="h-4 w-4" />
@@ -327,9 +325,8 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
 export default function Warehouses() {
   const [search, setSearch] = useState("");
   
-  const { data: warehouses = [], isLoading } = useQuery<Warehouse[]>({
-    queryKey: ["/api/warehouses"],
-  });
+  const { data: warehousesResponse, isLoading, error } = useWarehouses();
+  const warehouses = warehousesResponse?.data || [];
 
   const filteredWarehouses = warehouses.filter((warehouse: Warehouse) =>
     warehouse.name.toLowerCase().includes(search.toLowerCase())
@@ -365,49 +362,41 @@ export default function Warehouses() {
         />
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="h-48">
-              <CardHeader className="animate-pulse">
-                <div className="h-6 bg-muted rounded w-3/4"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent className="animate-pulse">
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded"></div>
-                  <div className="h-4 bg-muted rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWarehouses.map((warehouse: Warehouse) => (
-            <WarehouseCard key={warehouse.id} warehouse={warehouse} />
-          ))}
-          {filteredWarehouses.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum armazém encontrado</h3>
-              <p className="text-muted-foreground mb-4">
-                {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o seu primeiro armazém."}
-              </p>
-              {!search && (
-                <WarehouseDialog
-                  trigger={
-                    <Button data-testid="button-add-first-warehouse">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Criar Primeiro Armazém
-                    </Button>
-                  }
-                />
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      <LoadingState 
+         isLoading={isLoading} 
+         error={error}
+         isEmpty={filteredWarehouses.length === 0}
+         loadingComponent={
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             <LoadingComponents.Cards count={6} />
+           </div>
+         }
+         emptyComponent={
+           <div className="col-span-full text-center py-12">
+             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+             <h3 className="text-lg font-semibold mb-2">Nenhum armazém encontrado</h3>
+             <p className="text-muted-foreground mb-4">
+               {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro armazém."}
+             </p>
+             {!search && (
+               <WarehouseDialog
+                 trigger={
+                   <Button data-testid="button-add-first-warehouse">
+                     <Plus className="mr-2 h-4 w-4" />
+                     Criar Primeiro Armazém
+                   </Button>
+                 }
+               />
+             )}
+           </div>
+         }
+       >
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {filteredWarehouses.map((warehouse: Warehouse) => (
+             <WarehouseCard key={warehouse.id} warehouse={warehouse} />
+           ))}
+         </div>
+       </LoadingState>
       </div>
     </div>
   );

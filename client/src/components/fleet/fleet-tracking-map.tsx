@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Truck, Navigation, Clock, MapPin, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { useVehicleLocations } from '@/hooks/api/use-fleet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in react-leaflet
@@ -89,44 +89,43 @@ export function FleetTrackingMap({
   showControls = true,
   onVehicleSelect 
 }: FleetTrackingMapProps) {
-  const [vehicleLocations, setVehicleLocations] = useState<VehicleLocation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const { toast } = useToast();
+  
+  const { data: locationsResponse, isLoading: loading, error, refetch } = useVehicleLocations();
+  const vehicleLocations = locationsResponse?.data || [];
 
-  const fetchVehicleLocations = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await apiRequest('GET', '/api/fleet/vehicles/locations/all');
-      const data = await response.json();
-      
-      setVehicleLocations(data);
+  useEffect(() => {
+    if (vehicleLocations.length > 0) {
       setLastUpdate(new Date());
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar localizações dos veículos');
+    }
+  }, [vehicleLocations]);
+  
+  useEffect(() => {
+    if (error) {
       toast({
         title: "Erro de GPS",
         description: "Não foi possível carregar as localizações dos veículos.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error, toast]);
 
-  useEffect(() => {
-    fetchVehicleLocations();
-  }, []);
-
-  const handleRefresh = () => {
-    fetchVehicleLocations();
-    toast({
-      title: "Mapa Atualizado",
-      description: "Localizações dos veículos atualizadas.",
-    });
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+      setLastUpdate(new Date());
+      toast({
+        title: "Mapa Atualizado",
+        description: "Localizações dos veículos atualizadas.",
+      });
+    } catch (err) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar localizações.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -170,8 +169,8 @@ export function FleetTrackingMap({
           <div className="text-center py-8">
             <Navigation className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-semibold text-gray-900">Erro ao carregar mapa</h3>
-            <p className="mt-1 text-sm text-gray-500">{error}</p>
-            <Button onClick={fetchVehicleLocations} className="mt-4">
+            <p className="mt-1 text-sm text-gray-500">{error.message}</p>
+            <Button onClick={handleRefresh} className="mt-4">
               <RefreshCw className="mr-2 h-4 w-4" />
               Tentar Novamente
             </Button>
@@ -207,15 +206,15 @@ export function FleetTrackingMap({
         <div className="flex items-center gap-4 text-sm">
           <span className="flex items-center gap-1">
             <Truck className="h-4 w-4 text-green-600" />
-            {vehicleLocations.filter(v => v.status === 'ativo').length} Ativos
+            {vehicleLocations.filter((v: VehicleLocation) => v.status === 'ativo').length} Ativos
           </span>
           <span className="flex items-center gap-1">
             <Truck className="h-4 w-4 text-orange-600" />
-            {vehicleLocations.filter(v => v.status === 'manutencao').length} Manutenção
+            {vehicleLocations.filter((v: VehicleLocation) => v.status === 'manutencao').length} Manutenção
           </span>
           <span className="flex items-center gap-1">
             <Truck className="h-4 w-4 text-gray-600" />
-            {vehicleLocations.filter(v => v.status === 'inativo').length} Inativos
+            {vehicleLocations.filter((v: VehicleLocation) => v.status === 'inativo').length} Inativos
           </span>
         </div>
       </CardHeader>
@@ -244,10 +243,10 @@ export function FleetTrackingMap({
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
               
-              <MapAutoRefresh onRefresh={fetchVehicleLocations} />
+              <MapAutoRefresh onRefresh={handleRefresh} />
               <FitBounds locations={vehicleLocations} />
               
-              {vehicleLocations.map((vehicle) => (
+              {vehicleLocations.map((vehicle: VehicleLocation) => (
                 <Marker
                   key={vehicle.vehicleId}
                   position={[vehicle.latitude, vehicle.longitude]}

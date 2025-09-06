@@ -112,7 +112,10 @@ async function seed() {
       
       // Configurações do Sistema
       { name: "settings.read", description: "Visualizar configurações", module: "settings", action: "read", resource: "settings" },
-      { name: "settings.update", description: "Alterar configurações", module: "settings", action: "update", resource: "settings" }
+      { name: "settings.update", description: "Alterar configurações", module: "settings", action: "update", resource: "settings" },
+      
+      // Dashboard
+      { name: "dashboard.read", description: "Visualizar dashboard", module: "dashboard", action: "read", resource: "dashboard" }
     ];
     
     await db.insert(permissions).values(permissionsData);

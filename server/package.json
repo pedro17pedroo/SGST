@@ -31,11 +31,14 @@
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.4",
     "nanoid": "^5.1.5",
-    "sqlite3": "^5.1.7",
+    "mongodb": "^6.3.0",
+    "connect-mongo": "^5.1.0",
+    "express-session": "^1.18.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/express-session": "^1.18.0",
     "@types/node": "^22.10.2",
     "drizzle-kit": "^0.30.0",
     "esbuild": "^0.25.0",

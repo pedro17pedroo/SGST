@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategoryCombobox } from "@/components/ui/category-combobox";
+import { SupplierCombobox } from "@/components/ui/supplier-combobox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -180,189 +182,75 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="product-form">
-        <DialogHeader>
-          <DialogTitle data-testid="product-form-title">
-            {product ? "Editar Produto" : "Adicionar Produto"}
-          </DialogTitle>
-          <DialogDescription>
-            {product ? "Altere as informações do produto." : "Preencha os dados do novo produto."}
-          </DialogDescription>
-        </DialogHeader>
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-xl font-semibold" data-testid="product-form-title">
+              {product ? "Editar Produto" : "Adicionar Produto"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {product ? "Altere as informações do produto." : "Preencha os dados do novo produto."}
+            </DialogDescription>
+          </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome do Produto *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Laptop Dell Inspiron" {...field} data-testid="input-name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="sku"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>SKU *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: DELL-INSP-15" {...field} data-testid="input-sku" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Descrição detalhada do produto..." 
-                      className="min-h-[80px]"
-                      {...field} 
-                      data-testid="input-description"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preço (AOA) *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        placeholder="0.00" 
-                        {...field} 
-                        data-testid="input-price"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="barcode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código de Barras</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: 1234567890123" {...field} data-testid="input-barcode" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Informações Básicas */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
+                Informações Básicas
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Produto *</FormLabel>
                       <FormControl>
-                        <SelectTrigger data-testid="select-category">
-                          <SelectValue placeholder="Selecione uma categoria" />
-                        </SelectTrigger>
+                        <Input 
+                          placeholder="Ex: Laptop Dell Inspiron" 
+                          className="h-10"
+                          {...field} 
+                          data-testid="input-name" 
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">Sem categoria</SelectItem>
-                        {categories.map((category: any) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="supplierId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fornecedor</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormField
+                  control={form.control}
+                  name="sku"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SKU *</FormLabel>
                       <FormControl>
-                        <SelectTrigger data-testid="select-supplier">
-                          <SelectValue placeholder="Selecione um fornecedor" />
-                        </SelectTrigger>
+                        <Input 
+                          placeholder="Ex: DELL-INSP-15" 
+                          className="h-10"
+                          {...field} 
+                          data-testid="input-sku" 
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">Sem fornecedor</SelectItem>
-                        {suppliers.map((supplier: any) => (
-                          <SelectItem key={supplier.id} value={supplier.id}>
-                            {supplier.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="weight"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Peso (kg)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.001"
-                        placeholder="0.000" 
-                        {...field} 
-                        data-testid="input-weight"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
-                name="minStockLevel"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nível Mínimo de Stock</FormLabel>
+                    <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="10" 
+                      <Textarea 
+                        placeholder="Descrição detalhada do produto..." 
+                        className="min-h-[80px] resize-none"
                         {...field} 
-                        data-testid="input-min-stock"
+                        data-testid="input-description"
                       />
                     </FormControl>
                     <FormMessage />
@@ -371,11 +259,173 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               />
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-4">
+            {/* Preço e Código */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
+                Preço e Identificação
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço (AOA) *</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
+                            AOA
+                          </span>
+                          <Input 
+                            type="number" 
+                            step="0.01"
+                            placeholder="0.00" 
+                            className="pl-12 h-10"
+                            {...field} 
+                            data-testid="input-price"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="barcode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código de Barras</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Ex: 1234567890123" 
+                          className="h-10"
+                          {...field} 
+                          data-testid="input-barcode" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Categoria e Fornecedor */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
+                Classificação
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria</FormLabel>
+                      <FormControl>
+                        <CategoryCombobox
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          onAddNewCategory={() => {
+                            // TODO: Implementar modal de adicionar categoria
+                            console.log('Adicionar nova categoria')
+                          }}
+                          placeholder="Selecionar categoria..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="supplierId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fornecedor</FormLabel>
+                      <FormControl>
+                        <SupplierCombobox
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          onAddNewSupplier={() => {
+                            // TODO: Implementar modal de adicionar fornecedor
+                            console.log('Adicionar novo fornecedor')
+                          }}
+                          placeholder="Selecionar fornecedor..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Peso e Stock */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
+                Inventário
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Peso (kg)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            type="number" 
+                            step="0.001"
+                            placeholder="0.000" 
+                            className="pr-8 h-10"
+                            {...field} 
+                            data-testid="input-weight"
+                          />
+                          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
+                            kg
+                          </span>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="minStockLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nível Mínimo de Stock</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="10" 
+                          className="h-10"
+                          {...field} 
+                          data-testid="input-min-stock"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-6 border-t">
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full sm:w-auto order-2 sm:order-1"
+                className="w-full sm:w-auto order-2 sm:order-1 min-w-[100px]"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel"
               >
@@ -383,7 +433,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               </Button>
               <Button 
                 type="submit" 
-                className="w-full sm:w-auto order-1 sm:order-2"
+                className="w-full sm:w-auto order-1 sm:order-2 min-w-[100px]"
                 disabled={createProductMutation.isPending || updateProductMutation.isPending}
                 data-testid="button-submit"
               >

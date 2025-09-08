@@ -30,30 +30,37 @@ export class FleetStorage {
   }
 
   async getVehicle(id: string): Promise<Vehicle | null> {
-    const query = db.select().from(vehicles).where(eq(vehicles.id, id)).limit(1);
-    return await getSingleRecord<Vehicle>(query);
+    return await getSingleRecord<Vehicle>(vehicles, eq(vehicles.id, id));
   }
 
   async getVehicleByLicensePlate(licensePlate: string): Promise<Vehicle | null> {
     console.log('=== DEBUG getVehicleByLicensePlate ===');
     console.log('Searching for:', JSON.stringify(licensePlate));
     
-    const query = db.select().from(vehicles).where(eq(vehicles.licensePlate, licensePlate)).limit(1);
-    const result = await getSingleRecord<Vehicle>(query);
+    const result = await getSingleRecord<Vehicle>(vehicles, eq(vehicles.licensePlate, licensePlate));
     console.log('Result:', result ? `FOUND: ${JSON.stringify(result.licensePlate)}` : 'NOT FOUND');
     return result;
   }
 
   async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
-    return insertAndReturn<Vehicle>(vehicles, vehicle);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<Vehicle>(vehicles, { ...vehicle, id }, vehicles.id, id);
+    if (!result) {
+      throw new Error('Failed to create vehicle');
+    }
+    return result;
   }
 
   async updateVehicle(id: string, vehicle: Partial<InsertVehicle>): Promise<Vehicle> {
-    return updateAndReturn<Vehicle>(vehicles, id, vehicle);
+    const result = await updateAndReturn<Vehicle>(vehicles, id, vehicle, vehicles.id);
+    if (!result) {
+      throw new Error('Failed to update vehicle');
+    }
+    return result;
   }
 
   async deleteVehicle(id: string): Promise<void> {
-    await safeDelete(vehicles, id);
+    await safeDelete(vehicles, id, vehicles.id);
   }
 
   async getVehiclesByStatus(status: string): Promise<Vehicle[]> {
@@ -77,11 +84,20 @@ export class FleetStorage {
   }
 
   async createVehicleMaintenance(maintenance: InsertVehicleMaintenance): Promise<VehicleMaintenance> {
-    return insertAndReturn<VehicleMaintenance>(vehicleMaintenance, maintenance);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<VehicleMaintenance>(vehicleMaintenance, { ...maintenance, id }, vehicleMaintenance.id, id);
+    if (!result) {
+      throw new Error('Failed to create vehicle maintenance');
+    }
+    return result;
   }
 
   async updateMaintenance(id: string, maintenance: Partial<InsertVehicleMaintenance>): Promise<VehicleMaintenance> {
-    return updateAndReturn<VehicleMaintenance>(vehicleMaintenance, id, maintenance);
+    const result = await updateAndReturn<VehicleMaintenance>(vehicleMaintenance, id, maintenance, vehicleMaintenance.id);
+    if (!result) {
+      throw new Error('Failed to update maintenance');
+    }
+    return result;
   }
 
   async getUpcomingMaintenance(): Promise<VehicleMaintenance[]> {
@@ -93,15 +109,16 @@ export class FleetStorage {
   // ===== GPS TRACKING =====
   
   async trackGPS(tracking: InsertGpsTracking): Promise<GpsTracking> {
-    return insertAndReturn<GpsTracking>(gpsTracking, tracking);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<GpsTracking>(gpsTracking, { ...tracking, id }, gpsTracking.id, id);
+    if (!result) {
+      throw new Error('Failed to track GPS');
+    }
+    return result;
   }
 
   async getVehicleCurrentLocation(vehicleId: string): Promise<GpsTracking | null> {
-    const query = db.select().from(gpsTracking)
-      .where(eq(gpsTracking.vehicleId, vehicleId))
-      .orderBy(desc(gpsTracking.timestamp))
-      .limit(1);
-    return await getSingleRecord<GpsTracking>(query);
+    return await getSingleRecord<GpsTracking>(gpsTracking, eq(gpsTracking.vehicleId, vehicleId));
   }
 
   async getVehicleLocationHistory(vehicleId: string, options: { startDate?: string; endDate?: string }): Promise<GpsTracking[]> {
@@ -131,7 +148,11 @@ export class FleetStorage {
   }
 
   async updateGPSStatus(vehicleId: string, status: string): Promise<Vehicle> {
-    return updateAndReturn<Vehicle>(vehicles, vehicleId, { gpsStatus: status });
+    const result = await updateAndReturn<Vehicle>(vehicles, vehicleId, { gpsStatus: status }, vehicles.id);
+    if (!result) {
+      throw new Error('Failed to update GPS status');
+    }
+    return result;
   }
 
   // ===== VEHICLE ASSIGNMENTS =====
@@ -142,16 +163,24 @@ export class FleetStorage {
   }
 
   async getAssignment(id: string): Promise<VehicleAssignment | null> {
-    const query = db.select().from(vehicleAssignments).where(eq(vehicleAssignments.id, id)).limit(1);
-    return await getSingleRecord<VehicleAssignment>(query);
+    return await getSingleRecord<VehicleAssignment>(vehicleAssignments, eq(vehicleAssignments.id, id));
   }
 
   async createAssignment(assignment: InsertVehicleAssignment): Promise<VehicleAssignment> {
-    return insertAndReturn<VehicleAssignment>(vehicleAssignments, assignment);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<VehicleAssignment>(vehicleAssignments, { ...assignment, id }, vehicleAssignments.id, id);
+    if (!result) {
+      throw new Error('Failed to create assignment');
+    }
+    return result;
   }
 
   async updateAssignment(id: string, assignment: Partial<InsertVehicleAssignment>): Promise<VehicleAssignment> {
-    return updateAndReturn<VehicleAssignment>(vehicleAssignments, id, assignment);
+    const result = await updateAndReturn<VehicleAssignment>(vehicleAssignments, id, assignment, vehicleAssignments.id);
+    if (!result) {
+      throw new Error('Failed to update assignment');
+    }
+    return result;
   }
 
   async getVehicleActiveAssignments(vehicleId: string): Promise<VehicleAssignment[]> {
@@ -179,20 +208,28 @@ export class FleetStorage {
   }
 
   async getGeofence(id: string): Promise<Geofence | null> {
-    const query = db.select().from(geofences).where(eq(geofences.id, id)).limit(1);
-    return await getSingleRecord<Geofence>(query);
+    return await getSingleRecord<Geofence>(geofences, eq(geofences.id, id));
   }
 
   async createGeofence(geofence: InsertGeofence): Promise<Geofence> {
-    return insertAndReturn<Geofence>(geofences, geofence);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<Geofence>(geofences, { ...geofence, id }, geofences.id, id);
+    if (!result) {
+      throw new Error('Failed to create geofence');
+    }
+    return result;
   }
 
   async updateGeofence(id: string, geofence: Partial<InsertGeofence>): Promise<Geofence> {
-    return updateAndReturn<Geofence>(geofences, id, geofence);
+    const result = await updateAndReturn<Geofence>(geofences, id, geofence, geofences.id);
+    if (!result) {
+      throw new Error('Failed to update geofence');
+    }
+    return result;
   }
 
   async deleteGeofence(id: string): Promise<void> {
-    await safeDelete(geofences, id);
+    await safeDelete(geofences, id, geofences.id);
   }
 
   async getActiveGeofences(): Promise<Geofence[]> {
@@ -209,14 +246,23 @@ export class FleetStorage {
   }
 
   async createGeofenceAlert(alert: InsertGeofenceAlert): Promise<GeofenceAlert> {
-    return insertAndReturn<GeofenceAlert>(geofenceAlerts, alert);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<GeofenceAlert>(geofenceAlerts, { ...alert, id }, geofenceAlerts.id, id);
+    if (!result) {
+      throw new Error('Failed to create geofence alert');
+    }
+    return result;
   }
 
   async acknowledgeGeofenceAlert(id: string): Promise<GeofenceAlert> {
-    return updateAndReturn<GeofenceAlert>(geofenceAlerts, id, { 
+    const result = await updateAndReturn<GeofenceAlert>(geofenceAlerts, id, { 
       isAcknowledged: true,
       acknowledgedAt: new Date()
-    });
+    }, geofenceAlerts.id);
+    if (!result) {
+      throw new Error('Failed to acknowledge geofence alert');
+    }
+    return result;
   }
 
   async getActiveGeofenceAlerts(): Promise<GeofenceAlert[]> {

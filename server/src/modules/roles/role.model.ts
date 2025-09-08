@@ -1,9 +1,15 @@
 import { db } from '../../../database/db';
-import { roles, insertRoleSchema, rolePermissions, permissions, userRoles, users } from '../../../../shared/schema';
+import { roles, rolePermissions, permissions, userRoles, users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-export type RoleCreateData = z.infer<typeof insertRoleSchema>;
+const roleCreateSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type RoleCreateData = z.infer<typeof roleCreateSchema>;
 export type RoleUpdateData = Partial<RoleCreateData>;
 
 export class RoleModel {
@@ -29,9 +35,10 @@ export class RoleModel {
 
   static async create(roleData: RoleCreateData) {
     try {
-      const validatedData = insertRoleSchema.parse(roleData);
-      const result = await db.insert(roles).values(validatedData).returning();
-      return result[0];
+      const validatedData = roleCreateSchema.parse(roleData);
+      const id = crypto.randomUUID();
+      await db.insert(roles).values({ id, ...validatedData });
+      return await this.getById(id);
     } catch (error) {
       console.error('Erro ao criar perfil:', error);
       throw new Error('Erro ao criar perfil');
@@ -40,9 +47,8 @@ export class RoleModel {
 
   static async update(id: string, updateData: RoleUpdateData) {
     try {
-      const validatedData = insertRoleSchema.partial().parse(updateData);
-      const result = await db.update(roles).set(validatedData).where(eq(roles.id, id)).returning();
-      return result[0];
+      await db.update(roles).set(updateData).where(eq(roles.id, id));
+      return await this.getById(id);
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
       throw new Error('Erro ao atualizar perfil');
@@ -82,12 +88,14 @@ export class RoleModel {
 
   static async addPermissionToRole(roleId: string, permissionId: string) {
     try {
-      const result = await db.insert(rolePermissions).values({
+      const id = crypto.randomUUID();
+      await db.insert(rolePermissions).values({
+        id,
         roleId,
         permissionId,
-      }).returning();
+      });
       
-      return result[0];
+      return { id, roleId, permissionId };
     } catch (error) {
       console.error('Erro ao adicionar permissão ao perfil:', error);
       throw new Error('Erro ao adicionar permissão ao perfil');

@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2, Building, Mail, Phone, MapPin } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Search, Edit, Trash2, Building, Mail, Phone, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
@@ -265,15 +266,50 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
 }
 
 export default function Suppliers() {
-  const [search, setSearch] = useState("");
-  
-  const { data: suppliersResponse, isLoading } = useSuppliers();
-  const suppliers = suppliersResponse?.data || [];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const sortBy = "name";
+  const sortOrder: "asc" | "desc" = "asc";
 
-  const filteredSuppliers = suppliers.filter((supplier: Supplier) =>
-    supplier.name.toLowerCase().includes(search.toLowerCase()) ||
-    (supplier.email && supplier.email.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Reset da página quando a busca muda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  // Construir parâmetros de consulta
+  const queryParams = useMemo(() => {
+    const params: any = {
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy,
+      sortOrder,
+    };
+    
+    if (searchQuery) params.search = searchQuery;
+    
+    return params;
+  }, [currentPage, itemsPerPage, searchQuery, sortBy, sortOrder]);
+
+  // Usar hooks centralizados
+  const { data: suppliersResponse, isLoading, error } = useSuppliers(queryParams);
+  const suppliers = suppliersResponse?.data || [];
+  const pagination = suppliersResponse?.pagination || {
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 1
+  };
+
+  // Debug logs
+  console.log('Suppliers Debug:', {
+    queryParams,
+    suppliersResponse,
+    suppliers,
+    pagination,
+    isLoading,
+    error
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -298,8 +334,8 @@ export default function Suppliers() {
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Pesquisar fornecedores..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
           data-testid="input-search-suppliers"
         />
@@ -324,17 +360,17 @@ export default function Suppliers() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSuppliers.map((supplier: Supplier) => (
+          {suppliers.map((supplier: Supplier) => (
             <SupplierCard key={supplier.id} supplier={supplier} />
           ))}
-          {filteredSuppliers.length === 0 && (
+          {suppliers.length === 0 && (
             <div className="col-span-full text-center py-12">
               <Building className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">Nenhum fornecedor encontrado</h3>
               <p className="text-muted-foreground mb-4">
-                {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro fornecedor."}
+                {searchQuery ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro fornecedor."}
               </p>
-              {!search && (
+              {!searchQuery && (
                 <SupplierDialog
                   trigger={
                     <Button data-testid="button-add-first-supplier">
@@ -346,6 +382,56 @@ export default function Suppliers() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Paginação */}
+      {suppliers.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">Itens por página:</span>
+            <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">
+              Página {pagination.page} de {pagination.totalPages} ({pagination.total} fornecedores)
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === pagination.totalPages}
+            >
+              Próximo
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
       </div>

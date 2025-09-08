@@ -20,35 +20,6 @@ interface ModuleProviderProps {
 // Variável global para evitar múltiplas execuções simultâneas
 let isLoadingModules = false;
 
-// Flag global para evitar múltiplas execuções mesmo com hot reload
-// Constantes removidas - não utilizadas
-// const GLOBAL_MODULE_LOADING_KEY = '__SGST_MODULE_CONTEXT_LOADING__';
-// const GLOBAL_MODULE_LOADED_KEY = '__SGST_MODULE_CONTEXT_LOADED__';
-
-// Função para verificar se já foi carregado globalmente
-// function isGloballyLoaded(): boolean {
-//   return !!(window as any)[GLOBAL_MODULE_LOADED_KEY];
-// }
-
-// Função para marcar como carregado globalmente
-// function markGloballyLoaded(): void {
-//   (window as any)[GLOBAL_MODULE_LOADED_KEY] = true;
-// }
-
-// Função para verificar se está carregando globalmente
-// function isGloballyLoading(): boolean {
-//   return !!(window as any)[GLOBAL_MODULE_LOADING_KEY];
-// }
-
-// Função para marcar como carregando globalmente
-// function setGloballyLoading(loading: boolean): void {
-//   if (loading) {
-//     (window as any)[GLOBAL_MODULE_LOADING_KEY] = true;
-//   } else {
-//     delete (window as any)[GLOBAL_MODULE_LOADING_KEY];
-//   }
-// }
-
 export function ModuleProvider({ children }: ModuleProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [enabledModules, setEnabledModules] = useState<FrontendModuleConfig[]>([]);
@@ -141,7 +112,7 @@ export function ModuleProvider({ children }: ModuleProviderProps) {
     });
     
     // Listener para mudanças de permissões
-    const removePermissionListener = FrontendModuleManager.addPermissionChangeListener((newPermissions) => {
+    const removePermissionListener = FrontendModuleManager.addPermissionChangeListener(() => {
       const updatedModules = FrontendModuleManager.getEnabledModules();
       setEnabledModules(updatedModules);
       setForceUpdate(prev => prev + 1); // Força re-render dos componentes dependentes

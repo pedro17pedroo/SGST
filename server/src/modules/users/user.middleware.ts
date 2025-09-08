@@ -51,7 +51,7 @@ export function logUserActions(req: Request, res: Response, next: NextFunction) 
   
   // Log das ações do utilizador (em produção, usar um sistema de logging apropriado)
   console.log(`[${timestamp}] User action: ${method} ${path}`, {
-    userId: (req as any).user?.id,
+    userId: (req as AuthenticatedRequest).user?.id,
     action: method,
     resource: 'users',
     data: method !== 'GET' ? body : undefined

@@ -53,7 +53,7 @@ function ProductsContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const categoryFilter = "";
   const [statusFilter, setStatusFilter] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
@@ -95,16 +95,7 @@ function ProductsContent() {
 
 
 
-  // Função para formatar preço
-  const formatPrice = (price: string) => {
-    const numPrice = parseFloat(price);
-    return `${numPrice.toLocaleString('pt-AO')} Kz`;
-  };
 
-  // Resetar página quando filtros mudarem
-  const handleFilterChange = () => {
-    setCurrentPage(1);
-  };
 
   // Função para adicionar novo produto
   const handleAddNew = () => {
@@ -115,18 +106,6 @@ function ProductsContent() {
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
     setShowForm(true);
-  };
-
-  const handleDelete = (product: Product) => {
-    handleDeactivate(product.id);
-  };
-
-  const handleToggleStatus = async (product: Product) => {
-    if (product.isActive) {
-      await handleDeactivate(product.id);
-    } else {
-      await handleActivate(product.id);
-    }
   };
 
   const handleActivate = async (productId: string) => {
@@ -214,7 +193,7 @@ function ProductsContent() {
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    handleFilterChange();
+                    setCurrentPage(1);
                   }}
                   className="pl-10 w-full sm:w-80"
                   data-testid="product-search"
@@ -253,7 +232,7 @@ function ProductsContent() {
                 <label className="text-sm font-medium mb-2 block">Status</label>
                 <Select value={statusFilter || "all"} onValueChange={(value) => {
                    setStatusFilter(value === "all" ? "" : value);
-                   handleFilterChange();
+                   setCurrentPage(1);
                  }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todos" />
@@ -274,7 +253,7 @@ function ProductsContent() {
                   value={priceMin}
                   onChange={(e) => {
                     setPriceMin(e.target.value);
-                    handleFilterChange();
+                    setCurrentPage(1);
                   }}
                 />
               </div>
@@ -287,7 +266,7 @@ function ProductsContent() {
                   value={priceMax}
                   onChange={(e) => {
                     setPriceMax(e.target.value);
-                    handleFilterChange();
+                    setCurrentPage(1);
                   }}
                 />
               </div>
@@ -298,7 +277,7 @@ function ProductsContent() {
                   const [field, order] = value.split('-');
                   setSortBy(field);
                   setSortOrder(order as 'asc' | 'desc');
-                  handleFilterChange();
+                  setCurrentPage(1);
                 }}>
                   <SelectTrigger>
                     <SelectValue />

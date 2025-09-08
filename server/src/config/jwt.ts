@@ -30,7 +30,7 @@ export function generateAccessToken(user: User): string {
     expiresIn: JWT_EXPIRES_IN,
     issuer: 'sgst-api',
     audience: 'sgst-client'
-  });
+  } as any) as string;
 }
 
 /**
@@ -50,7 +50,7 @@ export function generateRefreshToken(user: User): string {
     expiresIn: JWT_REFRESH_EXPIRES_IN,
     issuer: 'sgst-api',
     audience: 'sgst-client'
-  });
+  } as any) as string;
 }
 
 /**

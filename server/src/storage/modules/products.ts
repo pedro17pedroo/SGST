@@ -2,6 +2,7 @@ import { db } from "../../../database/db";
 import { products, categories, suppliers, inventory, type Product, type InsertProduct, type Category, type Supplier } from "../../../../shared/schema";
 import { eq, ilike, desc, lt, sum } from "drizzle-orm";
 import { insertAndReturn, updateAndReturn, safeDelete, getSingleRecord } from "../utils";
+import { ErrorHandler } from "../base/StorageError";
 
 export class ProductStorage {
   async getProducts(): Promise<Array<Product & { category?: Category | null; supplier?: Supplier | null }>> {
@@ -24,12 +25,15 @@ export class ProductStorage {
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
-    const query = db.select().from(products).where(eq(products.id, id)).limit(1);
-    const result = await getSingleRecord<Product>(query);
+    ErrorHandler.validateId(id);
+    
+    const result = await getSingleRecord<Product>(products, eq(products.id, id));
     return result || undefined;
   }
 
   async searchProducts(query: string): Promise<Product[]> {
+    ErrorHandler.validateRequired(query, 'query');
+    
     return await db.select().from(products)
       .where(
         ilike(products.name, `%${query}%`)
@@ -37,15 +41,36 @@ export class ProductStorage {
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {
-    return insertAndReturn<Product>(products, product, eq(products.sku, product.sku));
+    ErrorHandler.validateRequired(product.name, 'name');
+    ErrorHandler.validateRequired(product.sku, 'sku');
+    ErrorHandler.validateRequired(product.price, 'price');
+    
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<Product>(products, product, products.id, id);
+    
+    if (!result) {
+      throw new Error('Falha ao criar produto');
+    }
+    
+    return result;
   }
 
   async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product> {
-    return updateAndReturn<Product>(products, id, product);
+    ErrorHandler.validateId(id);
+    
+    const result = await updateAndReturn<Product>(products, id, product, products.id);
+    
+    if (!result) {
+      throw new Error('Produto não encontrado');
+    }
+    
+    return result;
   }
 
   async deleteProduct(id: string): Promise<void> {
-    await safeDelete(products, id);
+    ErrorHandler.validateId(id);
+    
+    await safeDelete(products, id, products.id);
   }
 
   async getLowStockProducts(): Promise<Array<Product & { stock: number; category?: Category | null }>> {
@@ -69,8 +94,7 @@ export class ProductStorage {
   }
 
   async getProductByBarcode(barcode: string): Promise<Product | undefined> {
-    const query = db.select().from(products).where(eq(products.barcode, barcode)).limit(1);
-    const result = await getSingleRecord<Product>(query);
+    const result = await getSingleRecord<Product>(products, eq(products.barcode, barcode));
     return result || undefined;
   }
 

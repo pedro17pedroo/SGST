@@ -198,9 +198,6 @@ export function useGlobalStateDebug() {
     
     // Log de debug formatado
     logDebugInfo: () => {
-      const stats = getStats();
-      const history = getHistory(undefined, 5);
-      
       console.group('🔄 Global State Sync Debug');
       
       console.groupEnd();

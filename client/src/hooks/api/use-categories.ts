@@ -146,7 +146,7 @@ export function useUpdateCategory() {
 // Hook para alternar status da categoria (ativar/desativar)
 export function useToggleCategoryStatus() {
   const queryClient = useQueryClient();
-  const { handleError, handleSuccess, createSuccessMsg, createErrorTitle } = useApiMutationError('Alternar Status da Categoria');
+  const { handleError, handleSuccess, createErrorTitle } = useApiMutationError('Alternar Status da Categoria');
 
   return useMutation<any, Error, string, { previousCategory?: any }>({
     mutationFn: categoriesService.toggleCategoryStatus,

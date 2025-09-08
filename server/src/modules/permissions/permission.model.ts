@@ -1,9 +1,17 @@
 import { db } from '../../../database/db';
-import { permissions, insertPermissionSchema } from '../../../../shared/schema';
+import { permissions } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-export type PermissionCreateData = z.infer<typeof insertPermissionSchema>;
+const permissionCreateSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  module: z.string(),
+  action: z.string(),
+  resource: z.string().optional(),
+});
+
+export type PermissionCreateData = z.infer<typeof permissionCreateSchema>;
 export type PermissionUpdateData = Partial<PermissionCreateData>;
 
 export class PermissionModel {
@@ -29,9 +37,10 @@ export class PermissionModel {
 
   static async create(permissionData: PermissionCreateData) {
     try {
-      const validatedData = insertPermissionSchema.parse(permissionData);
-      const result = await db.insert(permissions).values(validatedData).returning();
-      return result[0];
+      const validatedData = permissionCreateSchema.parse(permissionData);
+      const id = crypto.randomUUID();
+      await db.insert(permissions).values({ id, ...validatedData });
+      return await this.getById(id);
     } catch (error) {
       console.error('Erro ao criar permissão:', error);
       throw new Error('Erro ao criar permissão');
@@ -40,9 +49,8 @@ export class PermissionModel {
 
   static async update(id: string, updateData: PermissionUpdateData) {
     try {
-      const validatedData = insertPermissionSchema.partial().parse(updateData);
-      const result = await db.update(permissions).set(validatedData).where(eq(permissions.id, id)).returning();
-      return result[0];
+      await db.update(permissions).set(updateData).where(eq(permissions.id, id));
+      return await this.getById(id);
     } catch (error) {
       console.error('Erro ao atualizar permissão:', error);
       throw new Error('Erro ao atualizar permissão');

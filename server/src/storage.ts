@@ -1,4 +1,5 @@
 import { Storage } from "./storage/index";
+import { createStandardDelegate } from "./storage/base/BaseStorageDelegate";
 import { db } from "../database/db";
 import { eq, desc, and, sql } from "drizzle-orm";
 import {
@@ -23,8 +24,14 @@ import type {
   DashboardStats
 } from "./storage/types";
 
-// Create the main storage instance
+// Create a storage instance
 const storage = new Storage();
+
+// Create standard delegates for common CRUD operations
+const userDelegate = createStandardDelegate<User, InsertUser>('User', () => storage.users);
+const productDelegate = createStandardDelegate<Product, InsertProduct>('Product', () => storage.products);
+const supplierDelegate = createStandardDelegate<Supplier, InsertSupplier>('Supplier', () => storage.suppliers);
+const warehouseDelegate = createStandardDelegate<Warehouse, InsertWarehouse>('Warehouse', () => storage.warehouses);
 
 // Export the storage interface for backward compatibility
 export interface IStorage {
@@ -88,7 +95,7 @@ export interface IStorage {
   updateBatch(id: string, data: any): Promise<any>;
   deleteBatch(id: string): Promise<void>;
   addProductsToBatch(batchId: string, data: any): Promise<any>;
-  removeProductFromBatch(batchId: string, productId: string): Promise<void>;
+  removeProductFromBatch(batchId: string, quantity: number): Promise<void>;
   getBatchExpiryAlerts(batchId: string): Promise<any[]>;
   getExpiringProducts(daysAhead: number, warehouseId?: string): Promise<any[]>;
   getExpiredProducts(warehouseId?: string): Promise<any[]>;
@@ -99,13 +106,13 @@ export interface IStorage {
 
 // Implementation class that delegates to the modular storage
 export class StorageImpl implements IStorage {
-  // Users
+  // Users - usando delegação padrão onde possível
   async getUsers(): Promise<User[]> {
-    return storage.users.getUsers();
+    return userDelegate.getAll();
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    return storage.users.getUser(id);
+    return userDelegate.getById(id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
@@ -117,15 +124,15 @@ export class StorageImpl implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    return storage.users.createUser(user);
+    return userDelegate.create(user);
   }
 
   async updateUser(id: string, user: Partial<InsertUser>): Promise<User> {
-    return storage.users.updateUser(id, user);
+    return userDelegate.update(id, user);
   }
 
   async deleteUser(id: string): Promise<void> {
-    return storage.users.deleteUser(id);
+    return userDelegate.delete(id);
   }
 
   // Dashboard
@@ -256,8 +263,7 @@ export class StorageImpl implements IStorage {
   }
 
   async updateBarcodeScanLocation(scanId: string, locationData: any): Promise<BarcodeScan> {
-    // This method would need to be implemented in the barcode scans module
-    throw new Error("updateBarcodeScanLocation not implemented in modular storage yet");
+    return storage.barcodeScans.updateBarcodeScanLocation(scanId, locationData);
   }
 
   async getLastProductLocation(productId: string): Promise<any> {
@@ -267,59 +273,62 @@ export class StorageImpl implements IStorage {
 
   // Batch Management
   async getBatches(filters: { warehouseId?: string; productId?: string; status?: string; expiryAlert?: boolean }): Promise<any[]> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.getBatches(filters);
   }
 
   async getBatchById(id: string): Promise<any> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.getBatch(id);
   }
 
   async getBatchByNumber(batchNumber: string): Promise<any> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.getBatchByNumber(batchNumber);
   }
 
   async createBatch(data: any): Promise<any> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.createBatch(data);
   }
 
   async updateBatch(id: string, data: any): Promise<any> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.updateBatch(id, data);
   }
 
   async deleteBatch(id: string): Promise<void> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.deleteBatch(id);
   }
 
   async addProductsToBatch(batchId: string, data: any): Promise<any> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.addProductsToBatch(batchId, data);
   }
 
-  async removeProductFromBatch(batchId: string, productId: string): Promise<void> {
-    throw new Error("Batch management module not implemented yet");
+  async removeProductFromBatch(batchId: string, quantity: number): Promise<void> {
+    await storage.batches.removeProductFromBatch(batchId, quantity);
   }
 
   async getBatchExpiryAlerts(batchId: string): Promise<any[]> {
-    throw new Error("Batch management module not implemented yet");
+    const result = await storage.batches.getBatchExpiryAlerts(batchId);
+    return Array.isArray(result) ? result : [];
   }
 
   async getExpiringProducts(daysAhead: number, warehouseId?: string): Promise<any[]> {
-    throw new Error("Batch management module not implemented yet");
+    const result = await storage.batches.getExpiringProducts(daysAhead, warehouseId);
+    return Array.isArray(result) ? result : [];
   }
 
   async getExpiredProducts(warehouseId?: string): Promise<any[]> {
-    throw new Error("Batch management module not implemented yet");
+    const result = await storage.batches.getExpiredProducts(warehouseId);
+    return Array.isArray(result) ? result : [];
   }
 
   async extendBatchExpiry(batchIds: string[], data: any): Promise<any> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.extendBatchExpiry(batchIds, data);
   }
 
   async getBatchHistory(batchNumber: string): Promise<any[]> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.getBatchHistory(batchNumber);
   }
 
   async getBatchLocation(batchNumber: string): Promise<any> {
-    throw new Error("Batch management module not implemented yet");
+    return storage.batches.getBatchLocation(batchNumber);
   }
 
   // Placeholder methods for features not yet implemented in modules
@@ -331,7 +340,8 @@ export class StorageImpl implements IStorage {
     limit?: number;
     search?: string;
   } = {}): Promise<{ categories: Category[]; total: number }> {
-    return storage.categories.getCategories(options);
+    const categories = await storage.categories.getCategories();
+    return { categories, total: categories.length };
   }
 
   async getCategoryByName(name: string): Promise<Category | undefined> {
@@ -347,31 +357,35 @@ export class StorageImpl implements IStorage {
   }
 
   async updateCategory(id: string, category: UpdateCategory): Promise<Category> {
-    return storage.categories.updateCategory(id, {
+    const result = await storage.categories.updateCategory(id, {
       name: category.name,
       description: category.description
     });
+    if (!result) {
+      throw new Error('Failed to update category');
+    }
+    return result;
   }
 
   async deleteCategory(id: string): Promise<void> {
     return storage.categories.deleteCategory(id);
   }
 
-  // Suppliers
+  // Suppliers - usando delegação padrão
   async getSuppliers(): Promise<Supplier[]> {
-    throw new Error("Suppliers module not implemented yet");
+    return supplierDelegate.getAll();
   }
 
   async createSupplier(supplier: InsertSupplier): Promise<Supplier> {
-    throw new Error("Suppliers module not implemented yet");
+    return supplierDelegate.create(supplier);
   }
 
   async updateSupplier(id: string, supplier: Partial<InsertSupplier>): Promise<Supplier> {
-    throw new Error("Suppliers module not implemented yet");
+    return supplierDelegate.update(id, supplier);
   }
 
   async deleteSupplier(id: string): Promise<void> {
-    throw new Error("Suppliers module not implemented yet");
+    return supplierDelegate.delete(id);
   }
 
   // Warehouses
@@ -402,7 +416,7 @@ export class StorageImpl implements IStorage {
   }
 
   async getWarehouseById(id: string): Promise<Warehouse | undefined> {
-    const warehouse = await storage.warehouses.getWarehouseById(id);
+    const warehouse = await storage.warehouses.getWarehouse(id);
     return warehouse || undefined;
   }
 

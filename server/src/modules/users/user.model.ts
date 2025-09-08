@@ -1,5 +1,6 @@
 import { db } from '../../../database/db';
 import { users, roles, userRoles, permissions, rolePermissions } from '@shared/schema';
+import type { User, Role, Permission, UserRole, RolePermission } from '@shared/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -36,20 +37,22 @@ export class UserModel {
   static async create(userData: UserCreateData) {
     const hashedPassword = await bcrypt.hash(userData.password, 10);
     
-    const result = await db.insert(users).values({
+    const id = crypto.randomUUID();
+    await db.insert(users).values({
+      id,
       username: userData.username,
       email: userData.email,
       password: hashedPassword,
       role: userData.role || 'user',
       isActive: userData.isActive ?? true,
-    }).returning();
+    });
     
-    return result[0] || { id: 'generated-id', ...userData, password: hashedPassword };
+    return await this.getById(id);
   }
 
   // Atualizar utilizador
   static async update(id: string, userData: UserUpdateData) {
-    const updateData: any = { ...userData };
+    const updateData: Partial<User> = { ...userData };
     
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
@@ -93,7 +96,7 @@ export class UserModel {
     }
     
     // Buscar detalhes dos roles
-     const roleIds = userRoleIds.map((ur: { roleId: string }) => ur.roleId);
+     const roleIds = userRoleIds.map((ur: UserRole) => ur.roleId);
      const result = await db
        .select()
        .from(roles)
@@ -142,7 +145,7 @@ export class UserModel {
      }
      
      // Buscar permissões dos roles
-     const roleIds = userRoleIds.map((ur: any) => ur.roleId);
+     const roleIds = userRoleIds.map((ur: UserRole) => ur.roleId);
      const rolePermissionIds = await db
        .select()
        .from(rolePermissions)
@@ -153,7 +156,7 @@ export class UserModel {
      }
      
      // Buscar detalhes das permissões
-     const permissionIds = rolePermissionIds.map((rp: any) => rp.permissionId);
+     const permissionIds = rolePermissionIds.map((rp: RolePermission) => rp.permissionId);
      const result = await db
        .select()
        .from(permissions)
@@ -163,8 +166,37 @@ export class UserModel {
   }
 
   // Verificar se utilizador tem permissão específica
-  static async hasPermission(userId: string, permissionName: string) {
+  static async hasPermission(userId: string, permissionName: string): Promise<boolean> {
     const permissions = await this.getUserPermissions(userId);
-    return permissions.some((permission: any) => permission.name === permissionName);
+    return permissions.some((permission: Permission) => permission.name === permissionName);
+  }
+
+  // Definir roles do utilizador (substituir todos os roles existentes)
+  static async setUserRoles(userId: string, roleIds: string[]) {
+    // Remover todos os roles existentes
+    await db.delete(userRoles).where(eq(userRoles.userId, userId));
+    
+    // Adicionar novos roles
+    if (roleIds.length > 0) {
+      const userRoleData = roleIds.map(roleId => ({
+        id: crypto.randomUUID(),
+        userId,
+        roleId,
+      }));
+      
+      await db.insert(userRoles).values(userRoleData);
+    }
+    
+    return { success: true, message: 'Roles do utilizador atualizados com sucesso' };
+  }
+
+  // Adicionar role ao utilizador (método alternativo para compatibilidade)
+  static async addRoleToUser(userId: string, roleId: string, assignedBy?: string) {
+    return await this.assignRole(userId, roleId);
+  }
+
+  // Remover role do utilizador (método alternativo para compatibilidade)
+  static async removeRoleFromUser(userId: string, roleId: string) {
+    return await this.removeRole(userId, roleId);
   }
 }

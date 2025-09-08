@@ -503,7 +503,6 @@ export class FrontendModuleManager {
     }
 
     this.requestCounter++;
-    const requestId = this.requestCounter;
     
     (window as any)[globalKey] = true;
     FrontendModuleManager.isLoading = true;

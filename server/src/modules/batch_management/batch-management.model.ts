@@ -34,8 +34,8 @@ export class BatchManagementModel {
     return await storage.addProductsToBatch(batchId, data);
   }
 
-  static async removeProductFromBatch(batchId: string, productId: string) {
-    return await storage.removeProductFromBatch(batchId, productId);
+  static async removeProductFromBatch(batchId: string, quantity: number) {
+    return await storage.removeProductFromBatch(batchId, quantity);
   }
 
   static async getExpiryAlerts(batchId: string) {

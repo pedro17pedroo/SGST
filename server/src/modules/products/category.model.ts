@@ -1,4 +1,4 @@
-import storageImpl from '../../storage';
+import { storage } from '../../storage/index';
 import type { Category, InsertCategory } from '../../storage/types';
 
 export interface CreateCategoryData {
@@ -19,11 +19,11 @@ export class CategoryModel {
    */
   static async getAll(): Promise<Category[]> {
     try {
-      const result = await storageImpl.getCategories();
-      return result.categories;
+      const result = await storage.categories.getCategories();
+      return result || [];
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
-      throw new Error('Falha ao buscar categorias');
+      return [];
     }
   }
 
@@ -32,11 +32,10 @@ export class CategoryModel {
    */
   static async getById(id: string): Promise<Category | null> {
     try {
-      const result = await storageImpl.getCategories();
-      return result.categories.find(cat => cat.id === id) || null;
+      return await storage.categories.getCategory(id);
     } catch (error) {
       console.error('Erro ao buscar categoria por ID:', error);
-      throw new Error('Falha ao buscar categoria');
+      return null;
     }
   }
 
@@ -45,8 +44,8 @@ export class CategoryModel {
    */
   static async create(data: CreateCategoryData): Promise<Category> {
     try {
-      return await storageImpl.createCategory(data as InsertCategory);
-    } catch (error) {
+      return await storage.categories.createCategory(data as InsertCategory);
+    } catch (error: unknown) {
       console.error('Erro ao criar categoria:', error);
       throw error;
     }
@@ -57,8 +56,8 @@ export class CategoryModel {
    */
   static async update(id: string, data: UpdateCategoryData): Promise<Category | null> {
     try {
-      return await storageImpl.updateCategory(id, data as Partial<InsertCategory>);
-    } catch (error) {
+      return await storage.categories.updateCategory(id, data as Partial<InsertCategory>);
+    } catch (error: unknown) {
       console.error('Erro ao atualizar categoria:', error);
       throw error;
     }
@@ -69,10 +68,10 @@ export class CategoryModel {
    */
   static async delete(id: string): Promise<boolean> {
     try {
-      await storageImpl.deleteCategory(id);
+      await storage.categories.deleteCategory(id);
       return true;
-    } catch (error) {
-      console.error('Erro ao eliminar categoria:', error);
+    } catch (error: unknown) {
+      console.error('Erro ao deletar categoria:', error);
       return false;
     }
   }
@@ -82,9 +81,9 @@ export class CategoryModel {
    */
   static async hasProducts(categoryId: string): Promise<boolean> {
     try {
-      const products = await storageImpl.getProducts();
-      return products.some(product => product.categoryId === categoryId);
-    } catch (error) {
+      const products = await storage.getProducts();
+      return products.some((product: any) => product.categoryId === categoryId);
+    } catch (error: unknown) {
       console.error('Erro ao verificar produtos da categoria:', error);
       throw new Error('Falha ao verificar produtos da categoria');
     }
@@ -95,9 +94,9 @@ export class CategoryModel {
    */
   static async getProducts(categoryId: string) {
     try {
-      const products = await storageImpl.getProducts();
-      return products.filter(product => product.categoryId === categoryId);
-    } catch (error) {
+      const products = await storage.getProducts();
+      return products.filter((product: any) => product.categoryId === categoryId);
+    } catch (error: unknown) {
       console.error('Erro ao buscar produtos da categoria:', error);
       throw new Error('Falha ao buscar produtos da categoria');
     }

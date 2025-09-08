@@ -1,9 +1,25 @@
 import { storage } from '../../storage/index';
 import { Product } from '@shared/schema';
-import { insertProductSchema, updateProductSchema } from '@shared/schema';
 import { z } from 'zod';
 
-export type ProductCreateData = z.infer<typeof insertProductSchema>;
+const productCreateSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  categoryId: z.string(),
+  supplierId: z.string(),
+  sku: z.string(),
+  barcode: z.string().optional(),
+  price: z.string(),
+  costPrice: z.string(),
+  weight: z.string().optional(),
+  dimensions: z.string().optional(),
+  minStockLevel: z.number().optional(),
+  maxStockLevel: z.number().optional(),
+  reorderPoint: z.number().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type ProductCreateData = z.infer<typeof productCreateSchema>;
 export type ProductUpdateData = Partial<ProductCreateData>;
 
 export interface ProductFilters {
@@ -37,12 +53,12 @@ export class ProductModel {
   }
 
   static async create(productData: ProductCreateData) {
-    const validatedData = insertProductSchema.parse(productData);
+    const validatedData = productCreateSchema.parse(productData);
     return await storage.createProduct(validatedData);
   }
 
   static async update(id: string, updateData: ProductUpdateData) {
-    const validatedData = updateProductSchema.parse(updateData);
+    const validatedData = productCreateSchema.partial().parse(updateData);
     return await storage.updateProduct(id, validatedData);
   }
 
@@ -101,8 +117,8 @@ export class ProductModel {
     
     // Aplicar ordenação
     products.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
       
       switch (filters.sortBy) {
         case 'price':
@@ -122,16 +138,23 @@ export class ProductModel {
           bValue = b.name || '';
       }
       
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return filters.sortOrder === 'desc'
+          ? bValue.toLowerCase().localeCompare(aValue.toLowerCase())
+          : aValue.toLowerCase().localeCompare(bValue.toLowerCase());
       }
       
-      if (filters.sortOrder === 'desc') {
-        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
-      } else {
-        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      // Para valores numéricos
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return filters.sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
       }
+      
+      // Para tipos mistos, converter para string
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+      return filters.sortOrder === 'desc'
+        ? bStr.localeCompare(aStr)
+        : aStr.localeCompare(bStr);
     });
     
     // Calcular total antes da paginação

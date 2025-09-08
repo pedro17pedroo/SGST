@@ -129,7 +129,7 @@ async function throwIfResNotOk(res: Response, retryCallback?: () => Promise<Resp
 function logRequest(method: string, url: string, data?: unknown) {
   const config = getApiConfig();
   if (config.enableLogging) {
-
+    console.log(`[API] ${method} ${url}`, data ? { data } : '');
   }
 }
 

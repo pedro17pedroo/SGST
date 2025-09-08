@@ -37,20 +37,27 @@ export class InventoryStorage {
   }
 
   async updateInventory(productId: string, warehouseId: string, quantity: number): Promise<Inventory> {
-    const query = db.select().from(inventory)
-      .where(and(eq(inventory.productId, productId), eq(inventory.warehouseId, warehouseId)))
-      .limit(1);
-    const existing = await getSingleRecord<Inventory>(query);
+    const condition = and(eq(inventory.productId, productId), eq(inventory.warehouseId, warehouseId));
+    const existing = await getSingleRecord<Inventory>(inventory, condition!);
 
     if (existing) {
-      return updateAndReturn<Inventory>(inventory, existing.id, { quantity });
+      const result = await updateAndReturn<Inventory>(inventory, existing.id, { quantity }, inventory.id);
+      if (!result) {
+        throw new Error('Falha ao atualizar inventário');
+      }
+      return result;
     } else {
+      const id = crypto.randomUUID();
       const newInventory: InsertInventory = {
         productId,
         warehouseId,
         quantity
       };
-      return insertAndReturn<Inventory>(inventory, newInventory);
+      const result = await insertAndReturn<Inventory>(inventory, newInventory, inventory.id, id);
+      if (!result) {
+        throw new Error('Falha ao criar inventário');
+      }
+      return result;
     }
   }
 
@@ -79,7 +86,14 @@ export class InventoryStorage {
   }
 
   async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> {
-    return insertAndReturn<StockMovement>(stockMovements, movement);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<StockMovement>(stockMovements, movement, stockMovements.id, id);
+    
+    if (!result) {
+      throw new Error('Falha ao criar movimento de estoque');
+    }
+    
+    return result;
   }
 
   async getTotalStock(productId: string): Promise<number> {

@@ -454,9 +454,9 @@ async function seed() {
         supplierId: supplierMap["Cervejaria Cuca"].id,
         sku: "CUC-001",
         barcode: "7891234567890",
-        unitPrice: 150.00,
-        costPrice: 100.00,
-        weight: 0.33,
+        price: "150.00",
+      costPrice: "100.00",
+        weight: "0.33",
         dimensions: "6.5x6.5x20",
         minStockLevel: 100,
         maxStockLevel: 1000,
@@ -470,9 +470,9 @@ async function seed() {
         supplierId: supplierMap["Cervejaria Cuca"].id,
         sku: "CUC-002",
         barcode: "7891234567891",
-        unitPrice: 180.00,
-        costPrice: 120.00,
-        weight: 0.33,
+        price: "180.00",
+      costPrice: "120.00",
+        weight: "0.33",
         dimensions: "6.5x6.5x20",
         minStockLevel: 50,
         maxStockLevel: 500,
@@ -486,9 +486,9 @@ async function seed() {
         supplierId: supplierMap["Cervejaria Cuca"].id,
         sku: "NOC-001",
         barcode: "7891234567892",
-        unitPrice: 200.00,
-        costPrice: 140.00,
-        weight: 0.33,
+        price: "200.00",
+      costPrice: "140.00",
+        weight: "0.33",
         dimensions: "6.5x6.5x20",
         minStockLevel: 80,
         maxStockLevel: 800,
@@ -502,9 +502,9 @@ async function seed() {
         supplierId: supplierMap["Coca-Cola Angola"].id,
         sku: "HEI-001",
         barcode: "7891234567893",
-        unitPrice: 250.00,
-        costPrice: 180.00,
-        weight: 0.33,
+        price: "250.00",
+      costPrice: "180.00",
+        weight: "0.33",
         dimensions: "6.5x6.5x20",
         minStockLevel: 60,
         maxStockLevel: 600,
@@ -520,9 +520,9 @@ async function seed() {
         supplierId: supplierMap["Coca-Cola Angola"].id,
         sku: "COC-350",
         barcode: "7891234567894",
-        unitPrice: 120.00,
-        costPrice: 80.00,
-        weight: 0.35,
+        price: "120.00",
+      costPrice: "80.00",
+        weight: "0.35",
         dimensions: "6x6x12",
         minStockLevel: 200,
         maxStockLevel: 2000,
@@ -536,9 +536,9 @@ async function seed() {
         supplierId: supplierMap["Refriango - Refrigerantes de Angola"].id,
         sku: "PEP-350",
         barcode: "7891234567895",
-        unitPrice: 110.00,
-        costPrice: 75.00,
-        weight: 0.35,
+        price: "110.00",
+      costPrice: "75.00",
+        weight: "0.35",
         dimensions: "6x6x12",
         minStockLevel: 150,
         maxStockLevel: 1500,
@@ -552,9 +552,9 @@ async function seed() {
         supplierId: supplierMap["Coca-Cola Angola"].id,
         sku: "FAN-350",
         barcode: "7891234567896",
-        unitPrice: 110.00,
-        costPrice: 75.00,
-        weight: 0.35,
+        price: "110.00",
+      costPrice: "75.00",
+        weight: "0.35",
         dimensions: "6x6x12",
         minStockLevel: 120,
         maxStockLevel: 1200,
@@ -570,9 +570,9 @@ async function seed() {
         supplierId: supplierMap["Águas de Angola"].id,
         sku: "AGU-500",
         barcode: "7891234567897",
-        unitPrice: 80.00,
-        costPrice: 50.00,
-        weight: 0.5,
+        price: "80.00",
+      costPrice: "50.00",
+        weight: "0.5",
         dimensions: "6x6x20",
         minStockLevel: 300,
         maxStockLevel: 3000,
@@ -586,9 +586,9 @@ async function seed() {
         supplierId: supplierMap["Águas de Angola"].id,
         sku: "AGU-1500",
         barcode: "7891234567898",
-        unitPrice: 150.00,
-        costPrice: 100.00,
-        weight: 1.5,
+        price: "150.00",
+      costPrice: "100.00",
+        weight: "1.5",
         dimensions: "8x8x30",
         minStockLevel: 200,
         maxStockLevel: 2000,
@@ -604,9 +604,9 @@ async function seed() {
         supplierId: supplierMap["Vinhos Africanos Lda"].id,
         sku: "VIN-CAL",
         barcode: "7891234567899",
-        unitPrice: 800.00,
-        costPrice: 500.00,
-        weight: 0.75,
+        price: "800.00",
+      costPrice: "500.00",
+        weight: "0.75",
         dimensions: "8x8x30",
         minStockLevel: 30,
         maxStockLevel: 300,
@@ -620,9 +620,9 @@ async function seed() {
         supplierId: supplierMap["Vinhos Africanos Lda"].id,
         sku: "VIN-CAL-B",
         barcode: "7891234567900",
-        unitPrice: 750.00,
-        costPrice: 450.00,
-        weight: 0.75,
+        price: "750.00",
+      costPrice: "450.00",
+        weight: "0.75",
         dimensions: "8x8x30",
         minStockLevel: 25,
         maxStockLevel: 250,
@@ -638,9 +638,9 @@ async function seed() {
         supplierId: supplierMap["Sumos Tropicais"].id,
         sku: "SUM-MAN",
         barcode: "7891234567901",
-        unitPrice: 180.00,
-        costPrice: 120.00,
-        weight: 1.0,
+        price: "180.00",
+      costPrice: "120.00",
+        weight: "1.0",
         dimensions: "8x8x25",
         minStockLevel: 100,
         maxStockLevel: 1000,
@@ -654,9 +654,9 @@ async function seed() {
         supplierId: supplierMap["Sumos Tropicais"].id,
         sku: "SUM-LAR",
         barcode: "7891234567902",
-        unitPrice: 170.00,
-        costPrice: 110.00,
-        weight: 1.0,
+        price: "170.00",
+      costPrice: "110.00",
+        weight: "1.0",
         dimensions: "8x8x25",
         minStockLevel: 80,
         maxStockLevel: 800,
@@ -672,9 +672,9 @@ async function seed() {
         supplierId: supplierMap["Refriango - Refrigerantes de Angola"].id,
         sku: "RDB-250",
         barcode: "7891234567903",
-        unitPrice: 400.00,
-        costPrice: 280.00,
-        weight: 0.25,
+        price: "400.00",
+      costPrice: "280.00",
+        weight: "0.25",
         dimensions: "5x5x15",
         minStockLevel: 50,
         maxStockLevel: 500,
@@ -688,9 +688,9 @@ async function seed() {
         supplierId: supplierMap["Refriango - Refrigerantes de Angola"].id,
         sku: "MON-500",
         barcode: "7891234567904",
-        unitPrice: 500.00,
-        costPrice: 350.00,
-        weight: 0.5,
+        price: "500.00",
+      costPrice: "350.00",
+        weight: "0.5",
         dimensions: "6x6x18",
         minStockLevel: 40,
         maxStockLevel: 400,
@@ -706,9 +706,9 @@ async function seed() {
         supplierId: supplierMap["Destilaria Nacional"].id,
         sku: "WHI-BL",
         barcode: "7891234567905",
-        unitPrice: 3500.00,
-        costPrice: 2500.00,
-        weight: 0.7,
+        price: "3500.00",
+      costPrice: "2500.00",
+        weight: "0.7",
         dimensions: "8x8x32",
         minStockLevel: 10,
         maxStockLevel: 100,
@@ -722,9 +722,9 @@ async function seed() {
         supplierId: supplierMap["Destilaria Nacional"].id,
         sku: "VOD-SM",
         barcode: "7891234567906",
-        unitPrice: 2800.00,
-        costPrice: 2000.00,
-        weight: 0.7,
+        price: "2800.00",
+      costPrice: "2000.00",
+        weight: "0.7",
         dimensions: "8x8x32",
         minStockLevel: 15,
         maxStockLevel: 150,
@@ -752,7 +752,7 @@ async function seed() {
           country: "Angola",
           customerType: "distribuidor",
           taxNumber: "5417123456",
-          creditLimit: 500000.00,
+          creditLimit: "500000.00",
           paymentTerms: "30 dias",
           isActive: true
         },
@@ -768,7 +768,7 @@ async function seed() {
           country: "Angola",
           customerType: "distribuidor",
           taxNumber: "5417234567",
-          creditLimit: 300000.00,
+          creditLimit: "300000.00",
           paymentTerms: "30 dias",
           isActive: true
         },
@@ -784,7 +784,7 @@ async function seed() {
           country: "Angola",
           customerType: "distribuidor",
           taxNumber: "5417345678",
-          creditLimit: 250000.00,
+          creditLimit: "250000.00",
           paymentTerms: "30 dias",
           isActive: true
         },
@@ -802,7 +802,7 @@ async function seed() {
          country: "Angola",
          customerType: "restaurante",
          taxNumber: "5417456789",
-         creditLimit: 50000.00,
+         creditLimit: "50000.00",
          paymentTerms: "15 dias",
          isActive: true
        },
@@ -818,7 +818,7 @@ async function seed() {
          country: "Angola",
          customerType: "restaurante",
          taxNumber: "5417567890",
-         creditLimit: 40000.00,
+         creditLimit: "40000.00",
          paymentTerms: "15 dias",
          isActive: true
        },
@@ -834,7 +834,7 @@ async function seed() {
          country: "Angola",
          customerType: "restaurante",
          taxNumber: "5417678901",
-         creditLimit: 35000.00,
+         creditLimit: "35000.00",
          paymentTerms: "15 dias",
          isActive: true
        },
@@ -852,7 +852,7 @@ async function seed() {
          country: "Angola",
          customerType: "bar",
          taxNumber: "5417789012",
-         creditLimit: 30000.00,
+         creditLimit: "30000.00",
          paymentTerms: "7 dias",
          isActive: true
        },
@@ -868,7 +868,7 @@ async function seed() {
          country: "Angola",
          customerType: "bar",
          taxNumber: "5417890123",
-         creditLimit: 45000.00,
+         creditLimit: "45000.00",
          paymentTerms: "7 dias",
          isActive: true
        },
@@ -886,7 +886,7 @@ async function seed() {
          country: "Angola",
          customerType: "hotel",
          taxNumber: "5417901234",
-         creditLimit: 80000.00,
+         creditLimit: "80000.00",
          paymentTerms: "30 dias",
          isActive: true
        },
@@ -902,7 +902,7 @@ async function seed() {
          country: "Angola",
          customerType: "hotel",
          taxNumber: "5418012345",
-         creditLimit: 60000.00,
+         creditLimit: "60000.00",
          paymentTerms: "30 dias",
          isActive: true
        },
@@ -920,7 +920,7 @@ async function seed() {
          country: "Angola",
          customerType: "supermercado",
          taxNumber: "5418123456",
-         creditLimit: 100000.00,
+         creditLimit: "100000.00",
          paymentTerms: "30 dias",
          isActive: true
        },
@@ -936,7 +936,7 @@ async function seed() {
          country: "Angola",
          customerType: "supermercado",
          taxNumber: "5418234567",
-         creditLimit: 120000.00,
+         creditLimit: "120000.00",
          paymentTerms: "30 dias",
          isActive: true
        }
@@ -956,7 +956,7 @@ async function seed() {
          year: 2020,
          vin: "WDB9700451L123456",
          type: "truck",
-         capacity: 7500.00, // 7.5 toneladas
+         capacity: "7500.00", // 7.5 toneladas
          fuelType: "diesel",
          status: "available",
          driverId: null,
@@ -974,7 +974,7 @@ async function seed() {
          year: 2019,
          vin: "ZCFC7700005123789",
          type: "truck",
-         capacity: 6000.00, // 6 toneladas
+         capacity: "6000.00", // 6 toneladas
          fuelType: "diesel",
          status: "available",
          driverId: null,
@@ -992,7 +992,7 @@ async function seed() {
          year: 2021,
          vin: "JMFXDAU60NP123456",
          type: "truck",
-         capacity: 5000.00, // 5 toneladas
+         capacity: "5000.00", // 5 toneladas
          fuelType: "diesel",
          status: "available",
          driverId: null,
@@ -1012,7 +1012,7 @@ async function seed() {
          year: 2020,
          vin: "WF0XXXTTGXKW123456",
          type: "van",
-         capacity: 2000.00, // 2 toneladas
+         capacity: "2000.00", // 2 toneladas
          fuelType: "diesel",
          status: "available",
          driverId: null,
@@ -1030,7 +1030,7 @@ async function seed() {
          year: 2019,
          vin: "WV1ZZZZZKXHX123456",
          type: "van",
-         capacity: 1800.00, // 1.8 toneladas
+         capacity: "1800.00", // 1.8 toneladas
          fuelType: "diesel",
          status: "available",
          driverId: null,
@@ -1050,7 +1050,7 @@ async function seed() {
          year: 2021,
          vin: "AHTEB52G9N0123456",
          type: "car",
-         capacity: 1000.00, // 1 tonelada
+         capacity: "1000.00", // 1 tonelada
          fuelType: "diesel",
          status: "available",
          driverId: null,
@@ -1068,7 +1068,7 @@ async function seed() {
          year: 2020,
          vin: "JN1TBNT26Z0123456",
          type: "car",
-         capacity: 1000.00, // 1 tonelada
+         capacity: "1000.00", // 1 tonelada
          fuelType: "diesel",
          status: "available",
          driverId: null,
@@ -1297,7 +1297,7 @@ async function seed() {
           pickingListItemsData.push({
             pickingListId: pickingList.id,
             productId: orderItem.productId,
-            quantityRequested: orderItem.quantity,
+            quantityToPick: orderItem.quantity,
             quantityPicked: pickingList.status === 'completed' ? orderItem.quantity : 0,
             location,
             status: pickingList.status === 'completed' ? 'picked' : 'pending',
@@ -1349,7 +1349,7 @@ async function seed() {
         for (const product of insertedProducts) {
           // Nem todos os produtos estão em todos os armazéns
           if (Math.random() > 0.3) {
-            const location = `${warehouse.code}-A${Math.floor(Math.random() * 10) + 1}-${Math.floor(Math.random() * 20) + 1}-${Math.floor(Math.random() * 5) + 1}`;
+            const location = `${warehouse.name}-A${Math.floor(Math.random() * 10) + 1}-${Math.floor(Math.random() * 20) + 1}-${Math.floor(Math.random() * 5) + 1}`;
             
             productLocationsData.push({
               productId: product.id,
@@ -1378,16 +1378,18 @@ async function seed() {
         const user = insertedUsers[Math.floor(Math.random() * insertedUsers.length)];
         const warehouse = insertedWarehouses[Math.floor(Math.random() * insertedWarehouses.length)];
         
-        barcodeScansData.push({
-          barcode: product.barcode,
-          productId: product.id,
-          userId: user.id,
-          warehouseId: warehouse.id,
-          scanType: ['inventory_check', 'picking', 'receiving', 'shipping'][Math.floor(Math.random() * 4)],
-          quantity: Math.floor(Math.random() * 20) + 1,
-          location: `${warehouse.code}-A${Math.floor(Math.random() * 10) + 1}-${Math.floor(Math.random() * 20) + 1}`,
-          metadata: JSON.stringify({ device: 'Scanner-001', session: `scan_${i}` }),
-        });
+        // Só criar scan se o produto tiver barcode
+        if (product.barcode) {
+          barcodeScansData.push({
+            scannedCode: product.barcode,
+            scanType: ['barcode', 'qr', 'rfid'][Math.floor(Math.random() * 3)],
+            scanPurpose: ['inventory', 'picking', 'receiving', 'shipping'][Math.floor(Math.random() * 4)],
+            productId: product.id,
+            userId: user.id,
+            warehouseId: warehouse.id,
+            metadata: { device: 'Scanner-001', session: `scan_${i}`, quantity: Math.floor(Math.random() * 20) + 1, location: `${warehouse.name}-A${Math.floor(Math.random() * 10) + 1}-${Math.floor(Math.random() * 20) + 1}` },
+          });
+        }
       }
       
       await db.insert(barcodeScans).values(barcodeScansData);
@@ -1411,12 +1413,12 @@ async function seed() {
           
           gpsTrackingData.push({
             vehicleId: vehicle.id,
-            latitude: baseLat + latOffset,
-            longitude: baseLng + lngOffset,
-            speed: Math.floor(Math.random() * 80) + 10, // 10-90 km/h
-            heading: Math.floor(Math.random() * 360),
-            altitude: Math.floor(Math.random() * 100) + 50, // 50-150m
-            accuracy: Math.floor(Math.random() * 10) + 1, // 1-10m
+            latitude: (baseLat + latOffset).toString(),
+            longitude: (baseLng + lngOffset).toString(),
+            speed: (Math.floor(Math.random() * 80) + 10).toString(), // 10-90 km/h
+            heading: Math.floor(Math.random() * 360).toString(),
+            altitude: (Math.floor(Math.random() * 100) + 50).toString(), // 50-150m
+            accuracy: (Math.floor(Math.random() * 10) + 1).toString(), // 1-10m
             timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // últimas 24h
             metadata: JSON.stringify({ 
               engine: Math.random() > 0.5 ? 'on' : 'off',

@@ -181,8 +181,9 @@ export class BatchManagementController {
 
   static async removeProductFromBatch(req: Request, res: Response) {
     try {
-      const { id, productId } = req.params;
-      await BatchManagementModel.removeProductFromBatch(id, productId);
+      const { id } = req.params;
+      const { quantity } = req.body;
+      await BatchManagementModel.removeProductFromBatch(id, quantity);
       res.status(204).send();
     } catch (error) {
       console.error('Error removing product from batch:', error);

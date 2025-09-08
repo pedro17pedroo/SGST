@@ -24,7 +24,7 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.36.4",
+    "drizzle-orm": "^0.44.5",
     "drizzle-zod": "^0.8.3",
     "express": "^5.1.0",
     "hono": "^4.6.14",

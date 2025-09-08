@@ -20,10 +20,10 @@ export class DigitalTwinController {
       const validatedData = insertWarehouseZoneSchema.parse(req.body);
       const zone = await DigitalTwinModel.createWarehouseZone(validatedData);
       res.status(201).json(zone);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar zona:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+      if ((error as any).name === 'ZodError') {
+        return res.status(400).json({ message: 'Dados inválidos', errors: (error as any).errors });
       }
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
@@ -71,10 +71,10 @@ export class DigitalTwinController {
       const validatedData = insertWarehouseLayoutSchema.parse(req.body);
       const layout = await DigitalTwinModel.createWarehouseLayout(validatedData);
       res.status(201).json(layout);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar layout:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+      if ((error as any).name === 'ZodError') {
+        return res.status(400).json({ message: 'Dados inválidos', errors: (error as any).errors });
       }
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
@@ -122,10 +122,10 @@ export class DigitalTwinController {
       const validatedData = insertDigitalTwinSimulationSchema.parse(req.body);
       const simulation = await DigitalTwinModel.createSimulation(validatedData);
       res.status(201).json(simulation);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar simulação:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+      if ((error as any).name === 'ZodError') {
+        return res.status(400).json({ message: 'Dados inválidos', errors: (error as any).errors });
       }
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
@@ -135,7 +135,7 @@ export class DigitalTwinController {
     try {
       const { id } = req.params;
       const simulations = await DigitalTwinModel.getSimulations(''); // We'll get by ID if needed
-      const simulation = simulations.find(s => s.id === id);
+      const simulation = simulations.find((s: any) => s.id === id);
       
       if (!simulation) {
         return res.status(404).json({ message: 'Simulação não encontrada' });
@@ -161,7 +161,7 @@ export class DigitalTwinController {
       
       // Get simulation data to determine type
       const simulations = await DigitalTwinModel.getSimulations('');
-      const simulation = simulations.find(s => s.id === id);
+      const simulation = simulations.find((s: any) => s.id === id);
       
       if (!simulation) {
         return res.status(404).json({ message: 'Simulação não encontrada' });
@@ -184,7 +184,7 @@ export class DigitalTwinController {
       const updatedSimulation = await DigitalTwinModel.updateSimulationStatus(id, 'completed', results);
       
       res.json(updatedSimulation);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao executar simulação:', error);
       await DigitalTwinModel.updateSimulationStatus(req.params.id, 'failed');
       res.status(500).json({ message: 'Erro interno do servidor' });
@@ -197,7 +197,7 @@ export class DigitalTwinController {
       const { warehouseId } = req.params;
       const visualization = await DigitalTwinModel.getRealTimeVisualization(warehouseId);
       res.json(visualization);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar visualização:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
@@ -207,7 +207,7 @@ export class DigitalTwinController {
     try {
       const visualization = await DigitalTwinModel.updateVisualization(req.body);
       res.status(201).json(visualization);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar visualização:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
@@ -366,7 +366,7 @@ export class DigitalTwinController {
       };
 
       res.json(viewerData);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar dados do visualizador:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
@@ -391,7 +391,7 @@ export class DigitalTwinController {
           maxIntensity: Math.max(...heatmapData.map(p => p.intensity), 0)
         }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao gerar heatmap:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
     }

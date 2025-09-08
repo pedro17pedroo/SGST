@@ -31,13 +31,17 @@ interface SupplierFormData {
   contactPerson?: string;
 }
 
-// interface PaginatedResponse<T> {
-//   data: T[];
-//   total: number;
-//   page: number;
-//   limit: number;
-//   totalPages: number;
-// }
+interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  success: boolean;
+  message?: string;
+}
 
 interface ApiResponse<T> {
   success: boolean;

@@ -8,8 +8,8 @@ export class ReportsController {
       const { startDate, endDate, limit = 10 } = req.query;
       
       const filters = {
-        startDate: startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        endDate: endDate ? new Date(endDate as string) : new Date(),
+        startDate: startDate ? (startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: endDate ? (endDate as string) : new Date().toISOString().split('T')[0],
         limit: parseInt(limit as string)
       };
       
@@ -29,8 +29,8 @@ export class ReportsController {
       const { startDate, endDate, limit = 10 } = req.query;
       
       const filters = {
-        startDate: startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        endDate: endDate ? new Date(endDate as string) : new Date(),
+        startDate: startDate ? (startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: endDate ? (endDate as string) : new Date().toISOString().split('T')[0],
         limit: parseInt(limit as string)
       };
       
@@ -50,8 +50,8 @@ export class ReportsController {
       const { startDate, endDate, limit = 10 } = req.query;
       
       const filters = {
-        startDate: startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        endDate: endDate ? new Date(endDate as string) : new Date(),
+        startDate: startDate ? (startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: endDate ? (endDate as string) : new Date().toISOString().split('T')[0],
         limit: parseInt(limit as string)
       };
       

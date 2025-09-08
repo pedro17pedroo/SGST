@@ -21,12 +21,12 @@ export async function updateProduct(id: string, product: any) {
 
 export async function deactivateProduct(id: string) {
   const result = await apiServices.products.deactivateProduct(id);
-  return result.data;
+  return result.product;
 }
 
 export async function activateProduct(id: string) {
   const result = await apiServices.products.activateProduct(id);
-  return result.data;
+  return result.product;
 }
 
 export async function deleteProduct(id: string) {

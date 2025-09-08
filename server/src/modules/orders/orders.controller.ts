@@ -1,63 +1,124 @@
 import { Request, Response } from 'express';
 import { OrdersModel } from './orders.model';
+import { BaseController } from '../base/base.controller';
+import { z } from 'zod';
 
-export class OrdersController {
+// Schema de validação para criação de pedido
+const createOrderSchema = z.object({
+  orderNumber: z.string().min(1, 'Número do pedido é obrigatório'),
+  type: z.enum(['purchase', 'sale'], { required_error: 'Tipo do pedido é obrigatório' }),
+  status: z.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']).default('pending'),
+  customerId: z.string().optional(),
+  customerName: z.string().min(1, 'Nome do cliente é obrigatório'),
+  customerEmail: z.string().email('Email inválido').optional(),
+  customerPhone: z.string().optional(),
+  customerAddress: z.string().optional(),
+  supplierId: z.string().optional(),
+  totalAmount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Valor total deve ser um número válido'),
+  notes: z.string().optional(),
+  userId: z.string().min(1, 'ID do usuário é obrigatório')
+});
+
+// Schema de validação para atualização de pedido
+const updateOrderSchema = createOrderSchema.partial();
+
+export class OrdersController extends BaseController {
   static async getOrders(req: Request, res: Response) {
+    const controller = new OrdersController();
     try {
-      const orders = await OrdersModel.getOrders();
-      res.json(orders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      res.status(500).json({ 
-        message: "Erro ao buscar pedidos", 
-        error: error instanceof Error ? error.message : 'Unknown error'
+      const { page, limit } = controller.validatePagination(req);
+      const { search, status, type, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+      
+      // Para manter compatibilidade, vamos buscar todos e implementar paginação simples
+      const allOrders = await OrdersModel.getOrders();
+      
+      // Filtrar por busca se fornecida
+       let filteredOrders = allOrders;
+       if (search && typeof search === 'string') {
+         const searchLower = search.toLowerCase();
+         filteredOrders = allOrders.filter(order => 
+           order.orderNumber.toLowerCase().includes(searchLower) ||
+           (order.customerName && order.customerName.toLowerCase().includes(searchLower)) ||
+           (order.customerEmail && order.customerEmail.toLowerCase().includes(searchLower))
+         );
+       }
+      
+      // Filtrar por status
+      if (status && typeof status === 'string') {
+        filteredOrders = filteredOrders.filter(order => order.status === status);
+      }
+      
+      // Filtrar por tipo
+      if (type && typeof type === 'string') {
+        filteredOrders = filteredOrders.filter(order => order.type === type);
+      }
+      
+      // Ordenar
+      filteredOrders.sort((a, b) => {
+        const aValue = a[sortBy as keyof typeof a] || '';
+        const bValue = b[sortBy as keyof typeof b] || '';
+        const comparison = aValue.toString().localeCompare(bValue.toString());
+        return sortOrder === 'desc' ? -comparison : comparison;
       });
+      
+      // Paginação
+      const total = filteredOrders.length;
+      const totalPages = Math.ceil(total / limit);
+      const startIndex = (page - 1) * limit;
+      const paginatedOrders = filteredOrders.slice(startIndex, startIndex + limit);
+      
+      return controller.sendSuccessWithPagination(
+        res,
+        paginatedOrders,
+        { page, limit, total, totalPages },
+        'Pedidos carregados com sucesso'
+      );
+    } catch (error) {
+      return controller.handleError(res, error, 'Erro ao buscar pedidos');
     }
   }
 
   static async getOrder(req: Request, res: Response) {
+    const controller = new OrdersController();
     try {
-      const { id } = req.params;
+      const id = controller.validateId(req);
       const order = await OrdersModel.getOrder(id);
       
-      if (!order) {
-        return res.status(404).json({ message: "Pedido não encontrado" });
-      }
+      controller.ensureResourceExists(order, 'Pedido');
       
-      res.json(order);
+      return controller.sendSuccess(res, order, 'Pedido encontrado com sucesso');
     } catch (error) {
-      console.error('Error fetching order:', error);
-      res.status(500).json({ 
-        message: "Erro ao buscar pedido", 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+      return controller.handleError(res, error, 'Erro ao buscar pedido');
     }
   }
 
   static async createOrder(req: Request, res: Response) {
+    const controller = new OrdersController();
     try {
-      const order = await OrdersModel.createOrder(req.body);
-      res.status(201).json(order);
+      const validatedData = controller.validateBody(req, createOrderSchema);
+      const order = await OrdersModel.createOrder(validatedData);
+      
+      return controller.sendSuccess(res, order, 'Pedido criado com sucesso', 201);
     } catch (error) {
-      console.error('Error creating order:', error);
-      res.status(500).json({ 
-        message: "Erro ao criar pedido", 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+      return controller.handleError(res, error, 'Erro ao criar pedido');
     }
   }
 
   static async updateOrder(req: Request, res: Response) {
+    const controller = new OrdersController();
     try {
-      const { id } = req.params;
-      const order = await OrdersModel.updateOrder(id, req.body);
-      res.json(order);
+      const id = controller.validateId(req);
+      const validatedData = controller.validateBody(req, updateOrderSchema);
+      
+      // Verificar se o pedido existe antes de atualizar
+      const existingOrder = await OrdersModel.getOrder(id);
+      controller.ensureResourceExists(existingOrder, 'Pedido');
+      
+      const order = await OrdersModel.updateOrder(id, validatedData);
+      
+      return controller.sendSuccess(res, order, 'Pedido atualizado com sucesso');
     } catch (error) {
-      console.error('Error updating order:', error);
-      res.status(500).json({ 
-        message: "Erro ao atualizar pedido", 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+      return controller.handleError(res, error, 'Erro ao atualizar pedido');
     }
   }
 

@@ -2,6 +2,11 @@ import { Request, Response } from 'express';
 import { CRDTOperation } from '@shared/offline-types';
 import { OfflineSyncModel } from './offline-sync.model';
 
+interface SyncResult {
+  success: boolean;
+  conflict?: boolean;
+}
+
 export class OfflineSyncController {
   static async syncOperations(req: Request, res: Response) {
     try {
@@ -20,9 +25,9 @@ export class OfflineSyncController {
       const results = await OfflineSyncModel.processOperations(operations, deviceId);
 
       // Contar sucessos e falhas
-      const successful = results.filter((r: any) => r.success).length;
-      const conflicts = results.filter((r: any) => r.conflict).length;
-      const failures = results.filter((r: any) => !r.success && !r.conflict).length;
+      const successful = results.filter((r: SyncResult) => r.success).length;
+      const conflicts = results.filter((r: SyncResult) => r.conflict).length;
+      const failures = results.filter((r: SyncResult) => !r.success && !r.conflict).length;
 
       console.log(`✅ Sincronização concluída: ${successful} sucessos, ${conflicts} conflitos, ${failures} falhas`);
 

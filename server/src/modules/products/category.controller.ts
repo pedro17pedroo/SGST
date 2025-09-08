@@ -2,6 +2,14 @@ import { Request, Response } from 'express';
 import { CategoryModel } from './category.model';
 import { insertCategorySchema, updateCategorySchema } from '../../../../shared/schema';
 
+// Interface para formatação de erros de validação
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+
+
 export class CategoryController {
   /**
    * Obter todas as categorias com paginação
@@ -18,6 +26,11 @@ export class CategoryController {
       
       // Buscar todas as categorias
       let categories = await CategoryModel.getAll();
+      
+      // Verificar se categories é válido
+      if (!categories || !Array.isArray(categories)) {
+        categories = [];
+      }
       
       // Aplicar filtro de pesquisa se fornecido
       if (search) {
@@ -59,7 +72,7 @@ export class CategoryController {
           totalPages
         }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar categorias:', error);
       res.status(500).json({ 
         message: "Erro ao buscar categorias", 
@@ -81,7 +94,7 @@ export class CategoryController {
       }
       
       res.json({ data: category, success: true });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar categoria:', error);
       res.status(500).json({ 
         message: "Erro ao buscar categoria", 
@@ -100,7 +113,7 @@ export class CategoryController {
       if (!validation.success) {
         return res.status(400).json({
           message: 'Dados inválidos',
-          errors: validation.error.issues.map((issue: any) => ({
+          errors: validation.error.issues.map((issue): ValidationError => ({
             field: issue.path.join('.'),
             message: issue.message
           }))
@@ -109,7 +122,7 @@ export class CategoryController {
 
       const category = await CategoryModel.create(validation.data);
       res.status(201).json({ data: category, success: true, message: 'Categoria criada com sucesso' });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao criar categoria:', error);
       
       // Verificar se é erro de duplicação (nome já existe)
@@ -137,7 +150,7 @@ export class CategoryController {
       if (!validation.success) {
         return res.status(400).json({
           message: 'Dados inválidos',
-          errors: validation.error.issues.map((issue: any) => ({
+          errors: validation.error.issues.map((issue): ValidationError => ({
             field: issue.path.join('.'),
             message: issue.message
           }))
@@ -151,7 +164,7 @@ export class CategoryController {
       }
       
       res.json({ data: category, success: true, message: 'Categoria atualizada com sucesso' });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar categoria:', error);
       
       // Verificar se é erro de duplicação (nome já existe)
@@ -191,7 +204,7 @@ export class CategoryController {
         success: true, 
         message: `Categoria ${action} com sucesso` 
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao alterar status da categoria:', error);
       res.status(500).json({ 
         message: "Erro ao alterar status da categoria", 
@@ -222,7 +235,7 @@ export class CategoryController {
       }
       
       res.status(204).send();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao eliminar categoria:', error);
       res.status(500).json({ 
         message: "Erro ao eliminar categoria", 
@@ -239,7 +252,7 @@ export class CategoryController {
       const { id } = req.params;
       const products = await CategoryModel.getProducts(id);
       res.json(products);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar produtos da categoria:', error);
       res.status(500).json({ 
         message: "Erro ao buscar produtos da categoria", 

@@ -4,11 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Edit, Trash2, Package, ChevronLeft, ChevronRight, Power } from "lucide-react";
+import { Plus, Search, Edit, Package, ChevronLeft, ChevronRight, Power } from "lucide-react";
 import { CategoryForm } from "@/components/categories/category-form";
-import { useToast } from "@/hooks/use-toast";
 import { useCategories, useToggleCategoryStatus, type Category } from "@/hooks/api/use-categories";
-import { useIsMobile } from "@/hooks/use-mobile";
 import Swal from "sweetalert2";
 
 export default function Categories() {
@@ -17,10 +15,8 @@ export default function Categories() {
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const sortBy = "name";
+  const sortOrder: "asc" | "desc" = "asc";
 
   // Reset da página quando a busca muda
   useEffect(() => {

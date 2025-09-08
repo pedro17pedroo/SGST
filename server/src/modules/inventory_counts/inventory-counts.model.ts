@@ -2,6 +2,8 @@ import { db } from '../../../database/db';
 import { inventoryCounts, inventoryCountItems } from '../../../../shared/schema';
 import { eq, sql } from 'drizzle-orm';
 import { insertAndReturn, updateAndReturn } from '../../storage/utils';
+import { inventoryCounts as inventoryCountsTable } from '../../../../shared/schema';
+import { randomUUID } from 'crypto';
 import type { 
   InsertInventoryCount, 
   InventoryCount, 
@@ -74,11 +76,13 @@ export class InventoryCountsModel {
   }
 
   static async createInventoryCount(count: InsertInventoryCount) {
-    return await insertAndReturn<InventoryCount>(inventoryCounts, count);
+    const id = randomUUID();
+    const countData = { ...count, id };
+    return await insertAndReturn<InventoryCount>(inventoryCounts, countData, inventoryCountsTable.id, id);
   }
 
   static async updateInventoryCount(id: string, count: Partial<InsertInventoryCount>) {
-    return await updateAndReturn<InventoryCount>(inventoryCounts, id, count);
+    return await updateAndReturn<InventoryCount>(inventoryCounts, id, count, inventoryCountsTable.id);
   }
 
   static async deleteInventoryCount(id: string) {

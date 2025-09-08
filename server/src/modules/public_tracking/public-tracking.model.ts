@@ -82,18 +82,7 @@ export class PublicTrackingModel {
     }
 
     return {
-      id: shipmentData.id,
-      shipmentNumber: shipmentData.shipment_number,
-      orderId: shipmentData.order_id,
-      vehicleId: shipmentData.vehicle_id,
-      status: shipmentData.status,
-      carrier: shipmentData.carrier,
-      trackingNumber: shipmentData.tracking_number,
-      shippingAddress: shipmentData.shipping_address,
-      estimatedDelivery: shipmentData.estimated_delivery,
-      actualDelivery: shipmentData.actual_delivery,
-      userId: shipmentData.user_id,
-      createdAt: shipmentData.created_at,
+      ...shipment,
       order: orderData,
       orderItems: orderItemsData
     };

@@ -57,7 +57,7 @@ export const CustomerCombobox = React.memo(function CustomerCombobox({
     return data
   }, [searchQuery])
 
-  const { data: customers = [], isLoading, error } = useQuery({
+  const { data: customers = [], isLoading } = useQuery({
     queryKey: ['/api/customers/search', searchQuery],
     queryFn: searchQueryFn,
     enabled: searchQuery.length >= 2,

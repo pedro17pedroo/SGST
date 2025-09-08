@@ -1,9 +1,9 @@
 URL do pedido
-http://localhost:4001/api/categories?page=1&limit=5&sortBy=name&sortOrder=asc
+http://localhost:4001/api/suppliers
 Método de pedido
 GET
 Código de estado
-500 Internal Server Error
+304 Not Modified
 Endereço remoto
 127.0.0.1:4001
 Política do referenciador
@@ -14,14 +14,10 @@ access-control-allow-origin
 http://localhost:3000
 connection
 keep-alive
-content-length
-76
-content-type
-application/json; charset=utf-8
 date
-Mon, 08 Sep 2025 09:26:08 GMT
+Mon, 08 Sep 2025 14:21:24 GMT
 etag
-W/"4c-iM+iQDvxEaFs8+yvZyE4UXXNeH0"
+W/"b7-YqsNMs3Xms+aEkBFzRlkX5dMlzc"
 keep-alive
 timeout=5
 vary
@@ -35,13 +31,13 @@ gzip, deflate, br, zstd
 accept-language
 en,es;q=0.9,es-ES;q=0.8,pt;q=0.7
 authorization
-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzMyMzQ3MCwiZXhwIjoxNzU3NDA5ODcwLCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.E64reHo0_qcxeMCSbjMmoEoNJl4oV6GBdxZ35-RqsJU
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzM0MDk0NiwiZXhwIjoxNzU3NDI3MzQ2LCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.Vglk0XCFHnGgQvyvTGnQ0PkdUQY_CHIu8MqZEKGTuQQ
 connection
 keep-alive
 host
 localhost:4001
 if-none-match
-W/"3fd-0rbvdT7sp5bqDHkyePpywBHUEy0"
+W/"b7-YqsNMs3Xms+aEkBFzRlkX5dMlzc"
 origin
 http://localhost:3000
 referer
@@ -63,6 +59,18 @@ Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like 
 
 Response:
 {
-    "message": "Erro ao buscar categorias",
-    "error": "Falha ao buscar categorias"
+    "success": true,
+    "message": "Fornecedores carregados com sucesso",
+    "data": [
+        {},
+        {}
+    ],
+    "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 0,
+        "totalPages": 0,
+        "hasNextPage": false,
+        "hasPreviousPage": false
+    }
 }

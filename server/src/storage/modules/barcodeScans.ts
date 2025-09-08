@@ -55,15 +55,43 @@ export class BarcodeScanStorage {
 
   async getProductByBarcode(barcode: string): Promise<Product | undefined> {
     try {
-      const [product] = await db
+      const result = await db
         .select()
         .from(products)
         .where(eq(products.barcode, barcode))
         .limit(1);
-      return product || undefined;
+      
+      return result[0] || undefined;
     } catch (error) {
       console.error('Erro ao buscar produto por código de barras:', error);
       return undefined;
+    }
+  }
+
+  async updateBarcodeScanLocation(scanId: string, locationData: any): Promise<BarcodeScan> {
+    try {
+      await db
+        .update(barcodeScans)
+        .set({
+          locationId: locationData.location || null
+        })
+        .where(eq(barcodeScans.id, scanId));
+      
+      // Buscar o scan atualizado
+      const [updatedScan] = await db
+        .select()
+        .from(barcodeScans)
+        .where(eq(barcodeScans.id, scanId))
+        .limit(1);
+      
+      if (!updatedScan) {
+        throw new Error('Scan de código de barras não encontrado');
+      }
+      
+      return updatedScan;
+    } catch (error) {
+      console.error('Erro ao atualizar localização do scan:', error);
+      throw error;
     }
   }
 }

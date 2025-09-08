@@ -3,8 +3,29 @@ import jwt from 'jsonwebtoken';
 import { AuthenticatedRequest } from '../../types/auth';
 import { UserModel } from '../users/user.model';
 import { verifyToken, extractTokenFromHeader, isAccessToken } from '../../config/jwt';
+import type { User } from '@shared/schema';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Interface para o payload do JWT
+interface JWTPayload {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  iat?: number;
+  exp?: number;
+}
+
+// Interface para dados do usuário no token
+interface TokenUserData {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+}
 
 // Middleware para verificar token JWT
 export function requireJWTAuth(req: Request, res: Response, next: NextFunction) {
@@ -20,7 +41,7 @@ export function requireJWTAuth(req: Request, res: Response, next: NextFunction) 
   const token = authHeader.substring(7); // Remove 'Bearer '
   
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     
     // Adicionar utilizador ao request
     (req as AuthenticatedRequest).user = {
@@ -68,7 +89,7 @@ export function requireJWTRole(allowedRoles: string[]) {
 }
 
 // Função para gerar token JWT
-export function generateJWTToken(user: any) {
+export function generateJWTToken(user: TokenUserData): string {
   return jwt.sign(
     {
       id: user.id,
@@ -85,7 +106,7 @@ export function generateJWTToken(user: any) {
 // Middleware híbrido que aceita tanto sessão quanto JWT
 export function requireHybridAuth(req: Request, res: Response, next: NextFunction) {
   // Primeiro tenta autenticação por sessão
-  const sessionUser = (req as any).session?.user;
+  const sessionUser = (req as any).session?.user as User | undefined;
   
   if (sessionUser) {
     (req as AuthenticatedRequest).user = sessionUser;

@@ -6,6 +6,8 @@ import { FleetStorage } from "./modules/fleet";
 import { CategoryStorage } from "./modules/categories";
 import { WarehouseStorage } from "./modules/warehouses";
 import { BarcodeScanStorage } from "./modules/barcodeScans";
+import { SupplierStorage } from "./modules/suppliers";
+import { BatchStorage } from "./modules/batches";
 import { db } from "../../database/db";
 import { sql, count } from "drizzle-orm";
 import { products, orders, stockMovements, users, type Product, type StockMovement, type User } from "../../../shared/schema";
@@ -20,6 +22,8 @@ export class Storage {
   public categories: CategoryStorage;
   public warehouses: WarehouseStorage;
   public barcodeScans: BarcodeScanStorage;
+  public suppliers: SupplierStorage;
+  public batches: BatchStorage;
 
   constructor() {
     this.users = new UserStorage();
@@ -28,6 +32,8 @@ export class Storage {
     this.inventory = new InventoryStorage();
     this.fleet = new FleetStorage();
     this.categories = new CategoryStorage();
+    this.suppliers = new SupplierStorage();
+    this.batches = new BatchStorage();
     this.warehouses = new WarehouseStorage();
     this.barcodeScans = new BarcodeScanStorage();
   }

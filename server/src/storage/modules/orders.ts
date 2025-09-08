@@ -24,21 +24,33 @@ export class OrderStorage {
   }
 
   async getOrder(id: string): Promise<Order | undefined> {
-    const query = db.select().from(orders).where(eq(orders.id, id)).limit(1);
-    const result = await getSingleRecord<Order>(query);
+    const result = await getSingleRecord<Order>(orders, eq(orders.id, id));
     return result || undefined;
   }
 
   async createOrder(order: InsertOrder): Promise<Order> {
-    return insertAndReturn<Order>(orders, order);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<Order>(orders, order, orders.id, id);
+    
+    if (!result) {
+      throw new Error('Falha ao criar pedido');
+    }
+    
+    return result;
   }
 
   async updateOrder(id: string, order: Partial<InsertOrder>): Promise<Order> {
-    return updateAndReturn<Order>(orders, id, order);
+    const result = await updateAndReturn<Order>(orders, id, order, orders.id);
+    
+    if (!result) {
+      throw new Error('Pedido não encontrado');
+    }
+    
+    return result;
   }
 
   async deleteOrder(id: string): Promise<void> {
-    await safeDelete(orders, id);
+    await safeDelete(orders, id, orders.id);
   }
 
   async getOrderItems(orderId: string): Promise<Array<OrderItem & { product: Product }>> {
@@ -58,15 +70,28 @@ export class OrderStorage {
   }
 
   async createOrderItem(item: InsertOrderItem): Promise<OrderItem> {
-    return insertAndReturn<OrderItem>(orderItems, item);
+    const id = crypto.randomUUID();
+    const result = await insertAndReturn<OrderItem>(orderItems, item, orderItems.id, id);
+    
+    if (!result) {
+      throw new Error('Falha ao criar item do pedido');
+    }
+    
+    return result;
   }
 
   async updateOrderItem(id: string, item: Partial<InsertOrderItem>): Promise<OrderItem> {
-    return updateAndReturn<OrderItem>(orderItems, id, item);
+    const result = await updateAndReturn<OrderItem>(orderItems, id, item, orderItems.id);
+    
+    if (!result) {
+      throw new Error('Item do pedido não encontrado');
+    }
+    
+    return result;
   }
 
   async deleteOrderItem(id: string): Promise<void> {
-    await safeDelete(orderItems, id);
+    await safeDelete(orderItems, id, orderItems.id);
   }
 
   async getOrdersByStatus(status: string): Promise<Order[]> {

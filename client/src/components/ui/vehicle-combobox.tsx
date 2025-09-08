@@ -28,7 +28,6 @@ interface Vehicle {
   type: string
   capacity?: string
   fuelType: string
-  status: string
 }
 
 interface VehicleComboboxProps {
@@ -62,7 +61,7 @@ export const VehicleCombobox = React.memo(function VehicleCombobox({
     return data
   }, [])
 
-  const { data: vehicles = [], isLoading, error } = useQuery({
+  const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['/api/shipping/vehicles/available'],
     queryFn: vehiclesQueryFn,
     staleTime: 30000, // Cache por 30 segundos

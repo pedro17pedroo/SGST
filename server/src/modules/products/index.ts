@@ -26,6 +26,7 @@ export class ProductsModule extends BaseModule {
     categoryRoutes.get('/:id', CategoryController.getCategoryById);
     categoryRoutes.post('/', requireJWTRole(['admin', 'manager']), CategoryController.createCategory);
     categoryRoutes.put('/:id', requireJWTRole(['admin', 'manager']), CategoryController.updateCategory);
+    categoryRoutes.patch('/:id/toggle-status', requireJWTRole(['admin', 'manager']), CategoryController.toggleCategoryStatus);
     categoryRoutes.delete('/:id', requireJWTRole(['admin', 'manager']), CategoryController.deleteCategory);
     categoryRoutes.get('/:id/products', CategoryController.getCategoryProducts);
     

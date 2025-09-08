@@ -18,6 +18,7 @@ router.get('/categories', CategoryController.getCategories);
 router.get('/categories/:id', CategoryController.getCategoryById);
 router.post('/categories', requireJWTRole(['admin', 'manager']), CategoryController.createCategory);
 router.put('/categories/:id', requireJWTRole(['admin', 'manager']), CategoryController.updateCategory);
+router.patch('/categories/:id/toggle-status', requireJWTRole(['admin', 'manager']), CategoryController.toggleCategoryStatus);
 router.delete('/categories/:id', requireJWTRole(['admin', 'manager']), CategoryController.deleteCategory);
 router.get('/categories/:id/products', CategoryController.getCategoryProducts);
 

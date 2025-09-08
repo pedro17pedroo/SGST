@@ -1,23 +1,64 @@
 import { Request, Response } from 'express';
 import { CategoryModel } from './category.model';
-import { z } from 'zod';
-
-// Schema de validação para categoria
-const categorySchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome deve ter no máximo 100 caracteres'),
-  description: z.string().optional().nullable()
-});
-
-const categoryUpdateSchema = categorySchema.partial();
+import { insertCategorySchema, updateCategorySchema } from '../../../../shared/schema';
 
 export class CategoryController {
   /**
-   * Obter todas as categorias
+   * Obter todas as categorias com paginação
    */
   static async getCategories(req: Request, res: Response) {
     try {
-      const categories = await CategoryModel.getAll();
-      res.json(categories);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const search = req.query.search as string;
+      const sortBy = req.query.sortBy as string || 'name';
+      const sortOrder = req.query.sortOrder as string || 'asc';
+
+      const offset = (page - 1) * limit;
+      
+      // Buscar todas as categorias
+      let categories = await CategoryModel.getAll();
+      
+      // Aplicar filtro de pesquisa se fornecido
+      if (search) {
+        const searchLower = search.toLowerCase();
+        categories = categories.filter(category => 
+          category.name.toLowerCase().includes(searchLower) ||
+          (category.description && category.description.toLowerCase().includes(searchLower))
+        );
+      }
+      
+      // Aplicar ordenação
+      categories.sort((a, b) => {
+        let aValue = a[sortBy as keyof typeof a] || '';
+        let bValue = b[sortBy as keyof typeof b] || '';
+        
+        if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+        if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+        
+        if (sortOrder === 'desc') {
+          return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+        }
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      });
+      
+      const total = categories.length;
+      const totalPages = Math.ceil(total / limit);
+      
+      // Aplicar paginação
+      const paginatedCategories = categories.slice(offset, offset + limit);
+      
+      res.json({
+        data: paginatedCategories,
+        success: true,
+        message: 'Categorias carregadas com sucesso',
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages
+        }
+      });
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
       res.status(500).json({ 
@@ -39,7 +80,7 @@ export class CategoryController {
         return res.status(404).json({ message: 'Categoria não encontrada' });
       }
       
-      res.json(category);
+      res.json({ data: category, success: true });
     } catch (error) {
       console.error('Erro ao buscar categoria:', error);
       res.status(500).json({ 
@@ -54,12 +95,12 @@ export class CategoryController {
    */
   static async createCategory(req: Request, res: Response) {
     try {
-      const validation = categorySchema.safeParse(req.body);
+      const validation = insertCategorySchema.safeParse(req.body);
       
       if (!validation.success) {
         return res.status(400).json({
           message: 'Dados inválidos',
-          errors: validation.error.issues.map(issue => ({
+          errors: validation.error.issues.map((issue: any) => ({
             field: issue.path.join('.'),
             message: issue.message
           }))
@@ -67,7 +108,7 @@ export class CategoryController {
       }
 
       const category = await CategoryModel.create(validation.data);
-      res.status(201).json(category);
+      res.status(201).json({ data: category, success: true, message: 'Categoria criada com sucesso' });
     } catch (error) {
       console.error('Erro ao criar categoria:', error);
       
@@ -91,12 +132,12 @@ export class CategoryController {
   static async updateCategory(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const validation = categoryUpdateSchema.safeParse(req.body);
+      const validation = updateCategorySchema.safeParse(req.body);
       
       if (!validation.success) {
         return res.status(400).json({
           message: 'Dados inválidos',
-          errors: validation.error.issues.map(issue => ({
+          errors: validation.error.issues.map((issue: any) => ({
             field: issue.path.join('.'),
             message: issue.message
           }))
@@ -109,7 +150,7 @@ export class CategoryController {
         return res.status(404).json({ message: 'Categoria não encontrada' });
       }
       
-      res.json(category);
+      res.json({ data: category, success: true, message: 'Categoria atualizada com sucesso' });
     } catch (error) {
       console.error('Erro ao atualizar categoria:', error);
       
@@ -128,7 +169,39 @@ export class CategoryController {
   }
 
   /**
-   * Eliminar categoria
+   * Alternar status da categoria (ativar/desativar)
+   */
+  static async toggleCategoryStatus(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      
+      // Buscar categoria atual
+      const currentCategory = await CategoryModel.getById(id);
+      if (!currentCategory) {
+        return res.status(404).json({ message: 'Categoria não encontrada' });
+      }
+      
+      // Alternar o status
+      const newStatus = !currentCategory.isActive;
+      const updatedCategory = await CategoryModel.update(id, { isActive: newStatus });
+      
+      const action = newStatus ? 'ativada' : 'desativada';
+      res.json({ 
+        data: updatedCategory, 
+        success: true, 
+        message: `Categoria ${action} com sucesso` 
+      });
+    } catch (error) {
+      console.error('Erro ao alterar status da categoria:', error);
+      res.status(500).json({ 
+        message: "Erro ao alterar status da categoria", 
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
+
+  /**
+   * Eliminar categoria (mantido para compatibilidade)
    */
   static async deleteCategory(req: Request, res: Response) {
     try {

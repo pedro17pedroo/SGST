@@ -8,6 +8,7 @@ router.get('/categories', CategoryController.getCategories);
 router.get('/categories/:id', CategoryController.getCategoryById);
 router.post('/categories', CategoryController.createCategory);
 router.put('/categories/:id', CategoryController.updateCategory);
+router.patch('/categories/:id/toggle-status', CategoryController.toggleCategoryStatus);
 router.delete('/categories/:id', CategoryController.deleteCategory);
 router.get('/categories/:id/products', CategoryController.getCategoryProducts);
 

@@ -1,17 +1,22 @@
 /**
- * Hook para gestão de categorias
+ * Hook otimizado para gestão de categorias com React Query
+ * Implementa boas práticas de cache, tratamento de erros e tipagem
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoriesService } from '../../services/api.service';
 import { CACHE_CONFIG, RETRY_CONFIG } from '../../config/api';
-import { useToast } from '../use-toast';
+import { useApiMutationError, createRetryConfig } from '../use-api-error';
+import { useAuth } from '../../contexts/auth-context';
+import { useModules } from '../../contexts/module-context';
+import { useMemo } from 'react';
+import type { QueryParams, ApiResponse, PaginatedResponse } from '../../services/api.service';
 
 // Tipos para categorias
-interface Category {
+export interface Category {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -30,34 +35,48 @@ interface CategoryFormData {
 //   totalPages: number;
 // } // Removed unused interface
 
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
 
-// Chaves de query tipadas
+
+// Chaves de query organizadas e tipadas
 export const CATEGORIES_QUERY_KEYS = {
   all: ['categories'] as const,
   lists: () => [...CATEGORIES_QUERY_KEYS.all, 'list'] as const,
-  list: (params?: Record<string, any>) => [...CATEGORIES_QUERY_KEYS.lists(), params] as const,
-  detail: (id: string) => [...CATEGORIES_QUERY_KEYS.all, 'detail', id] as const,
+  list: (params?: QueryParams) => [...CATEGORIES_QUERY_KEYS.lists(), params] as const,
+  details: () => [...CATEGORIES_QUERY_KEYS.all, 'detail'] as const,
+  detail: (id: string) => [...CATEGORIES_QUERY_KEYS.details(), id] as const,
 };
 
-// Hook para listar categorias
-export function useCategories(params?: Record<string, any>) {
-  return useQuery({
+// Hook principal para buscar categorias com cache inteligente
+export function useCategories(params?: QueryParams) {
+  const { isAuthenticated, isReady, user } = useAuth();
+  const { isLoading: isModulesLoading } = useModules();
+  
+  // Calcular se pode carregar dados
+  const canLoadData = useMemo(() => {
+    return isAuthenticated && isReady && !isModulesLoading;
+  }, [isAuthenticated, isReady, isModulesLoading]);
+
+  // Debug logs
+  console.log('useCategories Debug:', {
+    params,
+    isAuthenticated,
+    isReady,
+    user,
+    isModulesLoading,
+    canLoadData
+  });
+  
+  return useQuery<PaginatedResponse<Category>, Error>({
     queryKey: CATEGORIES_QUERY_KEYS.list(params),
-    queryFn: () => categoriesService.getCategories(params),
+    queryFn: async () => {
+      const response = await categoriesService.getCategories(params);
+      return response as PaginatedResponse<Category>;
+    },
+    enabled: canLoadData,
     staleTime: CACHE_CONFIG.static.staleTime,
     gcTime: CACHE_CONFIG.static.gcTime,
-    retry: (failureCount, error: any) => {
-      // Não tentar novamente para erros 4xx
-      if (error?.status >= 400 && error?.status < 500) {
-        return false;
-      }
-      return failureCount < RETRY_CONFIG.read.retry;
-    },
+    refetchOnWindowFocus: false,
+    ...createRetryConfig(3),
   });
 }
 
@@ -82,26 +101,21 @@ export function useCategory(id: string) {
 // Hook para criar categoria
 export function useCreateCategory() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { handleError, handleSuccess, createSuccessMsg, createErrorTitle } = useApiMutationError('Criar Categoria');
 
   return useMutation<ApiResponse<Category>, Error, CategoryFormData>({
     mutationFn: categoriesService.createCategory,
+    ...createRetryConfig(1), // Apenas 1 tentativa para operações de criação
     onSuccess: (response) => {
       // Invalidar cache de listas
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEYS.lists() });
       
-      toast({
-        title: 'Categoria criada',
-        description: `${response.data.name} foi criada com sucesso.`,
-        variant: 'default',
-      });
+      const successMessage = createSuccessMsg('create', 'Categoria', response.data.name);
+      handleSuccess(successMessage, 'Categoria criada');
     },
     onError: (error) => {
-      toast({
-        title: 'Erro ao criar categoria',
-        description: error.message || 'Ocorreu um erro inesperado.',
-        variant: 'destructive',
-      });
+      const errorTitle = createErrorTitle('create', 'categoria');
+      handleError(error, errorTitle);
     },
   });
 }
@@ -109,38 +123,73 @@ export function useCreateCategory() {
 // Hook para atualizar categoria
 export function useUpdateCategory() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { handleError, handleSuccess, createSuccessMsg, createErrorTitle } = useApiMutationError('Atualizar Categoria');
 
   return useMutation<ApiResponse<Category>, Error, { id: string; data: Partial<CategoryFormData> }>({
     mutationFn: ({ id, data }) => categoriesService.updateCategory(id, data),
+    ...createRetryConfig(1),
     onSuccess: (response, { id }) => {
       // Atualizar cache específico
       queryClient.setQueryData(CATEGORIES_QUERY_KEYS.detail(id), response);
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEYS.lists() });
       
-      toast({
-        title: 'Categoria atualizada',
-        description: `${response.data.name} foi atualizada com sucesso.`,
-        variant: 'default',
-      });
+      const successMessage = createSuccessMsg('update', 'Categoria', response.data.name);
+      handleSuccess(successMessage, 'Categoria atualizada');
     },
     onError: (error) => {
-      toast({
-        title: 'Erro ao atualizar categoria',
-        description: error.message || 'Ocorreu um erro inesperado.',
-        variant: 'destructive',
-      });
+      const errorTitle = createErrorTitle('update', 'categoria');
+      handleError(error, errorTitle);
     },
   });
 }
 
-// Hook para deletar categoria
+// Hook para alternar status da categoria (ativar/desativar)
+export function useToggleCategoryStatus() {
+  const queryClient = useQueryClient();
+  const { handleError, handleSuccess, createSuccessMsg, createErrorTitle } = useApiMutationError('Alternar Status da Categoria');
+
+  return useMutation<any, Error, string, { previousCategory?: any }>({
+    mutationFn: categoriesService.toggleCategoryStatus,
+    ...createRetryConfig(1),
+    onMutate: async (categoryId) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: CATEGORIES_QUERY_KEYS.detail(categoryId) });
+      
+      // Obter dados para possível rollback
+      const previousCategory = queryClient.getQueryData(CATEGORIES_QUERY_KEYS.detail(categoryId));
+      
+      return { previousCategory };
+    },
+    onSuccess: (response, categoryId) => {
+      // Atualizar cache específico
+      queryClient.setQueryData(CATEGORIES_QUERY_KEYS.detail(categoryId), response);
+      queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEYS.lists() });
+      
+      const category = response.data;
+      const action = category.isActive ? 'ativada' : 'desativada';
+      const successMessage = `Categoria ${category.name} foi ${action} com sucesso`;
+      handleSuccess(successMessage, 'Status alterado');
+    },
+    onError: (error, categoryId, context) => {
+      // Restaurar dados em caso de erro
+      if (context?.previousCategory) {
+        queryClient.setQueryData(CATEGORIES_QUERY_KEYS.detail(categoryId), context.previousCategory);
+      }
+      
+      const errorTitle = createErrorTitle('update', 'status da categoria');
+      handleError(error, errorTitle);
+    },
+  });
+}
+
+// Hook para deletar categoria (mantido para compatibilidade)
 export function useDeleteCategory() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { handleError, handleSuccess, createSuccessMsg, createErrorTitle } = useApiMutationError('Deletar Categoria');
 
   return useMutation<any, Error, string, { previousCategory?: any }>({
     mutationFn: categoriesService.deleteCategory,
+    ...createRetryConfig(1),
     onMutate: async (categoryId) => {
       // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: CATEGORIES_QUERY_KEYS.detail(categoryId) });
@@ -155,11 +204,8 @@ export function useDeleteCategory() {
       queryClient.removeQueries({ queryKey: CATEGORIES_QUERY_KEYS.detail(categoryId) });
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEYS.lists() });
       
-      toast({
-        title: 'Categoria removida',
-        description: 'A categoria foi removida com sucesso.',
-        variant: 'default',
-      });
+      const successMessage = createSuccessMsg('delete', 'Categoria');
+      handleSuccess(successMessage, 'Categoria removida');
     },
     onError: (error, categoryId, context) => {
       // Restaurar dados em caso de erro
@@ -167,11 +213,8 @@ export function useDeleteCategory() {
         queryClient.setQueryData(CATEGORIES_QUERY_KEYS.detail(categoryId), context.previousCategory);
       }
       
-      toast({
-        title: 'Erro ao remover categoria',
-        description: error.message || 'Ocorreu um erro inesperado.',
-        variant: 'destructive',
-      });
+      const errorTitle = createErrorTitle('delete', 'categoria');
+      handleError(error, errorTitle);
     },
   });
 }

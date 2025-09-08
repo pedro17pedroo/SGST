@@ -231,6 +231,14 @@ export const categoriesService = {
     const response = await apiRequest('DELETE', API_ENDPOINTS.categories.delete(id));
     return processResponse<ApiResponse>(response);
   },
+
+  /**
+   * Alternar status da categoria (ativar/desativar)
+   */
+  async toggleCategoryStatus(id: string) {
+    const response = await apiRequest('PATCH', API_ENDPOINTS.categories.toggleStatus(id));
+    return processResponse<ApiResponse<any>>(response);
+  },
 };
 
 // === SERVIÇOS DE CLIENTES ===
@@ -300,8 +308,21 @@ export const suppliersService = {
    * Criar novo fornecedor
    */
   async createSupplier(supplierData: any) {
-    const response = await apiRequest('POST', API_ENDPOINTS.suppliers.create, supplierData);
-    return processResponse<ApiResponse<any>>(response);
+    console.log('suppliersService.createSupplier - Dados recebidos:', supplierData);
+    console.log('suppliersService.createSupplier - Endpoint:', API_ENDPOINTS.suppliers.create);
+    
+    try {
+      const response = await apiRequest('POST', API_ENDPOINTS.suppliers.create, supplierData);
+      console.log('suppliersService.createSupplier - Resposta bruta:', response);
+      
+      const processedResponse = processResponse<ApiResponse<any>>(response);
+      console.log('suppliersService.createSupplier - Resposta processada:', processedResponse);
+      
+      return processedResponse;
+    } catch (error) {
+      console.error('suppliersService.createSupplier - Erro:', error);
+      throw error;
+    }
   },
 
   /**

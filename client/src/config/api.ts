@@ -109,6 +109,7 @@ export const API_ENDPOINTS = {
     get: (id: string) => `/api/categories/${id}`,
     update: (id: string) => `/api/categories/${id}`,
     delete: (id: string) => `/api/categories/${id}`,
+    toggleStatus: (id: string) => `/api/categories/${id}/toggle-status`,
   },
 
   // Clientes
@@ -268,7 +269,10 @@ export function buildApiUrl(endpoint: string, params?: Record<string, string | n
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      searchParams.append(key, String(value));
+      // Filtrar valores undefined, null ou vazios
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, String(value));
+      }
     });
     url += `?${searchParams.toString()}`;
   }

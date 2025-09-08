@@ -20,6 +20,7 @@ export const categories = mysqlTable("categories", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -678,6 +679,9 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   createdAt: true,
 });
 
+// Schema específico para atualização de categorias
+export const updateCategorySchema = insertCategorySchema.partial();
+
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
   customerNumber: true, // Será gerado automaticamente pelo backend
@@ -864,6 +868,7 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type UpdateCategory = z.infer<typeof updateCategorySchema>;
 export type Customer = typeof customers.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Supplier = typeof suppliers.$inferSelect;

@@ -3,10 +3,11 @@ import { db } from "../database/db";
 import { eq, desc, and, sql } from "drizzle-orm";
 import {
   users, products, warehouses, barcodeScans, productLocations, categories,
-  type User, type Product, type Warehouse, type BarcodeScan, type ProductLocation
+  type User, type Product, type Warehouse, type BarcodeScan, type ProductLocation,
+  type Category, type InsertCategory, type UpdateCategory
 } from "../../shared/schema";
 import type {
-  InsertUser, Category, InsertCategory, Supplier, InsertSupplier,
+  InsertUser, Supplier, InsertSupplier,
   InsertWarehouse, InsertProduct, Inventory, InsertInventory,
   StockMovement, InsertStockMovement, Order, InsertOrder, OrderItem, InsertOrderItem,
   Shipment, InsertShipment, InsertProductLocation,
@@ -223,39 +224,28 @@ export class StorageImpl implements IStorage {
 
   // Barcode Scanning
   async getBarcodeScans(limit: number = 100): Promise<BarcodeScan[]> {
-    return await db
-      .select()
-      .from(barcodeScans)
-      .orderBy(desc(barcodeScans.createdAt))
-      .limit(limit);
+    return storage.barcodeScans.getBarcodeScans('', { limit });
   }
 
   async createBarcodeScan(scan: InsertBarcodeScan): Promise<BarcodeScan> {
-    await db.insert(barcodeScans).values(scan);
-    const [insertedScan] = await db.select().from(barcodeScans)
-      .where(and(
-        eq(barcodeScans.scannedCode, scan.scannedCode),
-        eq(barcodeScans.userId, scan.userId)
-      ))
-      .orderBy(desc(barcodeScans.createdAt))
-      .limit(1);
-    return insertedScan;
+    return storage.barcodeScans.createBarcodeScan({
+      productId: scan.productId,
+      warehouseId: scan.warehouseId,
+      userId: scan.userId,
+      scannedCode: scan.scannedCode,
+      scanType: scan.scanType || 'manual',
+      locationId: scan.locationId,
+      scanPurpose: scan.scanPurpose || 'inventory',
+      metadata: scan.metadata
+    });
   }
 
   async getBarcodeScansByProduct(productId: string): Promise<BarcodeScan[]> {
-    return await db
-      .select()
-      .from(barcodeScans)
-      .where(eq(barcodeScans.productId, productId))
-      .orderBy(desc(barcodeScans.createdAt));
+    return storage.barcodeScans.getBarcodeScansForProduct(productId);
   }
 
   async findProductByBarcode(barcode: string): Promise<Product | undefined> {
-    const [product] = await db
-      .select()
-      .from(products)
-      .where(eq(products.barcode, barcode));
-    return product || undefined;
+    return storage.barcodeScans.getProductByBarcode(barcode);
   }
 
   async updateProductLastScanned(productId: string, userId: string): Promise<void> {
@@ -266,25 +256,13 @@ export class StorageImpl implements IStorage {
   }
 
   async updateBarcodeScanLocation(scanId: string, locationData: any): Promise<BarcodeScan> {
-    await db
-      .update(barcodeScans)
-      .set({ 
-        locationId: locationData.locationId,
-        metadata: sql`${barcodeScans.metadata} || ${JSON.stringify(locationData)}`
-      })
-      .where(eq(barcodeScans.id, scanId));
-    const [result] = await db.select().from(barcodeScans).where(eq(barcodeScans.id, scanId));
-    return result;
+    // This method would need to be implemented in the barcode scans module
+    throw new Error("updateBarcodeScanLocation not implemented in modular storage yet");
   }
 
   async getLastProductLocation(productId: string): Promise<any> {
-    const [lastScan] = await db
-      .select()
-      .from(barcodeScans)
-      .where(eq(barcodeScans.productId, productId))
-      .orderBy(desc(barcodeScans.createdAt))
-      .limit(1);
-    return lastScan || undefined;
+    const scans = await storage.barcodeScans.getBarcodeScansForProduct(productId);
+    return scans.length > 0 ? scans[0] : undefined;
   }
 
   // Batch Management
@@ -348,26 +326,35 @@ export class StorageImpl implements IStorage {
   // These throw errors to indicate they need implementation
   
   // Categories
-  async getCategories(): Promise<Category[]> {
-    try {
-      const result = await db.select().from(categories);
-      return result;
-    } catch (error) {
-      console.error('Erro ao buscar categorias:', error);
-      throw new Error('Falha ao buscar categorias da base de dados');
-    }
+  async getCategories(options: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  } = {}): Promise<{ categories: Category[]; total: number }> {
+    return storage.categories.getCategories(options);
+  }
+
+  async getCategoryByName(name: string): Promise<Category | undefined> {
+    const category = await storage.categories.getCategoryByName(name);
+    return category || undefined;
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
-    throw new Error("Categories module not implemented yet");
+    return storage.categories.createCategory({
+      name: category.name,
+      description: category.description
+    });
   }
 
-  async updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category> {
-    throw new Error("Categories module not implemented yet");
+  async updateCategory(id: string, category: UpdateCategory): Promise<Category> {
+    return storage.categories.updateCategory(id, {
+      name: category.name,
+      description: category.description
+    });
   }
 
   async deleteCategory(id: string): Promise<void> {
-    throw new Error("Categories module not implemented yet");
+    return storage.categories.deleteCategory(id);
   }
 
   // Suppliers
@@ -389,50 +376,34 @@ export class StorageImpl implements IStorage {
 
   // Warehouses
   async getWarehouses(): Promise<Warehouse[]> {
-    try {
-      return await db.select().from(warehouses).orderBy(desc(warehouses.createdAt));
-    } catch (error) {
-      console.error('Erro ao buscar armazéns:', error);
-      throw new Error('Falha ao buscar armazéns');
-    }
+    return storage.warehouses.getWarehouses();
   }
 
   async createWarehouse(warehouse: InsertWarehouse): Promise<Warehouse> {
-    try {
-      const [newWarehouse] = await db.insert(warehouses).values(warehouse).returning();
-      return newWarehouse;
-    } catch (error) {
-      console.error('Erro ao criar armazém:', error);
-      throw new Error('Falha ao criar armazém');
-    }
+    return storage.warehouses.createWarehouse({
+      name: warehouse.name,
+      address: warehouse.address,
+      type: warehouse.type,
+      isActive: warehouse.isActive
+    });
   }
 
   async updateWarehouse(id: string, warehouse: Partial<InsertWarehouse>): Promise<Warehouse> {
-    try {
-      const [updatedWarehouse] = await db
-        .update(warehouses)
-        .set(warehouse)
-        .where(eq(warehouses.id, id))
-        .returning();
-      
-      if (!updatedWarehouse) {
-        throw new Error('Armazém não encontrado');
-      }
-      
-      return updatedWarehouse;
-    } catch (error) {
-      console.error('Erro ao atualizar armazém:', error);
-      throw new Error('Falha ao atualizar armazém');
-    }
+    return storage.warehouses.updateWarehouse(id, {
+      name: warehouse.name,
+      address: warehouse.address,
+      type: warehouse.type,
+      isActive: warehouse.isActive
+    });
   }
 
   async deleteWarehouse(id: string): Promise<void> {
-    try {
-      await db.delete(warehouses).where(eq(warehouses.id, id));
-    } catch (error) {
-      console.error('Erro ao deletar armazém:', error);
-      throw new Error('Falha ao deletar armazém');
-    }
+    return storage.warehouses.deleteWarehouse(id);
+  }
+
+  async getWarehouseById(id: string): Promise<Warehouse | undefined> {
+    const warehouse = await storage.warehouses.getWarehouseById(id);
+    return warehouse || undefined;
   }
 
   // All other methods that were in the original file but not yet modularized

@@ -3,6 +3,9 @@ import { ProductStorage } from "./modules/products";
 import { OrderStorage } from "./modules/orders";
 import { InventoryStorage } from "./modules/inventory";
 import { FleetStorage } from "./modules/fleet";
+import { CategoryStorage } from "./modules/categories";
+import { WarehouseStorage } from "./modules/warehouses";
+import { BarcodeScanStorage } from "./modules/barcodeScans";
 import { db } from "../../database/db";
 import { sql, count } from "drizzle-orm";
 import { products, orders, stockMovements, users, type Product, type StockMovement, type User } from "../../../shared/schema";
@@ -14,6 +17,9 @@ export class Storage {
   public orders: OrderStorage;
   public inventory: InventoryStorage;
   public fleet: FleetStorage;
+  public categories: CategoryStorage;
+  public warehouses: WarehouseStorage;
+  public barcodeScans: BarcodeScanStorage;
 
   constructor() {
     this.users = new UserStorage();
@@ -21,6 +27,9 @@ export class Storage {
     this.orders = new OrderStorage();
     this.inventory = new InventoryStorage();
     this.fleet = new FleetStorage();
+    this.categories = new CategoryStorage();
+    this.warehouses = new WarehouseStorage();
+    this.barcodeScans = new BarcodeScanStorage();
   }
 
   // Dashboard methods

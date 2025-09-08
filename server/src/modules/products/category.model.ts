@@ -4,11 +4,13 @@ import type { Category, InsertCategory } from '../../storage/types';
 export interface CreateCategoryData {
   name: string;
   description?: string | null;
+  isActive?: boolean;
 }
 
 export interface UpdateCategoryData {
   name?: string;
   description?: string | null;
+  isActive?: boolean;
 }
 
 export class CategoryModel {
@@ -17,7 +19,8 @@ export class CategoryModel {
    */
   static async getAll(): Promise<Category[]> {
     try {
-      return await storageImpl.getCategories();
+      const result = await storageImpl.getCategories();
+      return result.categories;
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
       throw new Error('Falha ao buscar categorias');
@@ -29,8 +32,8 @@ export class CategoryModel {
    */
   static async getById(id: string): Promise<Category | null> {
     try {
-      const categories = await storageImpl.getCategories();
-      return categories.find(cat => cat.id === id) || null;
+      const result = await storageImpl.getCategories();
+      return result.categories.find(cat => cat.id === id) || null;
     } catch (error) {
       console.error('Erro ao buscar categoria por ID:', error);
       throw new Error('Falha ao buscar categoria');

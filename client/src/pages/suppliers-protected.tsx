@@ -9,8 +9,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type Supplier } from "@shared/schema";
 import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from "@/hooks/api/use-suppliers";
+
+// Usar o tipo Supplier do hook em vez do schema para compatibilidade
+type Supplier = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  contactPerson?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
 // import { PermissionGuard } from "@/components/auth/permission-guard"; // Removido - não utilizado
 import { ProtectedAction } from "@/components/auth/protected-action";
 import { z } from "zod";
@@ -253,7 +265,7 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
 export default function SuppliersProtected() {
   const [search, setSearch] = useState("");
   
-  const { data: suppliersResponse, isLoading } = useSuppliers();
+  const { data: suppliersResponse, isLoading } = useSuppliers({ limit: 5 });
   const suppliers = suppliersResponse?.data || [];
 
   const filteredSuppliers = suppliers.filter((supplier: Supplier) =>

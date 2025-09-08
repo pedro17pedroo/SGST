@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/layout/header";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
+import { MultiBarcodeReader } from "@/components/ui/multi-barcode-scanner";
 import { Scan, Package, MapPin, Clock, User } from "lucide-react";
 
 interface BarcodeScan {
@@ -33,9 +33,7 @@ interface BarcodeScan {
 }
 
 export default function ScannerPage() {
-  const [isScanning, setIsScanning] = useState(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
-  const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -82,78 +80,27 @@ export default function ScannerPage() {
     }
   });
 
-  const startScanning = async () => {
-    try {
-      // Request camera permissions first
-      await navigator.mediaDevices.getUserMedia({ video: true });
-      
-      setIsScanning(true);
-      const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-        supportedScanTypes: [
-          Html5QrcodeScanType.SCAN_TYPE_CAMERA
-        ] as Html5QrcodeScanType[],
-        rememberLastUsedCamera: true,
-        showTorchButtonIfSupported: true,
-      };
-
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        "qr-reader",
-        config,
-        false
-      );
-
-      html5QrcodeScanner.render(
-        (decodedText) => {
-          setScannedCode(decodedText);
-          html5QrcodeScanner.clear();
-          setIsScanning(false);
-          
-          // Automatically create scan record
-          createScanMutation.mutate({
-            scannedCode: decodedText,
-            scanType: 'barcode',
-            scanPurpose: 'inventory',
-            metadata: {
-              timestamp: new Date().toISOString(),
-              userAgent: navigator.userAgent
-            }
-          });
-        },
-        () => {
-  
-        }
-      );
-
-      setScanner(html5QrcodeScanner);
-    } catch (error) {
-      console.error('Camera access error:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro de acesso à câmara",
-        description: "Não foi possível aceder à câmara. Verifique as permissões do browser.",
-      });
-      setIsScanning(false);
-    }
-  };
-
-  const stopScanning = () => {
-    if (scanner) {
-      scanner.clear();
-      setIsScanning(false);
-      setScanner(null);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (scanner) {
-        scanner.clear();
+  // Função para lidar com código escaneado
+  const handleScanResult = (code: string, method: 'laser' | 'camera' | 'manual') => {
+    setScannedCode(code);
+    
+    // Automatically create scan record
+    createScanMutation.mutate({
+      scannedCode: code,
+      scanType: method,
+      scanPurpose: 'inventory',
+      metadata: {
+        timestamp: new Date().toISOString(),
+        source: 'scanner-page',
+        method: method
       }
-    };
-  }, [scanner]);
+    });
+    
+    toast({
+      title: "Código escaneado com sucesso!",
+      description: `Método: ${method === 'laser' ? 'Laser' : method === 'camera' ? 'Câmera' : 'Manual'} - Código: ${code}`,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,36 +114,13 @@ export default function ScannerPage() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Scan className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold">Scanner</h2>
+              <h2 className="text-xl font-semibold">Scanner Multi-Método</h2>
             </div>
 
-            {!isScanning ? (
-              <div className="text-center space-y-4">
-                <div className="w-64 h-64 mx-auto bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-center space-y-2">
-                    <Scan className="w-16 h-16 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground">
-                      Clique para iniciar o escaneamento
-                    </p>
-                  </div>
-                </div>
-                <Button onClick={startScanning} data-testid="start-scan-button">
-                  <Scan className="w-4 h-4 mr-2" />
-                  Iniciar Escaneamento
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div id="qr-reader" className="w-full"></div>
-                <Button 
-                  onClick={stopScanning} 
-                  variant="outline"
-                  data-testid="stop-scan-button"
-                >
-                  Parar Escaneamento
-                </Button>
-              </div>
-            )}
+            <MultiBarcodeReader
+              onScanResult={handleScanResult}
+              className="w-full"
+            />
 
             {scannedCode && (
               <div className="p-4 bg-secondary rounded-lg">

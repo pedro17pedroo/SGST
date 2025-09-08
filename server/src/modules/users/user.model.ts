@@ -1,4 +1,4 @@
-import { db } from '../../../database/db';
+import { db, withRetry } from '../../../database/db';
 import { users, roles, userRoles, permissions, rolePermissions } from '@shared/schema';
 import type { User, Role, Permission, UserRole, RolePermission } from '@shared/schema';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -134,35 +134,37 @@ export class UserModel {
 
   // Buscar permissões do utilizador
   static async getUserPermissions(userId: string) {
-    // Buscar roles do utilizador
-     const userRoleIds = await db
-       .select()
-       .from(userRoles)
-       .where(eq(userRoles.userId, userId));
-     
-     if (userRoleIds.length === 0) {
-       return [];
-     }
-     
-     // Buscar permissões dos roles
-     const roleIds = userRoleIds.map((ur: UserRole) => ur.roleId);
-     const rolePermissionIds = await db
-       .select()
-       .from(rolePermissions)
-       .where(inArray(rolePermissions.roleId, roleIds));
-     
-     if (rolePermissionIds.length === 0) {
-       return [];
-     }
-     
-     // Buscar detalhes das permissões
-     const permissionIds = rolePermissionIds.map((rp: RolePermission) => rp.permissionId);
-     const result = await db
-       .select()
-       .from(permissions)
-       .where(inArray(permissions.id, permissionIds));
-    
-    return result;
+    return await withRetry(async () => {
+      // Buscar roles do utilizador
+      const userRoleIds = await db
+        .select()
+        .from(userRoles)
+        .where(eq(userRoles.userId, userId));
+      
+      if (userRoleIds.length === 0) {
+        return [];
+      }
+      
+      // Buscar permissões dos roles
+      const roleIds = userRoleIds.map((ur: UserRole) => ur.roleId);
+      const rolePermissionIds = await db
+        .select()
+        .from(rolePermissions)
+        .where(inArray(rolePermissions.roleId, roleIds));
+      
+      if (rolePermissionIds.length === 0) {
+        return [];
+      }
+      
+      // Buscar detalhes das permissões
+      const permissionIds = rolePermissionIds.map((rp: RolePermission) => rp.permissionId);
+      const result = await db
+        .select()
+        .from(permissions)
+        .where(inArray(permissions.id, permissionIds));
+      
+      return result;
+    });
   }
 
   // Verificar se utilizador tem permissão específica

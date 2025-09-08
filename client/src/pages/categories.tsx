@@ -47,15 +47,7 @@ export default function Categories() {
     totalPages: 1
   };
 
-  // Debug logs
-  console.log('Categories Debug:', {
-    queryParams,
-    categoriesResponse,
-    categories,
-    pagination,
-    isLoading,
-    error
-  });
+  // Debug logs removidos para melhor performance do console
   const toggleStatusMutation = useToggleCategoryStatus();
 
   const handleEdit = (category: Category) => {

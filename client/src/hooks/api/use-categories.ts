@@ -56,15 +56,7 @@ export function useCategories(params?: QueryParams) {
     return isAuthenticated && isReady && !isModulesLoading;
   }, [isAuthenticated, isReady, isModulesLoading]);
 
-  // Debug logs
-  console.log('useCategories Debug:', {
-    params,
-    isAuthenticated,
-    isReady,
-    user,
-    isModulesLoading,
-    canLoadData
-  });
+  // Debug logs removidos para melhor performance do console
   
   return useQuery<PaginatedResponse<Category>, Error>({
     queryKey: CATEGORIES_QUERY_KEYS.list(params),

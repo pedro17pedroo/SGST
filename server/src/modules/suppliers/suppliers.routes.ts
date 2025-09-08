@@ -8,6 +8,7 @@ const router = Router();
 router.use(moduleGuard('suppliers'));
 
 // Rotas dos fornecedores
+router.get('/search', SuppliersController.searchSuppliers); // Rota de pesquisa deve vir antes da rota com parâmetro
 router.get('/', SuppliersController.getSuppliers);
 router.get('/:id', SuppliersController.getSupplier);
 router.post('/', SuppliersController.createSupplier);

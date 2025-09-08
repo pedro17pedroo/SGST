@@ -246,24 +246,34 @@ export function handleError(
   } = {}
 ): AppError {
   const {
-    context,
+    context = 'Operação',
     showToast = true,
     customTitle,
-    logError: shouldLog = true,
+    logError: shouldLogError = true,
   } = options;
-  
+
+  // Ignorar erros de cancelamento (AbortError)
+  if (error instanceof Error && error.name === 'AbortError') {
+    return {
+      code: ERROR_CODES.TIMEOUT_ERROR,
+      message: 'Operação cancelada',
+      details: error.message,
+      timestamp: new Date(),
+    };
+  }
+
   const parsedError = parseError(error);
-  
-  // Log do erro
-  if (shouldLog) {
+
+  // Log do erro se habilitado e não for erro de cancelamento
+  if (shouldLogError && parsedError.code !== ERROR_CODES.TIMEOUT_ERROR) {
     logError(parsedError, context);
   }
-  
-  // Exibir toast se solicitado
-  if (showToast) {
+
+  // Mostrar toast se habilitado e não for erro de cancelamento
+  if (showToast && parsedError.code !== ERROR_CODES.TIMEOUT_ERROR) {
     showErrorToast(parsedError, customTitle);
   }
-  
+
   return parsedError;
 }
 

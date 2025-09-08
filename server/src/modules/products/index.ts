@@ -14,21 +14,23 @@ export class ProductsModule extends BaseModule {
     
     // Registrar rotas de categorias também em /api/categories para compatibilidade com frontend
     const categoryRoutes = Router();
-    categoryRoutes.use(moduleGuard('products'));
-    categoryRoutes.use(requireHybridAuth);
     
     // Importar controladores
     const { CategoryController } = require('./category.controller');
     const { requireJWTRole } = require('../auth/jwt.middleware');
     
     // Rotas de categorias em /api/categories
-    categoryRoutes.get('/', CategoryController.getCategories);
-    categoryRoutes.get('/:id', CategoryController.getCategoryById);
-    categoryRoutes.post('/', requireJWTRole(['admin', 'manager']), CategoryController.createCategory);
-    categoryRoutes.put('/:id', requireJWTRole(['admin', 'manager']), CategoryController.updateCategory);
-    categoryRoutes.patch('/:id/toggle-status', requireJWTRole(['admin', 'manager']), CategoryController.toggleCategoryStatus);
-    categoryRoutes.delete('/:id', requireJWTRole(['admin', 'manager']), CategoryController.deleteCategory);
-    categoryRoutes.get('/:id/products', CategoryController.getCategoryProducts);
+    // Rota de pesquisa pública
+    categoryRoutes.get('/search', CategoryController.searchCategories);
+    
+    // Rotas que precisam de autenticação
+    categoryRoutes.get('/', requireHybridAuth, CategoryController.getCategories);
+    categoryRoutes.get('/:id', requireHybridAuth, CategoryController.getCategoryById);
+    categoryRoutes.post('/', requireHybridAuth, requireJWTRole(['admin', 'manager']), CategoryController.createCategory);
+    categoryRoutes.put('/:id', requireHybridAuth, requireJWTRole(['admin', 'manager']), CategoryController.updateCategory);
+    categoryRoutes.patch('/:id/toggle-status', requireHybridAuth, requireJWTRole(['admin', 'manager']), CategoryController.toggleCategoryStatus);
+    categoryRoutes.delete('/:id', requireHybridAuth, requireJWTRole(['admin', 'manager']), CategoryController.deleteCategory);
+    categoryRoutes.get('/:id/products', requireHybridAuth, CategoryController.getCategoryProducts);
     
     app.use('/api/categories', categoryRoutes);
     

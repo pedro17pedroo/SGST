@@ -53,14 +53,22 @@ export const SupplierCombobox = React.memo(function SupplierCombobox({
   const [selectedSupplier, setSelectedSupplier] = React.useState<Supplier | null>(null)
 
   // Buscar fornecedores com base na query de pesquisa
-  const searchQueryFn = React.useCallback(async () => {
+  const searchQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
     if (!searchQuery || searchQuery.length < 2) return []
     
-    const response = await apiRequest('GET', `/api/suppliers/search?q=${encodeURIComponent(searchQuery)}`)
-    if (!response.ok) throw new Error('Erro ao buscar fornecedores')
-    const data = await response.json()
-
-    return data
+    try {
+      const response = await apiRequest('GET', `/api/suppliers/search?q=${encodeURIComponent(searchQuery)}`)
+      if (!response.ok) throw new Error('Erro ao buscar fornecedores')
+      const result = await response.json()
+      // Extrair dados do campo 'data' da resposta da API
+      return result.data || []
+    } catch (error) {
+      // Ignorar erros de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return []
+      }
+      throw error
+    }
   }, [searchQuery])
 
   const { data: suppliers = [], isLoading } = useQuery({
@@ -68,21 +76,45 @@ export const SupplierCombobox = React.memo(function SupplierCombobox({
     queryFn: searchQueryFn,
     enabled: searchQuery.length >= 2,
     staleTime: 30000, // Cache por 30 segundos
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for erro de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return false
+      }
+      return failureCount < 2
+    },
   })
 
   // Buscar fornecedor específico quando value muda
-  const currentSupplierQueryFn = React.useCallback(async () => {
+  const currentSupplierQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
     if (!value) return null
     
-    const response = await apiRequest('GET', `/api/suppliers/${value}`)
-    if (!response.ok) throw new Error('Erro ao buscar fornecedor')
-    return response.json()
+    try {
+      const response = await apiRequest('GET', `/api/suppliers/${value}`)
+      if (!response.ok) throw new Error('Erro ao buscar fornecedor')
+      const result = await response.json()
+      // Extrair dados do campo 'data' da resposta da API
+      return result.data || null
+    } catch (error) {
+      // Ignorar erros de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return null
+      }
+      throw error
+    }
   }, [value])
 
   const { data: currentSupplier } = useQuery({
     queryKey: ['/api/suppliers', value],
     queryFn: currentSupplierQueryFn,
     enabled: !!value && !selectedSupplier,
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for erro de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return false
+      }
+      return failureCount < 2
+    },
   })
 
   // Atualizar fornecedor selecionado quando currentSupplier muda

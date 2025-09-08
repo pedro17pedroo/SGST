@@ -228,7 +228,54 @@ function App() {
   React.useEffect(() => {
     PerformanceOptimizer.initialize(queryClient);
     initializeGlobalStateSync();
-  }, []);
+    
+    // Listener global para suprimir erros de extensões do navegador
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const error = event.reason;
+      
+      // Suprimir erros específicos de extensões do navegador
+      if (
+        error instanceof Error &&
+        (
+          error.message.includes('message channel closed before a response was received') ||
+          error.message.includes('Extension context invalidated') ||
+          error.message.includes('Could not establish connection')
+        )
+      ) {
+        // Prevenir que o erro apareça no console
+        event.preventDefault();
+        return;
+      }
+    };
+    
+    // Listener para erros síncronos de extensões
+    const handleError = (event: ErrorEvent) => {
+      const error = event.error;
+      
+      if (
+        error instanceof Error &&
+        (
+          error.message.includes('message channel closed before a response was received') ||
+          error.message.includes('Extension context invalidated') ||
+          error.message.includes('Could not establish connection')
+        )
+      ) {
+        // Prevenir que o erro apareça no console
+        event.preventDefault();
+        return;
+      }
+    };
+    
+    // Adicionar listeners
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+    
+    // Cleanup dos listeners
+     return () => {
+       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+       window.removeEventListener('error', handleError);
+     };
+   }, []);
 
   return (
     <ErrorBoundary>

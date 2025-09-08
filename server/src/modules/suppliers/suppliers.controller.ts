@@ -130,4 +130,29 @@ export class SuppliersController extends BaseController {
       return controller.handleError(res, error, 'Erro ao eliminar fornecedor');
     }
   }
+
+  static async searchSuppliers(req: Request, res: Response) {
+    const controller = new SuppliersController();
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string') {
+        return controller.sendSuccess(res, [], 'Parâmetro de pesquisa é obrigatório');
+      }
+      
+      const result = await suppliersModel.getSuppliersWithFilters(
+        1,
+        50, // Limite maior para pesquisa
+        {
+          search: q,
+          sortBy: 'name',
+          sortOrder: 'asc'
+        }
+      );
+      
+      return controller.sendSuccess(res, result.suppliers, 'Fornecedores encontrados com sucesso');
+    } catch (error) {
+      return controller.handleError(res, error, 'Erro ao pesquisar fornecedores');
+    }
+  }
 }

@@ -1,5 +1,5 @@
 URL do pedido
-http://localhost:4001/api/suppliers
+http://localhost:4001/api/customers
 Método de pedido
 GET
 Código de estado
@@ -15,9 +15,9 @@ http://localhost:3000
 connection
 keep-alive
 date
-Mon, 08 Sep 2025 14:21:24 GMT
+Mon, 08 Sep 2025 23:47:29 GMT
 etag
-W/"b7-YqsNMs3Xms+aEkBFzRlkX5dMlzc"
+W/"1880-UGmY+PWXlf9CH9kwXtuFyuYaqEU"
 keep-alive
 timeout=5
 vary
@@ -31,13 +31,13 @@ gzip, deflate, br, zstd
 accept-language
 en,es;q=0.9,es-ES;q=0.8,pt;q=0.7
 authorization
-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzM0MDk0NiwiZXhwIjoxNzU3NDI3MzQ2LCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.Vglk0XCFHnGgQvyvTGnQ0PkdUQY_CHIu8MqZEKGTuQQ
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzM2NzUwNywiZXhwIjoxNzU3NDUzOTA3LCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.Hen-hHsw8-gLJxjxTF_r8eKTo2TD9BVQyDCyb0Mjxr0
 connection
 keep-alive
 host
 localhost:4001
 if-none-match
-W/"b7-YqsNMs3Xms+aEkBFzRlkX5dMlzc"
+W/"1880-UGmY+PWXlf9CH9kwXtuFyuYaqEU"
 origin
 http://localhost:3000
 referer
@@ -57,20 +57,270 @@ same-site
 user-agent
 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36
 
-Response:
-{
-    "success": true,
-    "message": "Fornecedores carregados com sucesso",
-    "data": [
-        {},
-        {}
-    ],
-    "pagination": {
-        "page": 1,
-        "limit": 10,
-        "total": 0,
-        "totalPages": 0,
-        "hasNextPage": false,
-        "hasPreviousPage": false
+Response
+[
+    {
+        "id": "abf72153-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "DIST-001",
+        "name": "Distribuidora Luanda Sul",
+        "email": "vendas@luandasul.ao",
+        "phone": "+244 923 456 789",
+        "mobile": null,
+        "address": "Rua Amílcar Cabral, 123, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1000",
+        "country": "Angola",
+        "taxNumber": "5417123456",
+        "customerType": "distribuidor",
+        "creditLimit": "500000.00",
+        "paymentTerms": "30 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf72491-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "DIST-002",
+        "name": "Distribuidora Benguela Norte",
+        "email": "comercial@benguelanorte.ao",
+        "phone": "+244 924 567 890",
+        "mobile": null,
+        "address": "Avenida Norton de Matos, 456, Benguela",
+        "city": "Benguela",
+        "province": "Benguela",
+        "postalCode": "2000",
+        "country": "Angola",
+        "taxNumber": "5417234567",
+        "customerType": "distribuidor",
+        "creditLimit": "300000.00",
+        "paymentTerms": "30 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf72568-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "DIST-003",
+        "name": "Distribuidora Huambo Central",
+        "email": "geral@huambocentral.ao",
+        "phone": "+244 925 678 901",
+        "mobile": null,
+        "address": "Rua José Eduardo dos Santos, 789, Huambo",
+        "city": "Huambo",
+        "province": "Huambo",
+        "postalCode": "3000",
+        "country": "Angola",
+        "taxNumber": "5417345678",
+        "customerType": "distribuidor",
+        "creditLimit": "250000.00",
+        "paymentTerms": "30 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf725c5-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "REST-001",
+        "name": "Restaurante Ilha do Cabo",
+        "email": "reservas@ilhadocabo.ao",
+        "phone": "+244 926 789 012",
+        "mobile": null,
+        "address": "Ilha do Mussulo, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1001",
+        "country": "Angola",
+        "taxNumber": "5417456789",
+        "customerType": "restaurante",
+        "creditLimit": "50000.00",
+        "paymentTerms": "15 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf7261b-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "REST-002",
+        "name": "Restaurante Fortaleza",
+        "email": "info@fortaleza.ao",
+        "phone": "+244 927 890 123",
+        "mobile": null,
+        "address": "Fortaleza de São Miguel, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1002",
+        "country": "Angola",
+        "taxNumber": "5417567890",
+        "customerType": "restaurante",
+        "creditLimit": "40000.00",
+        "paymentTerms": "15 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf72666-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "REST-003",
+        "name": "Restaurante Marginal",
+        "email": "contato@marginal.ao",
+        "phone": "+244 928 901 234",
+        "mobile": null,
+        "address": "Marginal de Luanda, 234, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1003",
+        "country": "Angola",
+        "taxNumber": "5417678901",
+        "customerType": "restaurante",
+        "creditLimit": "35000.00",
+        "paymentTerms": "15 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf726ae-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "BAR-001",
+        "name": "Bar Tamariz",
+        "email": "eventos@tamariz.ao",
+        "phone": "+244 929 012 345",
+        "mobile": null,
+        "address": "Talatona, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1004",
+        "country": "Angola",
+        "taxNumber": "5417789012",
+        "customerType": "bar",
+        "creditLimit": "30000.00",
+        "paymentTerms": "7 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf72708-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "BAR-002",
+        "name": "Discoteca Miami Beach",
+        "email": "reservas@miamibeach.ao",
+        "phone": "+244 930 123 456",
+        "mobile": null,
+        "address": "Rua Rainha Ginga, 567, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1005",
+        "country": "Angola",
+        "taxNumber": "5417890123",
+        "customerType": "bar",
+        "creditLimit": "45000.00",
+        "paymentTerms": "7 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf7275d-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "HOT-001",
+        "name": "Hotel Presidente",
+        "email": "compras@hotelpresidente.ao",
+        "phone": "+244 931 234 567",
+        "mobile": null,
+        "address": "Largo 17 de Setembro, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1006",
+        "country": "Angola",
+        "taxNumber": "5417901234",
+        "customerType": "hotel",
+        "creditLimit": "80000.00",
+        "paymentTerms": "30 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf727a4-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "HOT-002",
+        "name": "Hotel Tropico",
+        "email": "f&b@tropico.ao",
+        "phone": "+244 932 345 678",
+        "mobile": null,
+        "address": "Rua Garcia Neto, 890, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1007",
+        "country": "Angola",
+        "taxNumber": "5418012345",
+        "customerType": "hotel",
+        "creditLimit": "60000.00",
+        "paymentTerms": "30 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf727ed-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "SUP-001",
+        "name": "Supermercado Kero",
+        "email": "compras@kero.ao",
+        "phone": "+244 933 456 789",
+        "mobile": null,
+        "address": "Avenida 4 de Fevereiro, 123, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1008",
+        "country": "Angola",
+        "taxNumber": "5418123456",
+        "customerType": "supermercado",
+        "creditLimit": "100000.00",
+        "paymentTerms": "30 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
+    },
+    {
+        "id": "abf72830-8b45-11f0-aefa-34b4ed86d8a9",
+        "customerNumber": "SUP-002",
+        "name": "Supermercado Candando",
+        "email": "comercial@candando.ao",
+        "phone": "+244 934 567 890",
+        "mobile": null,
+        "address": "Rua Comandante Che Guevara, 456, Luanda",
+        "city": "Luanda",
+        "province": "Luanda",
+        "postalCode": "1009",
+        "country": "Angola",
+        "taxNumber": "5418234567",
+        "customerType": "supermercado",
+        "creditLimit": "120000.00",
+        "paymentTerms": "30 dias",
+        "discount": "0.00",
+        "isActive": true,
+        "notes": null,
+        "createdAt": "2025-09-06T17:19:40.000Z",
+        "updatedAt": "2025-09-06T17:19:40.000Z"
     }
-}
+]

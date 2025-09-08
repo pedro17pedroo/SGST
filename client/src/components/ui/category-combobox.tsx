@@ -22,7 +22,7 @@ import { apiRequest } from "@/lib/queryClient"
 interface Category {
   id: string
   name: string
-  description?: string
+  description?: string | null
 }
 
 interface CategoryComboboxProps {
@@ -51,14 +51,22 @@ export const CategoryCombobox = React.memo(function CategoryCombobox({
   const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(null)
 
   // Buscar categorias com base na query de pesquisa
-  const searchQueryFn = React.useCallback(async () => {
+  const searchQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
     if (!searchQuery || searchQuery.length < 2) return []
     
-    const response = await apiRequest('GET', `/api/categories/search?q=${encodeURIComponent(searchQuery)}`)
-    if (!response.ok) throw new Error('Erro ao buscar categorias')
-    const data = await response.json()
-
-    return data
+    try {
+      const response = await apiRequest('GET', `/api/categories/search?q=${encodeURIComponent(searchQuery)}`)
+      if (!response.ok) throw new Error('Erro ao buscar categorias')
+      const result = await response.json()
+      // Extrair dados do campo 'data' da resposta da API
+      return result.data || []
+    } catch (error) {
+      // Ignorar erros de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return []
+      }
+      throw error
+    }
   }, [searchQuery])
 
   const { data: categories = [], isLoading } = useQuery({
@@ -66,21 +74,45 @@ export const CategoryCombobox = React.memo(function CategoryCombobox({
     queryFn: searchQueryFn,
     enabled: searchQuery.length >= 2,
     staleTime: 30000, // Cache por 30 segundos
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for erro de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return false
+      }
+      return failureCount < 2
+    },
   })
 
   // Buscar categoria específica quando value muda
-  const currentCategoryQueryFn = React.useCallback(async () => {
+  const currentCategoryQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
     if (!value) return null
     
-    const response = await apiRequest('GET', `/api/categories/${value}`)
-    if (!response.ok) throw new Error('Erro ao buscar categoria')
-    return response.json()
+    try {
+      const response = await apiRequest('GET', `/api/categories/${value}`)
+      if (!response.ok) throw new Error('Erro ao buscar categoria')
+      const result = await response.json()
+      // Extrair dados do campo 'data' da resposta da API
+      return result.data || null
+    } catch (error) {
+      // Ignorar erros de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return null
+      }
+      throw error
+    }
   }, [value])
 
   const { data: currentCategory } = useQuery({
     queryKey: ['/api/categories', value],
     queryFn: currentCategoryQueryFn,
     enabled: !!value && !selectedCategory,
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for erro de cancelamento
+      if (error instanceof Error && error.name === 'AbortError') {
+        return false
+      }
+      return failureCount < 2
+    },
   })
 
   // Atualizar categoria selecionada quando currentCategory muda

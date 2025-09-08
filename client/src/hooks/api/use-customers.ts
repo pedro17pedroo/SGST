@@ -13,12 +13,23 @@ import { useMemo } from 'react';
 // Tipos para clientes
 interface Customer {
   id: string;
+  customerNumber: string;
   name: string;
   email?: string;
   phone?: string;
+  mobile?: string;
   address?: string;
-  company?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  country: string;
+  taxNumber?: string;
+  customerType: 'distribuidor' | 'restaurante' | 'bar' | 'hotel' | 'supermercado' | 'individual' | 'company';
+  creditLimit: string;
+  paymentTerms: string;
+  discount: string;
   isActive: boolean;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

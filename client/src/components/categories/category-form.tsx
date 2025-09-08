@@ -41,9 +41,10 @@ interface CategoryFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category?: Category;
+  onCategoryCreated?: (category: Category) => void;
 }
 
-export function CategoryForm({ open, onOpenChange, category }: CategoryFormProps) {
+export function CategoryForm({ open, onOpenChange, category, onCategoryCreated }: CategoryFormProps) {
   const { toast } = useToast();
   const isEditing = !!category;
 
@@ -59,13 +60,18 @@ export function CategoryForm({ open, onOpenChange, category }: CategoryFormProps
   
   const handleCreateCategory = async (data: CategoryFormData) => {
     try {
-      await createCategoryMutation.mutateAsync(data);
+      const response = await createCategoryMutation.mutateAsync(data);
       toast({
         title: "Categoria criada",
         description: "A categoria foi criada com sucesso.",
       });
       onOpenChange(false);
       form.reset();
+      
+      // Notificar o componente pai sobre a nova categoria
+      if (onCategoryCreated && response?.data) {
+        onCategoryCreated(response.data);
+      }
     } catch (error: any) {
       toast({
         title: "Erro",

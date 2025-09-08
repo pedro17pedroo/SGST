@@ -1,6 +1,6 @@
 import { db } from "../../../database/db";
 import { products, categories, suppliers, inventory, type Product, type InsertProduct, type Category, type Supplier } from "../../../../shared/schema";
-import { eq, ilike, desc, lt, sum } from "drizzle-orm";
+import { eq, like, desc, lt, sum } from "drizzle-orm";
 import { insertAndReturn, updateAndReturn, safeDelete, getSingleRecord } from "../utils";
 import { ErrorHandler } from "../base/StorageError";
 
@@ -36,7 +36,7 @@ export class ProductStorage {
     
     return await db.select().from(products)
       .where(
-        ilike(products.name, `%${query}%`)
+        like(products.name, `%${query}%`)
       );
   }
 

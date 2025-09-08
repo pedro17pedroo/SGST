@@ -29,9 +29,9 @@ interface CustomerFormData {
   postalCode?: string;
   country: string;
   taxNumber?: string;
-  customerType: 'individual' | 'company';
+  customerType: 'distribuidor' | 'restaurante' | 'bar' | 'hotel' | 'supermercado' | 'individual' | 'company';
   creditLimit: string;
-  paymentTerms: 'cash' | 'credit_30' | 'credit_60' | 'credit_90';
+  paymentTerms: string;
   discount: string;
   notes?: string;
 }
@@ -49,9 +49,9 @@ interface Customer {
   postalCode?: string;
   country: string;
   taxNumber?: string;
-  customerType: 'individual' | 'company';
+  customerType: 'distribuidor' | 'restaurante' | 'bar' | 'hotel' | 'supermercado' | 'individual' | 'company';
   creditLimit: string;
-  paymentTerms: 'cash' | 'credit_30' | 'credit_60' | 'credit_90';
+  paymentTerms: string;
   discount: string;
   isActive: boolean;
   notes?: string;
@@ -75,7 +75,7 @@ export default function CustomersPage() {
     total: customers.length,
     active: customers.filter(c => c.isActive).length,
     individual: customers.filter(c => c.customerType === 'individual').length,
-    company: customers.filter(c => c.customerType === 'company').length,
+    company: customers.filter(c => ['company', 'distribuidor', 'restaurante', 'bar', 'hotel', 'supermercado'].includes(c.customerType)).length,
   };
 
   // Formulário
@@ -94,7 +94,7 @@ export default function CustomersPage() {
       taxNumber: '',
       customerType: 'individual',
       creditLimit: '0',
-      paymentTerms: 'cash',
+      paymentTerms: '30 dias',
       discount: '0',
       notes: '',
     },

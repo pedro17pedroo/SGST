@@ -249,7 +249,19 @@ export const customersService = {
   async getCustomers(params?: QueryParams) {
     const url = buildApiUrl(API_ENDPOINTS.customers.list, params);
     const response = await apiRequest('GET', url);
-    return processResponse<PaginatedResponse<any>>(response);
+    const data = await processResponse<any[]>(response);
+    
+    // A API retorna um array direto, então vamos envolver em uma estrutura compatível
+    return {
+      success: true,
+      data: data,
+      pagination: {
+        page: 1,
+        limit: data.length,
+        total: data.length,
+        totalPages: 1
+      }
+    };
   },
 
   /**

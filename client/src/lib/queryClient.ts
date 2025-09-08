@@ -249,11 +249,25 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutos em vez de Infinity
-      retry: RETRY_CONFIG.read.retry,
+      retry: (failureCount, error) => {
+        // Não tentar novamente se for erro de cancelamento
+        if (error instanceof Error && error.name === 'AbortError') {
+          return false
+        }
+        // Usar configuração padrão para outros erros
+        return failureCount < RETRY_CONFIG.read.retry
+      },
       retryDelay: RETRY_CONFIG.read.retryDelay,
     },
     mutations: {
-      retry: RETRY_CONFIG.write.retry,
+      retry: (failureCount, error) => {
+        // Não tentar novamente se for erro de cancelamento
+        if (error instanceof Error && error.name === 'AbortError') {
+          return false
+        }
+        // Usar configuração padrão para outros erros
+        return failureCount < RETRY_CONFIG.write.retry
+      },
       retryDelay: RETRY_CONFIG.write.retryDelay,
     },
   },

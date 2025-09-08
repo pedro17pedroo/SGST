@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,6 +26,9 @@ import {
 } from "@/components/ui/select";
 import { CategoryCombobox } from "@/components/ui/category-combobox";
 import { SupplierCombobox } from "@/components/ui/supplier-combobox";
+import { MultiBarcodeReader } from "@/components/ui/multi-barcode-scanner";
+import { CategoryForm } from "../categories/category-form";
+import { SupplierForm } from "../suppliers/supplier-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -33,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/api/use-categories";
 import { useSuppliers } from "@/hooks/api/use-suppliers";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/api/use-products";
+import { Scan } from "lucide-react";
 
 const productSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -69,6 +73,30 @@ interface ProductFormProps {
 
 export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const { toast } = useToast();
+  
+  // Estados para controlar os modais
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  
+  // Estados para itens recém-criados
+  const [newlyCreatedCategory, setNewlyCreatedCategory] = useState<{ id: string; name: string; description: string | null; createdAt: string } | null>(null);
+  const [newlyCreatedSupplier, setNewlyCreatedSupplier] = useState<{ id: string; name: string; email?: string; phone?: string; address?: string } | null>(null);
+  
+  // Limpar itens recém-criados após seleção automática
+  useEffect(() => {
+    if (newlyCreatedCategory) {
+      const timer = setTimeout(() => setNewlyCreatedCategory(null), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [newlyCreatedCategory]);
+  
+  useEffect(() => {
+    if (newlyCreatedSupplier) {
+      const timer = setTimeout(() => setNewlyCreatedSupplier(null), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [newlyCreatedSupplier]);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -160,6 +188,17 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         variant: "destructive",
       });
     }
+  };
+
+  // Função para lidar com código de barras escaneado
+  const handleBarcodeScanned = (barcode: string, method: 'laser' | 'camera' | 'manual') => {
+    form.setValue('barcode', barcode);
+    setShowBarcodeScanner(false);
+    
+    toast({
+      title: "Código de barras detectado!",
+      description: `Método: ${method === 'laser' ? 'Laser' : method === 'camera' ? 'Câmera' : 'Manual'} - Código: ${barcode}`,
+    });
   };
 
   const onSubmit = (data: ProductFormData) => {
@@ -299,12 +338,24 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                     <FormItem>
                       <FormLabel>Código de Barras</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Ex: 1234567890123" 
-                          className="h-10"
-                          {...field} 
-                          data-testid="input-barcode" 
-                        />
+                        <div className="relative">
+                          <Input 
+                            placeholder="Ex: 1234567890123" 
+                            className="h-10 pr-12"
+                            {...field} 
+                            data-testid="input-barcode" 
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted"
+                            onClick={() => setShowBarcodeScanner(true)}
+                            title="Escanear código de barras"
+                          >
+                            <Scan className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -330,11 +381,9 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         <CategoryCombobox
                           value={field.value}
                           onValueChange={field.onChange}
-                          onAddNewCategory={() => {
-                            // TODO: Implementar modal de adicionar categoria
-                            console.log('Adicionar nova categoria')
-                          }}
+                          onAddNewCategory={() => setShowCategoryModal(true)}
                           placeholder="Selecionar categoria..."
+                          newlyCreatedCategory={newlyCreatedCategory}
                         />
                       </FormControl>
                       <FormMessage />
@@ -352,11 +401,9 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         <SupplierCombobox
                           value={field.value}
                           onValueChange={field.onChange}
-                          onAddNewSupplier={() => {
-                            // TODO: Implementar modal de adicionar fornecedor
-                            console.log('Adicionar novo fornecedor')
-                          }}
+                          onAddNewSupplier={() => setShowSupplierModal(true)}
                           placeholder="Selecionar fornecedor..."
+                          newlyCreatedSupplier={newlyCreatedSupplier}
                         />
                       </FormControl>
                       <FormMessage />
@@ -444,6 +491,63 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
           </form>
         </Form>
       </DialogContent>
+      
+      {/* Modal do Scanner de Código de Barras */}
+      {showBarcodeScanner && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowBarcodeScanner(false);
+            }
+          }}
+        >
+          <div 
+            className="bg-background rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Scanner de Código de Barras</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowBarcodeScanner(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  ×
+                </Button>
+              </div>
+              <MultiBarcodeReader
+                onScanResult={handleBarcodeScanned}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal de Adicionar Categoria */}
+       <CategoryForm
+          open={showCategoryModal}
+          onOpenChange={setShowCategoryModal}
+          onCategoryCreated={(newCategory: { id: string; name: string; description: string | null; createdAt: string }) => {
+            // Definir categoria recém-criada para seleção automática
+            setNewlyCreatedCategory(newCategory);
+            setShowCategoryModal(false);
+          }}
+        />
+      
+      {/* Modal de Adicionar Fornecedor */}
+       <SupplierForm
+          open={showSupplierModal}
+          onOpenChange={setShowSupplierModal}
+          onSupplierCreated={(newSupplier: { id: string; name: string; email?: string; phone?: string; address?: string }) => {
+            // Definir fornecedor recém-criado para seleção automática
+            setNewlyCreatedSupplier(newSupplier);
+            setShowSupplierModal(false);
+          }}
+        />
     </Dialog>
   );
 }

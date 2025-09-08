@@ -260,4 +260,54 @@ export class CategoryController {
       });
     }
   }
+
+  /**
+   * Pesquisar categorias
+   */
+  static async searchCategories(req: Request, res: Response) {
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string') {
+        return res.json({
+          data: [],
+          success: true,
+          message: 'Parâmetro de pesquisa é obrigatório'
+        });
+      }
+      
+      // Buscar todas as categorias
+      let categories = await CategoryModel.getAll();
+      
+      // Verificar se categories é válido
+      if (!categories || !Array.isArray(categories)) {
+        categories = [];
+      }
+      
+      // Aplicar filtro de pesquisa
+      const searchLower = q.toLowerCase();
+      const filteredCategories = categories.filter(category => 
+        category.name.toLowerCase().includes(searchLower) ||
+        (category.description && category.description.toLowerCase().includes(searchLower))
+      );
+      
+      // Ordenar por nome
+      filteredCategories.sort((a, b) => a.name.localeCompare(b.name));
+      
+      // Limitar a 50 resultados
+      const limitedCategories = filteredCategories.slice(0, 50);
+      
+      res.json({
+        data: limitedCategories,
+        success: true,
+        message: 'Categorias encontradas com sucesso'
+      });
+    } catch (error: unknown) {
+      console.error('Erro ao pesquisar categorias:', error);
+      res.status(500).json({ 
+        message: "Erro ao pesquisar categorias", 
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      });
+    }
+  }
 }

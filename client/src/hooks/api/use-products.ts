@@ -110,7 +110,9 @@ export function useCreateProduct() {
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'topProducts'] });
       
-      const successMessage = createSuccessMsg('create', 'Produto', data.data.name);
+      // Verificar se a resposta tem a estrutura esperada
+      const productName = data?.data?.name || 'produto';
+      const successMessage = createSuccessMsg('create', 'Produto', productName);
       handleSuccess(successMessage, 'Produto criado');
     },
     onError: (error) => {

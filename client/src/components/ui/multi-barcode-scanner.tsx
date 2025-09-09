@@ -171,72 +171,9 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
     }));
   }, []);
 
-  // Ativar método de escaneamento com priorização
-  const activateMethod = useCallback(async (method: ScanMethod) => {
-    console.log(`🔄 Ativando método: ${method}`);
-    
-    // Parar câmera se estiver ativa
-    if (isCameraActive) {
-      stopCamera();
-    }
-    
-    // Remover listener laser se ativo
-    removeLaserListener();
-    
-    // Desativar outros métodos
-    setMethods(prev => {
-      const newMethods = { ...prev };
-      Object.keys(newMethods).forEach(key => {
-        newMethods[key as ScanMethod].active = false;
-        newMethods[key as ScanMethod].status = 'idle';
-        newMethods[key as ScanMethod].error = undefined;
-      });
-      return newMethods;
-    });
-    
-    setCurrentMethod(method);
-    
-    // Verificar se o método está disponível
-    if (!methods[method].available) {
-      console.log(`❌ Método ${method} não está disponível`);
-      toast({
-        title: "Método indisponível",
-        description: `O método ${method} não está disponível no momento.`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    switch (method) {
-      case 'laser':
-        setupLaserListener();
-        toast({
-          title: "Leitor Laser Ativado",
-          description: "Aponte o leitor laser para o código de barras.",
-        });
-        break;
-      case 'camera':
-        setMethods(prev => ({
-          ...prev,
-          camera: { ...prev.camera, active: true, status: 'idle' }
-        }));
-        toast({
-          title: "Câmera Ativada",
-          description: "Clique em 'Iniciar Câmera' para começar o escaneamento.",
-        });
-        break;
-      case 'manual':
-        setMethods(prev => ({
-          ...prev,
-          manual: { ...prev.manual, active: true, status: 'scanning' }
-        }));
-        toast({
-          title: "Entrada Manual Ativada",
-          description: "Digite o código de barras no campo abaixo.",
-        });
-        break;
-    }
-  }, [methods, setupLaserListener, removeLaserListener, isCameraActive, toast]);
+
+
+
 
   // Tratamento de erro para métodos
   const handleMethodError = useCallback((method: ScanMethod, error: string) => {
@@ -347,6 +284,75 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
     
     setIsCameraActive(false);
   }, []);
+
+  // Ativar método de escaneamento com priorização
+  const activateMethod = useCallback(async (method: ScanMethod) => {
+    console.log(`🔄 Ativando método: ${method}`);
+    
+    // Parar câmera se estiver ativa
+    if (isCameraActive) {
+      stopCamera();
+    }
+    
+    // Remover listener laser se ativo
+    removeLaserListener();
+    
+    // Desativar outros métodos e verificar disponibilidade
+    setMethods(prev => {
+      // Verificar se o método está disponível
+      if (!prev[method].available) {
+        console.log(`❌ Método ${method} não está disponível`);
+        toast({
+          title: "Método indisponível",
+          description: `O método ${method} não está disponível no momento.`,
+          variant: "destructive",
+        });
+        return prev; // Não fazer alterações se não estiver disponível
+      }
+      
+      const newMethods = { ...prev };
+      Object.keys(newMethods).forEach(key => {
+        newMethods[key as ScanMethod].active = false;
+        newMethods[key as ScanMethod].status = 'idle';
+        newMethods[key as ScanMethod].error = undefined;
+      });
+      return newMethods;
+    });
+    
+    setCurrentMethod(method);
+    
+    
+    // Ativar o método específico
+    switch (method) {
+      case 'laser':
+        setupLaserListener();
+        toast({
+          title: "Leitor Laser Ativado",
+          description: "Aponte o leitor laser para o código de barras.",
+        });
+        break;
+      case 'camera':
+        setMethods(prev => ({
+          ...prev,
+          camera: { ...prev.camera, active: true, status: 'idle' }
+        }));
+        toast({
+          title: "Câmera Ativada",
+          description: "Clique em 'Iniciar Câmera' para começar o escaneamento.",
+        });
+        break;
+      case 'manual':
+        setMethods(prev => ({
+          ...prev,
+          manual: { ...prev.manual, active: true, status: 'scanning' }
+        }));
+        toast({
+          title: "Entrada Manual Ativada",
+          description: "Digite o código de barras no campo abaixo.",
+        });
+        break;
+    }
+  }, [setupLaserListener, removeLaserListener, isCameraActive, stopCamera, toast]);
 
   // Entrada manual
   const handleManualSubmit = useCallback(() => {

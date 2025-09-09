@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { ProductModel } from './product.model';
+import { insertProductSchema } from '@shared/schema';
 import { z } from 'zod';
 
 export class ProductController {
@@ -105,15 +106,10 @@ export class ProductController {
 
   static async createProduct(req: Request, res: Response) {
     try {
-      // Converter campos numéricos de string para número
-      const productData = {
-        ...req.body,
-        price: req.body.price ? parseFloat(req.body.price) : undefined,
-        weight: req.body.weight ? parseFloat(req.body.weight) : undefined,
-        minStockLevel: req.body.minStockLevel ? parseInt(req.body.minStockLevel, 10) : undefined,
-      };
+      // Validar dados usando o schema compartilhado
+      const validatedData = insertProductSchema.parse(req.body);
       
-      const product = await ProductModel.create(productData);
+      const product = await ProductModel.create(validatedData);
       res.status(201).json(product);
     } catch (error) {
       console.error('Error creating product:', error);

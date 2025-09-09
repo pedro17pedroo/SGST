@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryCombobox } from "@/components/ui/category-combobox";
 import { SupplierCombobox } from "@/components/ui/supplier-combobox";
 import { MultiBarcodeReader } from "@/components/ui/multi-barcode-scanner";
@@ -28,22 +28,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-import { useCreateProduct } from "@/hooks/api/use-products";
-import { Scan } from "lucide-react";
+import { useCreateProduct, useUpdateProduct } from "@/hooks/api/use-products";
+import { 
+  Scan, 
+  Package, 
+  DollarSign, 
+  Tag, 
+  Users, 
+  Scale, 
+  BarChart3,
+  Info
+} from "lucide-react";
 
-const productSchema = z.object({
+// Schema para os dados de entrada do formulário (strings)
+const productFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string().optional(),
-  sku: z.string().min(1, "SKU é obrigatório"),
+  sku: z.string().optional(), // SKU é opcional - será gerado automaticamente se não fornecido
   barcode: z.string().optional(),
-  price: z.string().min(1, "Preço é obrigatório"),
-  weight: z.string().optional(),
+  price: z.string().min(1, "Preço é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço deve ser um número positivo"),
+  costPrice: z.string().min(1, "Preço de custo é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço de custo deve ser um número positivo"),
+  weight: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) > 0), "Peso deve ser um número positivo"),
   categoryId: z.string().optional(),
   supplierId: z.string().optional(),
-  minStockLevel: z.string().optional(),
+  minStockLevel: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), "Nível mínimo deve ser um número positivo"),
 });
 
-type ProductFormData = z.infer<typeof productSchema>;
+type ProductFormData = z.infer<typeof productFormSchema>;
 
 interface Product {
   id: string;
@@ -52,10 +63,11 @@ interface Product {
   sku: string;
   barcode: string | null;
   price: string;
+  costPrice: string;
   weight: string | null;
   categoryId: string | null;
   supplierId: string | null;
-  minStockLevel: number | null;
+  minStockLevel: string | null;
 }
 
 interface ProductFormProps {
@@ -92,13 +104,14 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   }, [newlyCreatedSupplier]);
 
   const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: product?.name || "",
       description: product?.description || "",
       sku: product?.sku || "",
       barcode: product?.barcode || "",
       price: product?.price || "",
+      costPrice: product?.costPrice || "",
       weight: product?.weight || "",
       categoryId: product?.categoryId || "",
       supplierId: product?.supplierId || "",
@@ -115,10 +128,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         sku: product.sku || "",
         barcode: product.barcode || "",
         price: product.price || "",
+        costPrice: product.costPrice || "",
         weight: product.weight || "",
         categoryId: product.categoryId || "",
         supplierId: product.supplierId || "",
-        minStockLevel: product.minStockLevel?.toString() || "",
+        minStockLevel: product.minStockLevel || "",
       });
     } else {
       form.reset({
@@ -127,6 +141,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         sku: "",
         barcode: "",
         price: "",
+        costPrice: "",
         weight: "",
         categoryId: "",
         supplierId: "",
@@ -138,8 +153,9 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
 
   const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
   
-  const handleCreateProduct = async (data: ProductFormData) => {
+  const handleCreateProduct = async (data: any) => {
     try {
       await createProductMutation.mutateAsync(data);
       toast({
@@ -157,6 +173,33 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     }
   };
 
+  const handleUpdateProduct = async (data: any) => {
+    if (!product?.id) {
+      toast({
+        title: "Erro",
+        description: "ID do produto não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateProductMutation.mutateAsync({ id: product.id, data });
+      toast({
+        title: "Produto atualizado",
+        description: "O produto foi atualizado com sucesso.",
+      });
+      onOpenChange(false);
+      form.reset();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar produto.",
+        variant: "destructive",
+      });
+    }
+   };
+
   // Função para lidar com código de barras escaneado
   const handleBarcodeScanned = (barcode: string, method: 'laser' | 'camera' | 'manual') => {
     form.setValue('barcode', barcode);
@@ -171,271 +214,378 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const onSubmit = (data: ProductFormData) => {
     const formattedData = {
       ...data,
-      price: data.price,
-      weight: data.weight || undefined,
+      sku: product ? data.sku : undefined, // Manter SKU se editando, gerar automaticamente se criando
+      price: String(data.price), // Converte para string
+      costPrice: String(data.costPrice), // Converte para string
+      weight: data.weight ? String(data.weight) : undefined, // Converte para string se existir
       categoryId: data.categoryId === "none" ? undefined : data.categoryId || undefined,
       supplierId: data.supplierId === "none" ? undefined : data.supplierId || undefined,
-      minStockLevel: data.minStockLevel ? data.minStockLevel.toString() : "0",
+      minStockLevel: data.minStockLevel ? String(data.minStockLevel) : undefined, // Converte para string se existir
     };
 
-    handleCreateProduct(formattedData);
-  };
+    // Detectar se é criação ou atualização baseado na presença do produto
+    if (product) {
+      handleUpdateProduct(formattedData);
+    } else {
+      handleCreateProduct(formattedData);
+    }
+   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="product-form">
-          <DialogHeader className="pb-4">
-            <DialogTitle className="text-xl font-semibold" data-testid="product-form-title">
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden p-0" data-testid="product-form">
+        <div className="flex flex-col h-full max-h-[95vh]">
+          <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 flex-shrink-0">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3" data-testid="product-form-title">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
               {product ? "Editar Produto" : "Adicionar Produto"}
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              {product ? "Altere as informações do produto." : "Preencha os dados do novo produto."}
+            <DialogDescription className="text-muted-foreground text-base mt-2">
+              {product ? "Altere as informações do produto selecionado." : "Preencha os dados do novo produto com todas as informações necessárias."}
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form id="product-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Informações Básicas */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
-                Informações Básicas
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  Informações Básicas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          Nome do Produto *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ex: Laptop Dell Inspiron" 
+                            className="h-11"
+                            {...field} 
+                            data-testid="input-name" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="sku"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <Tag className="h-4 w-4" />
+                          SKU (Gerado Automaticamente)
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Será gerado automaticamente" 
+                            className="h-11 bg-muted"
+                            {...field} 
+                            data-testid="input-sku"
+                            disabled
+                            readOnly
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                          <Info className="h-3 w-3" />
+                          O SKU será gerado automaticamente com base no nome do produto
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome do Produto *</FormLabel>
+                      <FormLabel className="text-sm font-medium">Descrição</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Ex: Laptop Dell Inspiron" 
-                          className="h-10"
+                        <Textarea 
+                          placeholder="Descrição detalhada do produto..." 
+                          className="min-h-[100px] resize-none"
                           {...field} 
-                          data-testid="input-name" 
+                          data-testid="input-description"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="sku"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SKU *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Ex: DELL-INSP-15" 
-                          className="h-10"
-                          {...field} 
-                          data-testid="input-sku" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Descrição detalhada do produto..." 
-                        className="min-h-[80px] resize-none"
-                        {...field} 
-                        data-testid="input-description"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Preço e Código */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
-                Preço e Identificação
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Preço (AOA) *</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
-                            AOA
-                          </span>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="0.00" 
-                            className="pl-12 h-10"
-                            {...field} 
-                            data-testid="input-price"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  Preço e Identificação
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <DollarSign className="h-4 w-4" />
+                          Preço (AOA) *
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                              AOA
+                            </span>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              placeholder="0.00" 
+                              className="pl-14 h-11"
+                              {...field} 
+                              data-testid="input-price"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="barcode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Código de Barras</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input 
-                            placeholder="Ex: 1234567890123" 
-                            className="h-10 pr-12"
-                            {...field} 
-                            data-testid="input-barcode" 
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted"
-                            onClick={() => setShowBarcodeScanner(true)}
-                            title="Escanear código de barras"
-                          >
-                            <Scan className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                  <FormField
+                    control={form.control}
+                    name="costPrice"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <DollarSign className="h-4 w-4" />
+                          Preço de Custo (AOA) *
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                              AOA
+                            </span>
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              placeholder="0.00" 
+                              className="pl-14 h-11"
+                              {...field} 
+                              data-testid="input-cost-price"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Código de Barras */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Scan className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  Código de Barras
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="barcode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <Scan className="h-4 w-4" />
+                          Código de Barras
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              placeholder="Ex: 1234567890123" 
+                              className="h-11 pr-12"
+                              {...field} 
+                              data-testid="input-barcode" 
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-9 w-9 p-0 hover:bg-muted"
+                              onClick={() => setShowBarcodeScanner(true)}
+                              title="Escanear código de barras"
+                            >
+                              <Scan className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Categoria e Fornecedor */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
-                Classificação
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="categoryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Categoria</FormLabel>
-                      <FormControl>
-                        <CategoryCombobox
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          onAddNewCategory={() => setShowCategoryModal(true)}
-                          placeholder="Selecionar categoria..."
-                          newlyCreatedCategory={newlyCreatedCategory}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  Classificação
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="categoryId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <Tag className="h-4 w-4" />
+                          Categoria
+                        </FormLabel>
+                        <FormControl>
+                          <CategoryCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            onAddNewCategory={() => setShowCategoryModal(true)}
+                            placeholder="Selecionar categoria..."
+                            newlyCreatedCategory={newlyCreatedCategory}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="supplierId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fornecedor</FormLabel>
-                      <FormControl>
-                        <SupplierCombobox
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          onAddNewSupplier={() => setShowSupplierModal(true)}
-                          placeholder="Selecionar fornecedor..."
-                          newlyCreatedSupplier={newlyCreatedSupplier}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+                  <FormField
+                    control={form.control}
+                    name="supplierId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Fornecedor
+                        </FormLabel>
+                        <FormControl>
+                          <SupplierCombobox
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            onAddNewSupplier={() => setShowSupplierModal(true)}
+                            placeholder="Selecionar fornecedor..."
+                            newlyCreatedSupplier={newlyCreatedSupplier}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Peso e Stock */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground border-b pb-2">
-                Inventário
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="weight"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Peso (kg)</FormLabel>
-                      <FormControl>
-                        <div className="relative">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  Inventário
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="weight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <Scale className="h-4 w-4" />
+                          Peso (kg)
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type="number" 
+                              step="0.001"
+                              placeholder="0.000" 
+                              className="pr-10 h-11"
+                              {...field} 
+                              data-testid="input-weight"
+                            />
+                            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                              kg
+                            </span>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="minStockLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4" />
+                          Nível Mínimo de Stock
+                        </FormLabel>
+                        <FormControl>
                           <Input 
                             type="number" 
-                            step="0.001"
-                            placeholder="0.000" 
-                            className="pr-8 h-10"
+                            placeholder="10" 
+                            className="h-11"
                             {...field} 
-                            data-testid="input-weight"
+                            data-testid="input-min-stock"
                           />
-                          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
-                            kg
-                          </span>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-                <FormField
-                  control={form.control}
-                  name="minStockLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nível Mínimo de Stock</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="10" 
-                          className="h-10"
-                          {...field} 
-                          data-testid="input-min-stock"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-6 border-t">
+           </form>
+         </Form>
+          </div>
+          
+          {/* Área de botões fixa na parte inferior */}
+          <div className="flex-shrink-0 border-t bg-white dark:bg-gray-950 px-6 py-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-4">
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full sm:w-auto order-2 sm:order-1 min-w-[100px]"
+                className="w-full sm:w-auto min-w-[120px] h-11"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel"
               >
@@ -443,15 +593,19 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               </Button>
               <Button 
                 type="submit" 
-                className="w-full sm:w-auto order-1 sm:order-2 min-w-[100px]"
+                form="product-form"
+                className="w-full sm:w-auto min-w-[120px] h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                 disabled={createProductMutation.isPending}
                 data-testid="button-submit"
               >
-                {createProductMutation.isPending ? "Guardando..." : "Criar Produto"}
+                {(createProductMutation.isPending || updateProductMutation.isPending) ? 
+                  (product ? "Atualizando..." : "Criando...") : 
+                  (product ? "Atualizar Produto" : "Criar Produto")
+                }
               </Button>
             </div>
-          </form>
-        </Form>
+          </div>
+        </div>
       </DialogContent>
       
       {/* Modal do Scanner de Código de Barras */}

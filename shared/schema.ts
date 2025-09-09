@@ -76,6 +76,7 @@ export const products = mysqlTable("products", {
   sku: varchar("sku", { length: 100 }).notNull().unique(),
   barcode: varchar("barcode", { length: 100 }),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  costPrice: decimal("cost_price", { precision: 10, scale: 2 }).notNull(),
   weight: decimal("weight", { precision: 8, scale: 3 }),
   dimensions: json("dimensions"), // {length, width, height}
   categoryId: varchar("category_id", { length: 36 }).references(() => categories.id),
@@ -706,9 +707,11 @@ export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
 }).extend({
-  price: z.number().positive("Preço deve ser positivo"),
-  weight: z.number().positive("Peso deve ser positivo").optional(),
-  minStockLevel: z.number().int().min(0, "Nível mínimo de stock deve ser positivo").optional(),
+  sku: z.string().optional(), // SKU é opcional - será gerado automaticamente se não fornecido
+  price: z.string().min(1, "Preço é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço deve ser um número positivo"),
+  weight: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) > 0), "Peso deve ser um número positivo"),
+  minStockLevel: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), "Nível mínimo deve ser um número positivo"),
+  costPrice: z.string().min(1, "Preço de custo é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço de custo deve ser um número positivo"),
 });
 
 // Schema específico para atualização de produtos (omite campos únicos como SKU)

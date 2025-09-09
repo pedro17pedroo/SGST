@@ -113,14 +113,16 @@ async function throwIfResNotOk(res: Response, retryCallback?: () => Promise<Resp
     
     const text = (await res.text()) || res.statusText;
     
-    // Try to parse JSON and extract message, otherwise use full text
+    // Try to parse JSON and extract specific error message from backend
     try {
       const errorData = JSON.parse(text);
-      const errorMessage = errorData.message || text;
+      // Priorizar o campo 'error' que contém a mensagem específica do backend
+      // Exemplo: {"message": "Erro ao criar produto", "error": "Produto com SKU 'TESTE-1R-MAU' já existe"}
+      const errorMessage = errorData.error || errorData.message || text;
       throw new Error(errorMessage);
     } catch (parseError) {
-      // If not valid JSON, throw the original text without status code
-      throw new Error(text);
+      // If not valid JSON, use the original text
+      throw new Error(text || 'Erro no servidor');
     }
   }
 }

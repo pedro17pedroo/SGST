@@ -1,25 +1,8 @@
 import { storage } from '../../storage/index';
-import { Product } from '@shared/schema';
+import { Product, insertProductSchema, type InsertProduct } from '@shared/schema';
 import { z } from 'zod';
 
-const productCreateSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  categoryId: z.string(),
-  supplierId: z.string(),
-  sku: z.string(),
-  barcode: z.string().optional(),
-  price: z.string(),
-  costPrice: z.string(),
-  weight: z.string().optional(),
-  dimensions: z.string().optional(),
-  minStockLevel: z.number().optional(),
-  maxStockLevel: z.number().optional(),
-  reorderPoint: z.number().optional(),
-  isActive: z.boolean().optional(),
-});
-
-export type ProductCreateData = z.infer<typeof productCreateSchema>;
+export type ProductCreateData = InsertProduct;
 export type ProductUpdateData = Partial<ProductCreateData>;
 
 export interface ProductFilters {
@@ -52,13 +35,70 @@ export class ProductModel {
     return await storage.searchProducts(query);
   }
 
+  /**
+   * Gera um SKU único baseado no nome do produto
+   * Formato: PRIMEIRAS_LETRAS-TIMESTAMP_CURTO
+   * Exemplo: PROD-A1B2C3
+   */
+  static async generateUniqueSku(productName: string): Promise<string> {
+    // Extrair primeiras letras significativas do nome
+    const nameWords = productName
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, '') // Remove caracteres especiais
+      .split(' ')
+      .filter(word => word.length > 0);
+    
+    // Pegar as primeiras 2-3 letras de cada palavra (máximo 8 caracteres)
+    let prefix = '';
+    for (const word of nameWords) {
+      if (prefix.length >= 8) break;
+      prefix += word.substring(0, Math.min(3, 8 - prefix.length));
+    }
+    
+    // Se o prefixo for muito curto, usar 'PROD'
+    if (prefix.length < 3) {
+      prefix = 'PROD';
+    }
+    
+    // Gerar sufixo único baseado em timestamp
+    const timestamp = Date.now();
+    const suffix = timestamp.toString(36).toUpperCase().slice(-6); // Últimos 6 caracteres em base36
+    
+    let sku = `${prefix}-${suffix}`;
+    
+    // Verificar se o SKU já existe e gerar um novo se necessário
+    let counter = 1;
+    while (await this.getBySku(sku)) {
+      sku = `${prefix}-${suffix}${counter.toString(36).toUpperCase()}`;
+      counter++;
+      
+      // Evitar loop infinito
+      if (counter > 1000) {
+        throw new Error('Não foi possível gerar um SKU único');
+      }
+    }
+    
+    return sku;
+  }
+
   static async create(productData: ProductCreateData) {
-    const validatedData = productCreateSchema.parse(productData);
+    // Se não foi fornecido SKU, gerar automaticamente
+    if (!productData.sku) {
+      productData.sku = await this.generateUniqueSku(productData.name);
+    } else {
+      // Verificar se o SKU fornecido já existe
+      const existingProduct = await this.getBySku(productData.sku);
+      if (existingProduct) {
+        throw new Error(`Produto com SKU '${productData.sku}' já existe`);
+      }
+    }
+    
+    const validatedData = insertProductSchema.parse(productData);
     return await storage.createProduct(validatedData);
   }
 
   static async update(id: string, updateData: ProductUpdateData) {
-    const validatedData = productCreateSchema.partial().parse(updateData);
+    const validatedData = insertProductSchema.partial().parse(updateData);
     return await storage.updateProduct(id, validatedData);
   }
 

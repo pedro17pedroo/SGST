@@ -17,13 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { CategoryCombobox } from "@/components/ui/category-combobox";
 import { SupplierCombobox } from "@/components/ui/supplier-combobox";
 import { MultiBarcodeReader } from "@/components/ui/multi-barcode-scanner";
@@ -33,9 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useCategories } from "@/hooks/api/use-categories";
-import { useSuppliers } from "@/hooks/api/use-suppliers";
-import { useCreateProduct, useUpdateProduct } from "@/hooks/api/use-products";
+
+import { useCreateProduct } from "@/hooks/api/use-products";
 import { Scan } from "lucide-react";
 
 const productSchema = z.object({
@@ -142,11 +135,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     }
   }, [product, form]);
 
-  const { data: categoriesResponse } = useCategories();
-  const categories = categoriesResponse?.data || [];
-  
-  const { data: suppliersResponse } = useSuppliers();
-  const suppliers = suppliersResponse?.data || [];
+
 
   const createProductMutation = useCreateProduct();
   
@@ -163,28 +152,6 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       toast({
         title: "Erro",
         description: error.message || "Erro ao criar produto.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateProductMutation = useUpdateProduct();
-  
-  const handleUpdateProduct = async (data: ProductFormData) => {
-    if (!product?.id) return;
-    
-    try {
-      await updateProductMutation.mutateAsync({ id: product.id, data });
-      toast({
-        title: "Produto atualizado",
-        description: "O produto foi atualizado com sucesso.",
-      });
-      onOpenChange(false);
-      form.reset();
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao atualizar produto.",
         variant: "destructive",
       });
     }
@@ -211,11 +178,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       minStockLevel: data.minStockLevel ? data.minStockLevel.toString() : "0",
     };
 
-    if (product) {
-      handleUpdateProduct(formattedData);
-    } else {
-      handleCreateProduct(formattedData);
-    }
+    handleCreateProduct(formattedData);
   };
 
   return (
@@ -481,11 +444,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               <Button 
                 type="submit" 
                 className="w-full sm:w-auto order-1 sm:order-2 min-w-[100px]"
-                disabled={createProductMutation.isPending || updateProductMutation.isPending}
+                disabled={createProductMutation.isPending}
                 data-testid="button-submit"
               >
-                {createProductMutation.isPending || updateProductMutation.isPending ? "Guardando..." : 
-                 product ? "Actualizar" : "Criar Produto"}
+                {createProductMutation.isPending ? "Guardando..." : "Criar Produto"}
               </Button>
             </div>
           </form>

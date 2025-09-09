@@ -16,10 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Scan, 
   Camera, 
-  Zap, 
   CheckCircle, 
   XCircle, 
-  Loader2,
   ScanLine,
   Video,
   AlertCircle,

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { WarehousesModel } from './warehouses.model';
 import { BaseController } from '../base/base.controller';
+import { storage } from '../../storage/index';
 import { z } from 'zod';
 
 // Schema de validação para criação de armazém
@@ -59,6 +60,34 @@ export class WarehousesController extends BaseController {
     }
   }
 
+  static async getWarehouseStock(req: Request, res: Response) {
+    const controller = new WarehousesController();
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        return controller.sendError(res, 'ID do armazém é obrigatório', 'ID não fornecido');
+      }
+
+      // Verificar se o armazém existe
+      const warehouse = await WarehousesModel.getWarehouse(id);
+      if (!warehouse) {
+        return controller.sendError(res, 'Armazém não encontrado', 'Armazém não existe');
+      }
+
+      // Obter contagem de produtos no armazém
+      const stockCount = await storage.inventory.getWarehouseStock(id);
+      
+      return controller.sendSuccess(
+        res,
+        { warehouseId: id, productCount: stockCount },
+        'Contagem de produtos obtida com sucesso'
+      );
+    } catch (error) {
+      return controller.handleError(res, error, 'Erro ao obter contagem de produtos do armazém');
+    }
+  }
+
   static async getWarehouse(req: Request, res: Response) {
     const controller = new WarehousesController();
     try {
@@ -103,20 +132,27 @@ export class WarehousesController extends BaseController {
     }
   }
 
-  static async deleteWarehouse(req: Request, res: Response) {
+  static async toggleWarehouseStatus(req: Request, res: Response) {
     const controller = new WarehousesController();
     try {
       const id = controller.validateId(req);
       
-      // Verificar se o armazém existe antes de deletar
+      // Verificar se o armazém existe
       const existingWarehouse = await WarehousesModel.getWarehouse(id);
       controller.ensureResourceExists(existingWarehouse, 'Armazém');
       
-      await WarehousesModel.deleteWarehouse(id);
+      // Alternar o status isActive
+      const newStatus = !existingWarehouse!.isActive;
+      const updatedWarehouse = await WarehousesModel.updateWarehouse(id, { isActive: newStatus });
       
-      return controller.sendSuccess(res, null, 'Armazém deletado com sucesso', 204);
+      const statusMessage = newStatus ? 'ativado' : 'desativado';
+      return controller.sendSuccess(
+        res, 
+        updatedWarehouse, 
+        `Armazém ${statusMessage} com sucesso`
+      );
     } catch (error) {
-      return controller.handleError(res, error, 'Erro ao deletar armazém');
+      return controller.handleError(res, error, 'Erro ao alterar status do armazém');
     }
   }
 }

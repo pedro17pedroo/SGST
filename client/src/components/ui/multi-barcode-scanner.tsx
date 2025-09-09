@@ -4,7 +4,7 @@ import { Input } from './input';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Badge } from './badge';
 import { useToast } from '../../hooks/use-toast';
-import { Scan, Camera, Keyboard, Zap, CheckCircle, AlertCircle, Video } from 'lucide-react';
+import { Scan, Camera, Keyboard, Zap, CheckCircle, Video } from 'lucide-react';
 import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
 
 interface MultiBarcodeReaderProps {
@@ -254,20 +254,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
     });
   }, [toast]);
 
-  // Timeout para detectar falhas no laser
-  const laserTimeoutDetection = useCallback(() => {
-    if (currentMethod === 'laser' && methods.laser.active) {
-      // Se laser está ativo há mais de 30 segundos sem resultado, considerar falha
-      const timeout = setTimeout(() => {
-        if (methods.laser.status === 'scanning' && !methods.laser.lastResult) {
-          console.log('⏰ Timeout do laser detectado');
-          handleMethodError('laser', 'Timeout do leitor laser');
-        }
-      }, 30000); // 30 segundos
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [currentMethod, methods.laser, handleMethodError]);
+
 
   // Iniciar câmera
   const startCamera = useCallback(async () => {
@@ -443,7 +430,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
       <CardContent className="space-y-6">
         {/* Status dos Métodos */}
         <div className="grid grid-cols-3 gap-4">
-          {(['laser', 'camera', 'manual'] as ScanMethod[]).map((method, index) => {
+          {(['laser', 'camera', 'manual'] as ScanMethod[]).map((method) => {
             const state = methods[method];
             const isActive = state.active;
             const isScanning = state.status === 'scanning';

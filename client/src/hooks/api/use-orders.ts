@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersService } from '../../services/api.service';
-import { CACHE_CONFIG, RETRY_CONFIG } from '../../config/api';
+import { CACHE_CONFIG } from '../../config/api';
 import { useToast } from '../use-toast';
 import { useAuth } from '../../contexts/auth-context';
 import { useModules } from '../../contexts/module-context';
@@ -91,7 +91,7 @@ export function useOrders(params?: Record<string, any>) {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }
@@ -117,7 +117,7 @@ export function useOrder(id: string) {
       if (error?.status === 404) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }
@@ -142,7 +142,7 @@ export function useRecentOrders() {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }

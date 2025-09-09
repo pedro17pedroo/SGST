@@ -4,7 +4,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { suppliersService } from '../../services/api.service';
-import { CACHE_CONFIG, RETRY_CONFIG } from '../../config/api';
+import type { ApiResponse } from '../../services/api.service';
+import { CACHE_CONFIG } from '../../config/api';
 import { useToast } from '../use-toast';
 import { useAuth } from '../../contexts/auth-context';
 import { useModules } from '../../contexts/module-context';
@@ -31,23 +32,7 @@ interface SupplierFormData {
   contactPerson?: string;
 }
 
-interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  success: boolean;
-  message?: string;
-}
 
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
 
 // Chaves de query tipadas
 export const SUPPLIERS_QUERY_KEYS = {
@@ -78,7 +63,7 @@ export function useSuppliers(params?: Record<string, any>) {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }
@@ -104,7 +89,7 @@ export function useSupplier(id: string) {
       if (error?.status === 404) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }

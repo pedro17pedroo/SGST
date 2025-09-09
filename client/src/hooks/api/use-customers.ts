@@ -5,7 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customersService } from '../../services/api.service';
 import { CACHE_CONFIG } from '../../config/api';
-import { useApiMutationError, createRetryConfig } from '../use-api-error';
+
 import { useAuth } from '../../contexts/auth-context';
 import { useModules } from '../../contexts/module-context';
 import { useMemo } from 'react';
@@ -146,7 +146,7 @@ export function useCustomers(params?: QueryParams) {
     staleTime: CACHE_CONFIG.dynamic.staleTime,
     gcTime: CACHE_CONFIG.dynamic.gcTime,
     refetchOnWindowFocus: false,
-    ...createRetryConfig(3),
+    retry: 3,
   });
   
   console.log('Debug useCustomers - query result:', query);

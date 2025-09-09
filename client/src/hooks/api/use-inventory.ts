@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { inventoryService } from '../../services/api.service';
-import { CACHE_CONFIG, RETRY_CONFIG } from '../../config/api';
+import { CACHE_CONFIG } from '../../config/api';
 import { useToast } from '../use-toast';
 import { useAuth } from '../../contexts/auth-context';
 import { useModules } from '../../contexts/module-context';
@@ -101,7 +101,7 @@ export function useInventory(params?: Record<string, any>) {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }
@@ -127,7 +127,7 @@ export function useInventorySummary() {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }
@@ -153,7 +153,7 @@ export function useInventoryMovements(params?: Record<string, any>) {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }

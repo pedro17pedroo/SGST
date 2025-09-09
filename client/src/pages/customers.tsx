@@ -4,17 +4,17 @@ import Swal from 'sweetalert2';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
-import { useToast } from '@/hooks/use-toast';
+
 import { useIsMobile } from '@/hooks/use-mobile.tsx';
 import { PermissionGuard } from '@/components/auth/permission-guard';
 import { Header } from '@/components/layout/header';
-import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, useActivateCustomer, useDeactivateCustomer } from '@/hooks/api/use-customers';
+import { useCustomers, useCreateCustomer, useUpdateCustomer, useActivateCustomer, useDeactivateCustomer } from '@/hooks/api/use-customers';
 
 // Tipo para dados do formulário
 interface CustomerFormData {
@@ -67,7 +67,6 @@ export default function CustomersPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const { toast } = useToast();
   const isMobile = useIsMobile();
 
   // Buscar clientes
@@ -151,17 +150,7 @@ export default function CustomersPage() {
     }
   };
 
-  // Mutation para deletar cliente
-  const deleteCustomerMutation = useDeleteCustomer();
-  
-  const handleDeleteCustomer = async (id: string) => {
-    try {
-      await deleteCustomerMutation.mutateAsync(id);
-      // Toast já é exibido pelo hook useDeleteCustomer
-    } catch (error) {
-      // Erro já é tratado pelo hook useDeleteCustomer
-    }
-  };
+
 
   // Mutations para ativar/desativar cliente
   const activateCustomerMutation = useActivateCustomer();

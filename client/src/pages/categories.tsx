@@ -38,7 +38,7 @@ export default function Categories() {
   }, [currentPage, itemsPerPage, searchQuery, sortBy, sortOrder]);
 
   // Usar hooks centralizados
-  const { data: categoriesResponse, isLoading, error } = useCategories(queryParams);
+  const { data: categoriesResponse, isLoading } = useCategories(queryParams);
   const categories = categoriesResponse?.data || [];
   const pagination = categoriesResponse?.pagination || {
     page: 1,

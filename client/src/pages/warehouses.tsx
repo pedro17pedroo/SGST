@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Search, MapPin, Package, Edit, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Search, MapPin, Package, Edit, Power } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   useWarehouses, 
   useCreateWarehouse, 
-  useUpdateWarehouse, 
-  useDeleteWarehouse 
+  useUpdateWarehouse,
+  useToggleWarehouseStatus 
 } from "@/hooks/api/use-warehouses";
 
 // Simple form data type without zod validation to avoid compatibility issues
@@ -32,8 +32,8 @@ type WarehouseFormData = {
 function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  
-  const form = useForm<WarehouseFormData>({
+    
+    const form = useForm<WarehouseFormData>({
     defaultValues: {
       name: "",
       address: "",
@@ -245,22 +245,13 @@ function WarehouseDialog({ warehouse, trigger }: { warehouse?: Warehouse; trigge
 }
 
 function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
-  const { toast } = useToast();
-  const deleteWarehouseMutation = useDeleteWarehouse();
+  const toggleStatusMutation = useToggleWarehouseStatus();
 
-  const handleDeleteWarehouse = async () => {
+  const handleToggleActive = async () => {
     try {
-      await deleteWarehouseMutation.mutateAsync(warehouse.id);
-      toast({
-        title: "Armazém removido",
-        description: "O armazém foi removido com sucesso.",
-      });
+      await toggleStatusMutation.mutateAsync(warehouse.id);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o armazém.",
-        variant: "destructive",
-      });
+      // O toast já é exibido pelo hook
     }
   };
 
@@ -290,11 +281,12 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleDeleteWarehouse}
-              disabled={deleteWarehouseMutation.isPending}
-              data-testid={`button-delete-${warehouse.id}`}
+              onClick={handleToggleActive}
+              disabled={toggleStatusMutation.isPending}
+              data-testid={`button-toggle-${warehouse.id}`}
+              title={warehouse.isActive ? "Desativar armazém" : "Ativar armazém"}
             >
-              <Trash2 className="h-4 w-4" />
+              <Power className={`h-4 w-4 ${warehouse.isActive ? 'text-red-500' : 'text-green-500'}`} />
             </Button>
           </div>
         </div>
@@ -323,14 +315,40 @@ function WarehouseCard({ warehouse }: { warehouse: Warehouse }) {
 }
 
 export default function Warehouses() {
-  const [search, setSearch] = useState("");
-  
-  const { data: warehousesResponse, isLoading, error } = useWarehouses();
-  const warehouses = warehousesResponse?.data || [];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const sortBy = "name";
+  const sortOrder: "asc" | "desc" = "asc";
 
-  const filteredWarehouses = warehouses.filter((warehouse: Warehouse) =>
-    warehouse.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Reset da página quando a busca muda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  // Construir parâmetros de consulta
+  const queryParams = useMemo(() => {
+    const params: any = {
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy,
+      sortOrder,
+    };
+    
+    if (searchQuery) params.search = searchQuery;
+    
+    return params;
+  }, [currentPage, itemsPerPage, searchQuery, sortBy, sortOrder]);
+
+  // Usar hooks centralizados
+  const { data: warehousesResponse, isLoading, error } = useWarehouses(queryParams);
+  const warehouses = warehousesResponse?.data || [];
+  const pagination = warehousesResponse?.pagination || {
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 1
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -355,8 +373,8 @@ export default function Warehouses() {
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Pesquisar armazéns..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
           data-testid="input-search-warehouses"
         />
@@ -365,7 +383,7 @@ export default function Warehouses() {
       <LoadingState 
          isLoading={isLoading} 
          error={error}
-         isEmpty={filteredWarehouses.length === 0}
+         isEmpty={warehouses.length === 0}
          loadingComponent={
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
              <LoadingComponents.Cards count={6} />
@@ -376,9 +394,9 @@ export default function Warehouses() {
              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
              <h3 className="text-lg font-semibold mb-2">Nenhum armazém encontrado</h3>
              <p className="text-muted-foreground mb-4">
-               {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro armazém."}
+               {searchQuery ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro armazém."}
              </p>
-             {!search && (
+             {!searchQuery && (
                <WarehouseDialog
                  trigger={
                    <Button data-testid="button-add-first-warehouse">
@@ -392,11 +410,59 @@ export default function Warehouses() {
          }
        >
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-           {filteredWarehouses.map((warehouse: Warehouse) => (
+           {warehouses.map((warehouse: Warehouse) => (
              <WarehouseCard key={warehouse.id} warehouse={warehouse} />
            ))}
          </div>
        </LoadingState>
+
+        {/* Paginação */}
+        {warehouses.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">Itens por página:</span>
+              <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">
+                Página {pagination.page} de {pagination.totalPages} ({pagination.total} armazéns)
+              </span>
+              
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage <= 1}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
+                  disabled={currentPage >= pagination.totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

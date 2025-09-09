@@ -703,11 +703,12 @@ export const usersService = {
 // === SERVIÇOS DE ARMAZÉNS ===
 export const warehousesService = {
   /**
-   * Obter lista de armazéns
+   * Obter lista de armazéns com paginação
    */
   async getWarehouses(params?: QueryParams) {
-    const response = await apiRequest('GET', buildApiUrl('/api/warehouses', params));
-    return processResponse<ApiResponse<any[]>>(response);
+    const url = buildApiUrl('/api/warehouses', params);
+    const response = await apiRequest('GET', url);
+    return processResponse<PaginatedResponse<any>>(response);
   },
 
   /**
@@ -735,11 +736,19 @@ export const warehousesService = {
   },
 
   /**
-   * Eliminar armazém
+   * Alternar status do armazém (ativar/desativar)
    */
-  async deleteWarehouse(id: string) {
-    const response = await apiRequest('DELETE', `/api/warehouses/${id}`);
+  async toggleWarehouseStatus(id: string) {
+    const response = await apiRequest('PATCH', `/api/warehouses/${id}/toggle-status`);
     return processResponse<ApiResponse>(response);
+  },
+
+  /**
+   * Obter contagem de produtos no armazém
+   */
+  async getWarehouseStock(id: string) {
+    const response = await apiRequest('GET', `/api/warehouses/${id}/stock`);
+    return processResponse<ApiResponse<{ warehouseId: string; productCount: number }>>(response);
   },
 };
 

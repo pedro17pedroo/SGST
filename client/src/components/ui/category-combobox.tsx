@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
+
 import { useQuery } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/queryClient"
 
@@ -51,7 +51,7 @@ export const CategoryCombobox = React.memo(function CategoryCombobox({
   const [selectedCategory, setSelectedCategory] = React.useState<Category | null>(null)
 
   // Buscar categorias com base na query de pesquisa
-  const searchQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
+  const searchQueryFn = React.useCallback(async () => {
     if (!searchQuery || searchQuery.length < 2) return []
     
     try {
@@ -84,7 +84,7 @@ export const CategoryCombobox = React.memo(function CategoryCombobox({
   })
 
   // Buscar categoria específica quando value muda
-  const currentCategoryQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
+  const currentCategoryQueryFn = React.useCallback(async () => {
     if (!value) return null
     
     try {

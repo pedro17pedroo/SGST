@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
+
 import { useQuery } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/queryClient"
 
@@ -53,7 +53,7 @@ export const SupplierCombobox = React.memo(function SupplierCombobox({
   const [selectedSupplier, setSelectedSupplier] = React.useState<Supplier | null>(null)
 
   // Buscar fornecedores com base na query de pesquisa
-  const searchQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
+  const searchQueryFn = React.useCallback(async () => {
     if (!searchQuery || searchQuery.length < 2) return []
     
     try {
@@ -86,7 +86,7 @@ export const SupplierCombobox = React.memo(function SupplierCombobox({
   })
 
   // Buscar fornecedor específico quando value muda
-  const currentSupplierQueryFn = React.useCallback(async ({ signal }: { signal?: AbortSignal }) => {
+  const currentSupplierQueryFn = React.useCallback(async () => {
     if (!value) return null
     
     try {

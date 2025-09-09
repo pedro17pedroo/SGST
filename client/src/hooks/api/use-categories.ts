@@ -5,8 +5,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { categoriesService } from '../../services/api.service';
-import { CACHE_CONFIG, RETRY_CONFIG } from '../../config/api';
-import { useApiMutationError, createRetryConfig } from '../use-api-error';
+import { CACHE_CONFIG } from '../../config/api';
+import { useApiMutationError } from '../use-api-error';
 import { useAuth } from '../../contexts/auth-context';
 import { useModules } from '../../contexts/module-context';
 import { useMemo } from 'react';
@@ -27,13 +27,7 @@ interface CategoryFormData {
   description?: string;
 }
 
-// interface PaginatedResponse<T> {
-//   data: T[];
-//   total: number;
-//   page: number;
-//   limit: number;
-//   totalPages: number;
-// } // Removed unused interface
+ // Removed unused interface
 
 
 
@@ -48,7 +42,7 @@ export const CATEGORIES_QUERY_KEYS = {
 
 // Hook principal para buscar categorias com cache inteligente
 export function useCategories(params?: QueryParams) {
-  const { isAuthenticated, isReady, user } = useAuth();
+  const { isAuthenticated, isReady } = useAuth();
   const { isLoading: isModulesLoading } = useModules();
   
   // Calcular se pode carregar dados
@@ -68,7 +62,7 @@ export function useCategories(params?: QueryParams) {
     staleTime: CACHE_CONFIG.static.staleTime,
     gcTime: CACHE_CONFIG.static.gcTime,
     refetchOnWindowFocus: false,
-    ...createRetryConfig(3),
+    retry: 3,
   });
 }
 
@@ -85,7 +79,7 @@ export function useCategory(id: string) {
       if (error?.status === 404) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }
@@ -97,7 +91,7 @@ export function useCreateCategory() {
 
   return useMutation<ApiResponse<Category>, Error, CategoryFormData>({
     mutationFn: categoriesService.createCategory,
-    ...createRetryConfig(1), // Apenas 1 tentativa para operações de criação
+    retry: 1, // Apenas 1 tentativa para operações de criação
     onSuccess: (response) => {
       // Invalidar cache de listas
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEYS.lists() });
@@ -119,7 +113,7 @@ export function useUpdateCategory() {
 
   return useMutation<ApiResponse<Category>, Error, { id: string; data: Partial<CategoryFormData> }>({
     mutationFn: ({ id, data }) => categoriesService.updateCategory(id, data),
-    ...createRetryConfig(1),
+    retry: 1,
     onSuccess: (response, { id }) => {
       // Atualizar cache específico
       queryClient.setQueryData(CATEGORIES_QUERY_KEYS.detail(id), response);
@@ -142,7 +136,7 @@ export function useToggleCategoryStatus() {
 
   return useMutation<any, Error, string, { previousCategory?: any }>({
     mutationFn: categoriesService.toggleCategoryStatus,
-    ...createRetryConfig(1),
+    retry: 1,
     onMutate: async (categoryId) => {
       // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: CATEGORIES_QUERY_KEYS.detail(categoryId) });
@@ -181,7 +175,7 @@ export function useDeleteCategory() {
 
   return useMutation<any, Error, string, { previousCategory?: any }>({
     mutationFn: categoriesService.deleteCategory,
-    ...createRetryConfig(1),
+    retry: 1,
     onMutate: async (categoryId) => {
       // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: CATEGORIES_QUERY_KEYS.detail(categoryId) });

@@ -6,7 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService } from '../../services/api.service';
 import { CACHE_CONFIG } from '../../config/api';
-import { useApiMutationError, createRetryConfig } from '../use-api-error';
+import { useApiMutationError } from '../use-api-error';
 import { useAuth } from '../../contexts/auth-context';
 import { useModules } from '../../contexts/module-context';
 import { useMemo } from 'react';
@@ -71,7 +71,7 @@ export function useProducts(params?: QueryParams) {
     staleTime: CACHE_CONFIG.dynamic.staleTime,
     gcTime: CACHE_CONFIG.dynamic.gcTime,
     refetchOnWindowFocus: false,
-    ...createRetryConfig(3),
+    retry: 3,
   });
 }
 
@@ -92,7 +92,7 @@ export function useProduct(id: string) {
     staleTime: CACHE_CONFIG.static.staleTime,
     gcTime: CACHE_CONFIG.static.gcTime,
     refetchOnWindowFocus: false,
-    ...createRetryConfig(3),
+    retry: 3,
   });
 }
 
@@ -103,7 +103,7 @@ export function useCreateProduct() {
 
   return useMutation<ApiResponse<Product>, Error, ProductFormData>({
     mutationFn: productsService.createProduct,
-    ...createRetryConfig(1), // Apenas 1 tentativa para operações de criação
+    retry: 1, // Apenas 1 tentativa para operações de criação
     onSuccess: (data) => {
       // Invalidar cache de produtos e dashboard
       queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEYS.lists() });
@@ -127,7 +127,7 @@ export function useUpdateProduct() {
 
   return useMutation<ApiResponse<Product>, Error, { id: string; data: ProductFormData }>({
     mutationFn: ({ id, data }) => productsService.updateProduct(id, data),
-    ...createRetryConfig(1),
+    retry: 1,
     onSuccess: (response, variables) => {
       // Atualizar cache específico com dados otimistas
       queryClient.setQueryData(
@@ -156,7 +156,7 @@ export function useDeleteProduct() {
 
   return useMutation<ApiResponse, Error, string, { previousProduct?: any }>({
     mutationFn: productsService.deleteProduct,
-    ...createRetryConfig(1),
+    retry: 1,
     onMutate: async (productId) => {
       // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: PRODUCTS_QUERY_KEYS.detail(productId) });
@@ -194,7 +194,7 @@ export function useActivateProduct() {
 
   return useMutation<{ success: boolean; message: string; product: any }, Error, string, { previousProduct?: any }>({
     mutationFn: productsService.activateProduct,
-    ...createRetryConfig(1),
+    retry: 1,
     onMutate: async (productId) => {
       // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: PRODUCTS_QUERY_KEYS.detail(productId) });
@@ -238,7 +238,7 @@ export function useDeactivateProduct() {
 
   return useMutation<{ success: boolean; message: string; product: any }, Error, string, { previousProduct?: any }>({
     mutationFn: productsService.deactivateProduct,
-    ...createRetryConfig(1),
+    retry: 1,
     onMutate: async (productId) => {
       // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: PRODUCTS_QUERY_KEYS.detail(productId) });

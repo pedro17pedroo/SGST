@@ -19,7 +19,7 @@ export const WAREHOUSES_QUERY_KEYS = {
 } as const;
 
 /**
- * Hook para obter lista de armazéns
+ * Hook para obter lista de armazéns com paginação
  */
 export function useWarehouses(params?: QueryParams) {
   const { isAuthenticated, isReady } = useAuth();
@@ -35,6 +35,13 @@ export function useWarehouses(params?: QueryParams) {
     enabled: canLoadData,
     staleTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
+      // Não tentar novamente para erros 4xx
+      if (error?.status >= 400 && error?.status < 500) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 }
 
@@ -133,17 +140,17 @@ export function useUpdateWarehouse() {
 }
 
 /**
- * Hook para eliminar armazém
+ * Hook para alternar status do armazém (ativar/desativar)
  */
-export function useDeleteWarehouse() {
+export function useToggleWarehouseStatus() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: warehousesService.deleteWarehouse,
-    onSuccess: (_data, warehouseId) => {
-      // Remover do cache
-      queryClient.removeQueries({ queryKey: WAREHOUSES_QUERY_KEYS.warehouse(warehouseId) });
+    mutationFn: warehousesService.toggleWarehouseStatus,
+    onSuccess: (data, warehouseId) => {
+      // Invalidar cache do armazém específico
+      queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEYS.warehouse(warehouseId) });
       
       // Invalidar lista de armazéns
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
@@ -153,13 +160,13 @@ export function useDeleteWarehouse() {
       
       toast({
         title: 'Sucesso',
-        description: 'Armazém eliminado com sucesso.',
+        description: data.message || 'Status do armazém alterado com sucesso.',
       });
     },
     onError: (error: any) => {
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao eliminar armazém.',
+        description: error.message || 'Erro ao alterar status do armazém.',
         variant: 'destructive',
       });
     },

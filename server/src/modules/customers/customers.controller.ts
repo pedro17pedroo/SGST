@@ -206,7 +206,11 @@ export class CustomerController {
       }
 
       const customer = await CustomerModel.deactivateCustomer(id);
-      res.json(customer);
+      res.json({
+        success: true,
+        message: 'Cliente desativado com sucesso',
+        data: customer
+      });
     } catch (error) {
       console.error('Error deactivating customer:', error);
       res.status(500).json({ 
@@ -227,7 +231,11 @@ export class CustomerController {
       }
 
       const customer = await CustomerModel.activateCustomer(id);
-      res.json(customer);
+      res.json({
+        success: true,
+        message: 'Cliente ativado com sucesso',
+        data: customer
+      });
     } catch (error) {
       console.error('Error activating customer:', error);
       res.status(500).json({ 

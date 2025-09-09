@@ -295,6 +295,22 @@ export const customersService = {
     const response = await apiRequest('DELETE', API_ENDPOINTS.customers.delete(id));
     return processResponse<ApiResponse>(response);
   },
+
+  /**
+   * Ativar cliente
+   */
+  async activateCustomer(id: string) {
+    const response = await apiRequest('PUT', API_ENDPOINTS.customers.activate(id));
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Desativar cliente
+   */
+  async deactivateCustomer(id: string) {
+    const response = await apiRequest('PUT', API_ENDPOINTS.customers.deactivate(id));
+    return processResponse<ApiResponse<any>>(response);
+  },
 };
 
 // === SERVIÇOS DE FORNECEDORES ===

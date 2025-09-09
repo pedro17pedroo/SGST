@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile.tsx';
 import { PermissionGuard } from '@/components/auth/permission-guard';
 import { Header } from '@/components/layout/header';
-import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from '@/hooks/api/use-customers';
+import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, useActivateCustomer, useDeactivateCustomer } from '@/hooks/api/use-customers';
 
 // Tipo para dados do formulário
 interface CustomerFormData {
@@ -157,6 +157,10 @@ export default function CustomersPage() {
     }
   };
 
+  // Mutations para ativar/desativar cliente
+  const activateCustomerMutation = useActivateCustomer();
+  const deactivateCustomerMutation = useDeactivateCustomer();
+
   // Filtrar e paginar clientes
   const { filteredCustomers, totalPages, paginatedCustomers } = useMemo(() => {
     let filtered = customers.filter(customer => {
@@ -231,7 +235,11 @@ export default function CustomersPage() {
     });
 
     if (result.isConfirmed) {
-      handleDeleteCustomer(customerId);
+      try {
+        await deactivateCustomerMutation.mutateAsync(customerId);
+      } catch (error) {
+        console.error('Erro ao desativar cliente:', error);
+      }
     }
   };
 
@@ -250,7 +258,11 @@ export default function CustomersPage() {
     });
 
     if (result.isConfirmed) {
-      handleDeleteCustomer(customerId);
+      try {
+        await activateCustomerMutation.mutateAsync(customerId);
+      } catch (error) {
+        console.error('Erro ao ativar cliente:', error);
+      }
     }
   };
 
@@ -515,11 +527,7 @@ export default function CustomersPage() {
 
         {/* Customer List */}
         <Card>
-          <CardHeader>
-            <CardTitle>Clientes</CardTitle>
-            <CardDescription>
-              Lista de todos os clientes registrados no sistema
-            </CardDescription>
+          <CardHeader className="pb-4">
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             {isLoading ? (
@@ -675,22 +683,22 @@ export default function CustomersPage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">Cliente</th>
-                      <th className="text-left py-3 px-4 font-medium">Tipo</th>
-                      <th className="text-left py-3 px-4 font-medium">Contato</th>
-                      <th className="text-left py-3 px-4 font-medium">Status</th>
-                      <th className="text-left py-3 px-4 font-medium">Data de Criação</th>
-                      <th className="text-left py-3 px-4 font-medium">Ações</th>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Cliente</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Tipo</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Contato</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Data de Criação</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedCustomers.length > 0 ? (
                       paginatedCustomers.map((customer) => (
-                        <tr key={customer.id} className="border-b hover:bg-muted/50">
+                        <tr key={customer.id} className="table-hover border-b border-border last:border-0">
                           <td className="py-3 px-4">
                             <div>
-                              <div className="font-medium">{customer.name}</div>
+                              <div className="text-sm font-medium text-foreground">{customer.name}</div>
                               <div className="text-sm text-muted-foreground">{customer.customerNumber}</div>
                             </div>
                           </td>
@@ -702,13 +710,13 @@ export default function CustomersPage() {
                           <td className="py-3 px-4">
                             <div className="space-y-1">
                               {customer.email && (
-                                <div className="flex items-center text-sm">
+                                <div className="flex items-center text-sm text-muted-foreground">
                                   <Mail className="w-3 h-3 mr-1" />
                                   {customer.email}
                                 </div>
                               )}
                               {customer.phone && (
-                                <div className="flex items-center text-sm">
+                                <div className="flex items-center text-sm text-muted-foreground">
                                   <Phone className="w-3 h-3 mr-1" />
                                   {customer.phone}
                                 </div>

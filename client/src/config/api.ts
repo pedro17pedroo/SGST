@@ -119,6 +119,8 @@ export const API_ENDPOINTS = {
     get: (id: string) => `/api/customers/${id}`,
     update: (id: string) => `/api/customers/${id}`,
     delete: (id: string) => `/api/customers/${id}`,
+    activate: (id: string) => `/api/customers/${id}/activate`,
+    deactivate: (id: string) => `/api/customers/${id}/deactivate`,
   },
 
   // Fornecedores

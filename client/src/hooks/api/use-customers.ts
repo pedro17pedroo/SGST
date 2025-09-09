@@ -196,3 +196,93 @@ export function useDeleteCustomer() {
     },
   });
 }
+
+// Hook para ativar cliente
+export function useActivateCustomer() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation<ApiResponse<Customer>, Error, string, { previousCustomer?: any }>({
+    mutationFn: customersService.activateCustomer,
+    onMutate: async (customerId) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: CUSTOMERS_QUERY_KEYS.detail(customerId) });
+      
+      // Obter dados para possível rollback
+      const previousCustomer = queryClient.getQueryData(CUSTOMERS_QUERY_KEYS.detail(customerId));
+      
+      return { previousCustomer };
+    },
+    onSuccess: (response, customerId) => {
+      // Atualizar cache e invalidar listas
+      queryClient.setQueryData(CUSTOMERS_QUERY_KEYS.detail(customerId), response);
+      queryClient.invalidateQueries({ queryKey: CUSTOMERS_QUERY_KEYS.lists() });
+      
+      // Verificação de segurança para evitar erros de propriedades undefined
+      const customerName = response?.data?.name || 'Cliente';
+      
+      toast({
+        title: 'Cliente ativado',
+        description: `${customerName} foi ativado com sucesso.`,
+        variant: 'default',
+      });
+    },
+    onError: (error, customerId, context) => {
+      // Restaurar dados em caso de erro
+      if (context?.previousCustomer) {
+        queryClient.setQueryData(CUSTOMERS_QUERY_KEYS.detail(customerId), context.previousCustomer);
+      }
+      
+      toast({
+        title: 'Erro ao ativar cliente',
+        description: error.message || 'Ocorreu um erro inesperado.',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+// Hook para desativar cliente
+export function useDeactivateCustomer() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation<ApiResponse<Customer>, Error, string, { previousCustomer?: any }>({
+    mutationFn: customersService.deactivateCustomer,
+    onMutate: async (customerId) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: CUSTOMERS_QUERY_KEYS.detail(customerId) });
+      
+      // Obter dados para possível rollback
+      const previousCustomer = queryClient.getQueryData(CUSTOMERS_QUERY_KEYS.detail(customerId));
+      
+      return { previousCustomer };
+    },
+    onSuccess: (response, customerId) => {
+      // Atualizar cache e invalidar listas
+      queryClient.setQueryData(CUSTOMERS_QUERY_KEYS.detail(customerId), response);
+      queryClient.invalidateQueries({ queryKey: CUSTOMERS_QUERY_KEYS.lists() });
+      
+      // Verificação de segurança para evitar erros de propriedades undefined
+      const customerName = response?.data?.name || 'Cliente';
+      
+      toast({
+        title: 'Cliente desativado',
+        description: `${customerName} foi desativado com sucesso.`,
+        variant: 'default',
+      });
+    },
+    onError: (error, customerId, context) => {
+      // Restaurar dados em caso de erro
+      if (context?.previousCustomer) {
+        queryClient.setQueryData(CUSTOMERS_QUERY_KEYS.detail(customerId), context.previousCustomer);
+      }
+      
+      toast({
+        title: 'Erro ao desativar cliente',
+        description: error.message || 'Ocorreu um erro inesperado.',
+        variant: 'destructive',
+      });
+    },
+  });
+}

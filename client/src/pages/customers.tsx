@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Search, Edit, Power, PowerOff, UserCheck, Phone, Mail } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Search, Edit, Power, PowerOff, UserCheck, Phone, Mail, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +63,10 @@ export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -70,15 +74,26 @@ export default function CustomersPage() {
   const { data: customersResponse, isLoading } = useCustomers();
   const customers = customersResponse?.data || [];
   
-  // Calcular estatísticas localmente
-  const customerStats = {
-    total: customers.length,
-    active: customers.filter(c => c.isActive).length,
-    individual: customers.filter(c => c.customerType === 'individual').length,
-    company: customers.filter(c => ['company', 'distribuidor', 'restaurante', 'bar', 'hotel', 'supermercado'].includes(c.customerType)).length,
-  };
+  // Calcular estatísticas baseadas nos filtros aplicados
+  const customerStats = useMemo(() => {
+    const filtered = statusFilter === 'all' ? customers : customers.filter(c => 
+      statusFilter === 'active' ? c.isActive : !c.isActive
+    );
+    
+    return {
+      total: filtered.length,
+      active: filtered.filter(c => c.isActive).length,
+      individual: filtered.filter(c => c.customerType === 'individual').length,
+      company: filtered.filter(c => ['company', 'distribuidor', 'restaurante', 'bar', 'hotel', 'supermercado'].includes(c.customerType)).length,
+    };
+  }, [customers, statusFilter]);
 
-  // Formulário
+   // Resetar página quando filtros mudarem
+   useEffect(() => {
+     setCurrentPage(1);
+   }, [searchTerm, statusFilter, typeFilter]);
+
+   // Formulário
   const form = useForm<CustomerFormData>({
     defaultValues: {
       customerNumber: '',
@@ -142,12 +157,32 @@ export default function CustomersPage() {
     }
   };
 
-  // Filtrar clientes
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.customerNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrar e paginar clientes
+  const { filteredCustomers, totalPages, paginatedCustomers } = useMemo(() => {
+    let filtered = customers.filter(customer => {
+      const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.customerNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && customer.isActive) ||
+        (statusFilter === 'inactive' && !customer.isActive);
+      
+      const matchesType = typeFilter === 'all' || customer.customerType === typeFilter;
+      
+      return matchesSearch && matchesStatus && matchesType;
+    });
+
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+    return {
+      filteredCustomers: filtered,
+      totalPages,
+      paginatedCustomers: paginated
+    };
+  }, [customers, searchTerm, statusFilter, typeFilter, currentPage, itemsPerPage]);
 
   // Submeter formulário
   const onSubmit = (data: CustomerFormData) => {
@@ -226,7 +261,7 @@ export default function CustomersPage() {
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Action Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
             <div className="relative flex-1 sm:flex-none">
               <Input
                 placeholder="Pesquisar clientes..."
@@ -236,6 +271,36 @@ export default function CustomersPage() {
                 data-testid="customer-search"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            </div>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Ativos</SelectItem>
+                  <SelectItem value="inactive">Inativos</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  <SelectItem value="individual">Pessoa Física</SelectItem>
+                  <SelectItem value="company">Empresa</SelectItem>
+                  <SelectItem value="distribuidor">Distribuidor</SelectItem>
+                  <SelectItem value="restaurante">Restaurante</SelectItem>
+                  <SelectItem value="bar">Bar</SelectItem>
+                  <SelectItem value="hotel">Hotel</SelectItem>
+                  <SelectItem value="supermercado">Supermercado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <PermissionGuard module="customers" action="create">
@@ -464,8 +529,8 @@ export default function CustomersPage() {
             ) : isMobile ? (
               // Versão Mobile - Cards
               <div className="space-y-4">
-                {filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((customer) => (
+                {paginatedCustomers.length > 0 ? (
+                  paginatedCustomers.map((customer) => (
                     <Card key={customer.id} className="p-4 hover:shadow-md transition-shadow">
                       <div className="space-y-3">
                         <div className="flex items-start justify-between">
@@ -548,7 +613,36 @@ export default function CustomersPage() {
                   ))
                 ) : (
                   <div className="py-8 text-center text-muted-foreground text-sm">
-                    {searchTerm ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.'}
+                    {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.'}
+                  </div>
+                )}
+                
+                {/* Paginação Mobile */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="text-sm text-muted-foreground">
+                      Página {currentPage} de {totalPages}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -567,8 +661,8 @@ export default function CustomersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCustomers.length > 0 ? (
-                      filteredCustomers.map((customer) => (
+                    {paginatedCustomers.length > 0 ? (
+                      paginatedCustomers.map((customer) => (
                         <tr key={customer.id} className="border-b hover:bg-muted/50">
                           <td className="py-3 px-4">
                             <div>
@@ -647,12 +741,69 @@ export default function CustomersPage() {
                     ) : (
                       <tr>
                         <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                          {searchTerm ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.'}
+                          {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.'}
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+                
+                {/* Paginação Desktop */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="text-sm text-muted-foreground">
+                      Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} de {filteredCustomers.length} clientes
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        Anterior
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className="h-8 w-8 p-0"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Próxima
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

@@ -4,11 +4,13 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customersService } from '../../services/api.service';
-import { CACHE_CONFIG, RETRY_CONFIG } from '../../config/api';
-import { useToast } from '../use-toast';
+import { CACHE_CONFIG } from '../../config/api';
+import { useApiMutationError, createRetryConfig } from '../use-api-error';
 import { useAuth } from '../../contexts/auth-context';
 import { useModules } from '../../contexts/module-context';
 import { useMemo } from 'react';
+import type { ApiResponse, QueryParams, PaginatedResponse } from '../../services/api.service';
+import { useToast } from '../use-toast';
 
 // Tipos para clientes
 interface Customer {
@@ -42,51 +44,33 @@ interface CustomerFormData {
   company?: string;
 }
 
-// interface PaginatedResponse<T> {
-//   data: T[];
-//   total: number;
-//   page: number;
-//   limit: number;
-//   totalPages: number;
-// } // Removed unused interface
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
 // Chaves de query tipadas
 export const CUSTOMERS_QUERY_KEYS = {
   all: ['customers'] as const,
   lists: () => [...CUSTOMERS_QUERY_KEYS.all, 'list'] as const,
-  list: (params?: Record<string, any>) => [...CUSTOMERS_QUERY_KEYS.lists(), params] as const,
-  detail: (id: string) => [...CUSTOMERS_QUERY_KEYS.all, 'detail', id] as const,
+  list: (params?: QueryParams) => [...CUSTOMERS_QUERY_KEYS.lists(), params] as const,
+  details: () => [...CUSTOMERS_QUERY_KEYS.all, 'detail'] as const,
+  detail: (id: string) => [...CUSTOMERS_QUERY_KEYS.details(), id] as const,
 };
 
-// Hook para listar clientes
-export function useCustomers(params?: Record<string, any>) {
-  const { user } = useAuth();
-  const { isModuleEnabled } = useModules();
+// Hook principal para buscar clientes com filtros e paginação
+export function useCustomers(params?: QueryParams) {
+  const { isAuthenticated, isReady } = useAuth();
+  const { isLoading: isModulesLoading } = useModules();
   
+  // Calcular se pode carregar dados
   const canLoadData = useMemo(() => {
-    return user && isModuleEnabled('customers');
-  }, [user, isModuleEnabled]);
-
-  return useQuery({
+    return isAuthenticated && isReady && !isModulesLoading;
+  }, [isAuthenticated, isReady, isModulesLoading]);
+  
+  return useQuery<PaginatedResponse<Customer>, Error>({
     queryKey: CUSTOMERS_QUERY_KEYS.list(params),
     queryFn: () => customersService.getCustomers(params),
+    enabled: canLoadData,
     staleTime: CACHE_CONFIG.dynamic.staleTime,
     gcTime: CACHE_CONFIG.dynamic.gcTime,
-    enabled: !!canLoadData,
     refetchOnWindowFocus: false,
-    retry: (failureCount, error: any) => {
-      // Não tentar novamente para erros 4xx
-      if (error?.status >= 400 && error?.status < 500) {
-        return false;
-      }
-      return failureCount < RETRY_CONFIG.read.retry;
-    },
+    ...createRetryConfig(3),
   });
 }
 
@@ -111,7 +95,7 @@ export function useCustomer(id: string) {
       if (error?.status === 404) {
         return false;
       }
-      return failureCount < RETRY_CONFIG.read.retry;
+      return failureCount < 3;
     },
   });
 }

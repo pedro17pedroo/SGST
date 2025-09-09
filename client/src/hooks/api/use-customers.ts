@@ -12,6 +12,74 @@ import { useMemo } from 'react';
 import type { ApiResponse, QueryParams, PaginatedResponse } from '../../services/api.service';
 import { useToast } from '../use-toast';
 
+// Função utilitária para gerar mensagens de erro amigáveis
+function getCustomerErrorMessage(error: any, operation: string): string {
+  // Verificar se é um erro de rede
+  if (!navigator.onLine) {
+    return 'Sem conexão com a internet. Verifique sua conexão e tente novamente.';
+  }
+
+  // Verificar códigos de status HTTP específicos
+  if (error?.status || error?.response?.status) {
+    const status = error.status || error.response.status;
+    
+    switch (status) {
+      case 400:
+        return 'Dados inválidos. Verifique as informações preenchidas e tente novamente.';
+      case 401:
+        return 'Sessão expirada. Faça login novamente para continuar.';
+      case 403:
+        return 'Você não tem permissão para realizar esta operação.';
+      case 404:
+        return 'Cliente não encontrado. Pode ter sido removido por outro usuário.';
+      case 409:
+        return 'Já existe um cliente com essas informações. Verifique os dados e tente novamente.';
+      case 422:
+        return 'Dados incompletos ou inválidos. Verifique todos os campos obrigatórios.';
+      case 500:
+        return 'Erro interno do servidor. Tente novamente em alguns instantes.';
+      case 503:
+        return 'Serviço temporariamente indisponível. Tente novamente em alguns minutos.';
+      default:
+        break;
+    }
+  }
+
+  // Verificar mensagens específicas do servidor
+  const serverMessage = error?.message || error?.response?.data?.message || error?.response?.data?.error;
+  if (serverMessage) {
+    // Traduzir algumas mensagens comuns do servidor
+    if (serverMessage.toLowerCase().includes('duplicate') || serverMessage.toLowerCase().includes('unique')) {
+      return 'Já existe um cliente com essas informações. Verifique os dados e tente novamente.';
+    }
+    if (serverMessage.toLowerCase().includes('validation')) {
+      return 'Dados inválidos. Verifique as informações preenchidas.';
+    }
+    if (serverMessage.toLowerCase().includes('not found')) {
+      return 'Cliente não encontrado.';
+    }
+    if (serverMessage.toLowerCase().includes('timeout')) {
+      return 'Operação demorou muito para responder. Tente novamente.';
+    }
+  }
+
+  // Mensagens padrão baseadas na operação
+  switch (operation) {
+    case 'create':
+      return 'Não foi possível criar o cliente. Verifique os dados e tente novamente.';
+    case 'update':
+      return 'Não foi possível atualizar o cliente. Verifique os dados e tente novamente.';
+    case 'delete':
+      return 'Não foi possível remover o cliente. Tente novamente em alguns instantes.';
+    case 'activate':
+      return 'Não foi possível ativar o cliente. Tente novamente em alguns instantes.';
+    case 'deactivate':
+      return 'Não foi possível desativar o cliente. Tente novamente em alguns instantes.';
+    default:
+      return 'Ocorreu um erro inesperado. Tente novamente em alguns instantes.';
+  }
+}
+
 // Tipos para clientes
 interface Customer {
   id: string;
@@ -120,7 +188,7 @@ export function useCreateCustomer() {
     onError: (error) => {
       toast({
         title: 'Erro ao criar cliente',
-        description: error.message || 'Ocorreu um erro inesperado.',
+        description: getCustomerErrorMessage(error, 'create'),
         variant: 'destructive',
       });
     },
@@ -148,7 +216,7 @@ export function useUpdateCustomer() {
     onError: (error) => {
       toast({
         title: 'Erro ao atualizar cliente',
-        description: error.message || 'Ocorreu um erro inesperado.',
+        description: getCustomerErrorMessage(error, 'update'),
         variant: 'destructive',
       });
     },
@@ -190,7 +258,7 @@ export function useDeleteCustomer() {
       
       toast({
         title: 'Erro ao remover cliente',
-        description: error.message || 'Ocorreu um erro inesperado.',
+        description: getCustomerErrorMessage(error, 'delete'),
         variant: 'destructive',
       });
     },
@@ -235,7 +303,7 @@ export function useActivateCustomer() {
       
       toast({
         title: 'Erro ao ativar cliente',
-        description: error.message || 'Ocorreu um erro inesperado.',
+        description: getCustomerErrorMessage(error, 'activate'),
         variant: 'destructive',
       });
     },
@@ -280,7 +348,7 @@ export function useDeactivateCustomer() {
       
       toast({
         title: 'Erro ao desativar cliente',
-        description: error.message || 'Ocorreu um erro inesperado.',
+        description: getCustomerErrorMessage(error, 'deactivate'),
         variant: 'destructive',
       });
     },

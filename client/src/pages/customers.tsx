@@ -123,9 +123,9 @@ export default function CustomersPage() {
       await createCustomerMutation.mutateAsync(data);
       setIsCreateDialogOpen(false);
       form.reset();
-      toast({ title: 'Cliente criado com sucesso!' });
+      // Toast já é exibido pelo hook useCreateCustomer
     } catch (error) {
-      toast({ title: 'Erro ao criar cliente', variant: 'destructive' });
+      // Erro já é tratado pelo hook useCreateCustomer
     }
   };
 
@@ -139,9 +139,9 @@ export default function CustomersPage() {
       await updateCustomerMutation.mutateAsync({ id: editingCustomer.id, data });
       setEditingCustomer(null);
       form.reset();
-      toast({ title: 'Cliente atualizado com sucesso!' });
+      // Toast já é exibido pelo hook useUpdateCustomer
     } catch (error) {
-      toast({ title: 'Erro ao atualizar cliente', variant: 'destructive' });
+      // Erro já é tratado pelo hook useUpdateCustomer
     }
   };
 
@@ -151,9 +151,9 @@ export default function CustomersPage() {
   const handleDeleteCustomer = async (id: string) => {
     try {
       await deleteCustomerMutation.mutateAsync(id);
-      toast({ title: 'Cliente removido com sucesso!' });
+      // Toast já é exibido pelo hook useDeleteCustomer
     } catch (error) {
-      toast({ title: 'Erro ao remover cliente', variant: 'destructive' });
+      // Erro já é tratado pelo hook useDeleteCustomer
     }
   };
 
@@ -358,15 +358,20 @@ export default function CustomersPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Tipo</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue />
+                                  <SelectValue placeholder="Selecione o tipo" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="individual">Pessoa Física</SelectItem>
                                 <SelectItem value="company">Empresa</SelectItem>
+                                <SelectItem value="distribuidor">Distribuidor</SelectItem>
+                                <SelectItem value="restaurante">Restaurante</SelectItem>
+                                <SelectItem value="bar">Bar</SelectItem>
+                                <SelectItem value="hotel">Hotel</SelectItem>
+                                <SelectItem value="supermercado">Supermercado</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />

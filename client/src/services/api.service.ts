@@ -34,9 +34,11 @@ export interface QueryParams {
 }
 
 // Utilitário para processar respostas
+// Nota: A resposta já foi processada pelo queryClient.ts, então apenas retornamos os dados
 async function processResponse<T>(response: Response): Promise<T> {
-  const data = await response.json();
-  return data;
+  // Processar o JSON da resposta
+  const jsonData = await response.json();
+  return jsonData as T;
 }
 
 // === SERVIÇOS DE AUTENTICAÇÃO ===
@@ -249,19 +251,31 @@ export const customersService = {
   async getCustomers(params?: QueryParams) {
     const url = buildApiUrl(API_ENDPOINTS.customers.list, params);
     const response = await apiRequest('GET', url);
-    const data = await processResponse<any[]>(response);
+    const apiResponse = await processResponse<{success: boolean, message: string, data: any[]}>(response);
     
-    // A API retorna um array direto, então vamos envolver em uma estrutura compatível
-    return {
-      success: true,
-      data: data,
+    console.log('Debug customersService.getCustomers - apiResponse:', apiResponse);
+    
+    // A API retorna { success: true, message: '...', data: customers }
+    // Extrair o array de clientes da resposta
+    const customers = apiResponse.data || [];
+    
+    console.log('Debug customersService.getCustomers - customers array:', customers);
+    
+    // Retornar no formato PaginatedResponse esperado pelo hook
+    const result = {
+      success: apiResponse.success,
+      message: apiResponse.message,
+      data: customers, // Array de clientes
       pagination: {
         page: 1,
-        limit: data.length,
-        total: data.length,
+        limit: customers.length,
+        total: customers.length,
         totalPages: 1
       }
-    };
+    } as PaginatedResponse<any>;
+    
+    console.log('Debug customersService.getCustomers - result:', result);
+    return result;
   },
 
   /**

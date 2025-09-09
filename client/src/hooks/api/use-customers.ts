@@ -128,18 +128,29 @@ export function useCustomers(params?: QueryParams) {
   
   // Calcular se pode carregar dados
   const canLoadData = useMemo(() => {
-    return isAuthenticated && isReady && !isModulesLoading;
+    const result = isAuthenticated && isReady && !isModulesLoading;
+    console.log('Debug useCustomers - isAuthenticated:', isAuthenticated);
+    console.log('Debug useCustomers - isReady:', isReady);
+    console.log('Debug useCustomers - isModulesLoading:', isModulesLoading);
+    console.log('Debug useCustomers - canLoadData:', result);
+    return result;
   }, [isAuthenticated, isReady, isModulesLoading]);
   
-  return useQuery<PaginatedResponse<Customer>, Error>({
+  const query = useQuery<PaginatedResponse<Customer>, Error>({
     queryKey: CUSTOMERS_QUERY_KEYS.list(params),
-    queryFn: () => customersService.getCustomers(params),
+    queryFn: () => {
+      console.log('Debug - Executando queryFn para buscar clientes');
+      return customersService.getCustomers(params);
+    },
     enabled: canLoadData,
     staleTime: CACHE_CONFIG.dynamic.staleTime,
     gcTime: CACHE_CONFIG.dynamic.gcTime,
     refetchOnWindowFocus: false,
     ...createRetryConfig(3),
   });
+  
+  console.log('Debug useCustomers - query result:', query);
+  return query;
 }
 
 // Hook para obter cliente específico
@@ -181,7 +192,7 @@ export function useCreateCustomer() {
       
       toast({
         title: 'Cliente criado',
-        description: `${response.data.name} foi criado com sucesso.`,
+        description: response.message || `${response.data.name} foi criado com sucesso.`,
         variant: 'default',
       });
     },

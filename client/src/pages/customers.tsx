@@ -71,20 +71,26 @@ export default function CustomersPage() {
   const isMobile = useIsMobile();
 
   // Buscar clientes
-  const { data: customersResponse, isLoading } = useCustomers();
+  const { data: customersResponse, isLoading, error } = useCustomers();
   const customers = customersResponse?.data || [];
+  
+  // Debug: Log para verificar o estado dos dados
+  console.log('Debug - customersResponse:', customersResponse);
+  console.log('Debug - customers array:', customers);
+  console.log('Debug - isLoading:', isLoading);
+  console.log('Debug - error:', error);
   
   // Calcular estatísticas baseadas nos filtros aplicados
   const customerStats = useMemo(() => {
-    const filtered = statusFilter === 'all' ? customers : customers.filter(c => 
+    const filtered = statusFilter === 'all' ? customers : customers.filter((c: Customer) => 
       statusFilter === 'active' ? c.isActive : !c.isActive
     );
     
     return {
       total: filtered.length,
-      active: filtered.filter(c => c.isActive).length,
-      individual: filtered.filter(c => c.customerType === 'individual').length,
-      company: filtered.filter(c => ['company', 'distribuidor', 'restaurante', 'bar', 'hotel', 'supermercado'].includes(c.customerType)).length,
+      active: filtered.filter((c: Customer) => c.isActive).length,
+      individual: filtered.filter((c: Customer) => c.customerType === 'individual').length,
+      company: filtered.filter((c: Customer) => ['company', 'distribuidor', 'restaurante', 'bar', 'hotel', 'supermercado'].includes(c.customerType)).length,
     };
   }, [customers, statusFilter]);
 
@@ -163,7 +169,7 @@ export default function CustomersPage() {
 
   // Filtrar e paginar clientes
   const { filteredCustomers, totalPages, paginatedCustomers } = useMemo(() => {
-    let filtered = customers.filter(customer => {
+    let filtered = customers.filter((customer: Customer) => {
       const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.customerNumber.toLowerCase().includes(searchTerm.toLowerCase());
@@ -543,7 +549,7 @@ export default function CustomersPage() {
               // Versão Mobile - Cards
               <div className="space-y-4">
                 {paginatedCustomers.length > 0 ? (
-                  paginatedCustomers.map((customer) => (
+                  paginatedCustomers.map((customer: Customer) => (
                     <Card key={customer.id} className="p-4 hover:shadow-md transition-shadow">
                       <div className="space-y-3">
                         <div className="flex items-start justify-between">
@@ -699,7 +705,7 @@ export default function CustomersPage() {
                   </thead>
                   <tbody>
                     {paginatedCustomers.length > 0 ? (
-                      paginatedCustomers.map((customer) => (
+                      paginatedCustomers.map((customer: Customer) => (
                         <tr key={customer.id} className="table-hover border-b border-border last:border-0">
                           <td className="py-3 px-4">
                             <div>

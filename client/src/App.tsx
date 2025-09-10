@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile.tsx";
 
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
+import AddProduct from "@/pages/add-product";
 import Categories from "@/pages/categories";
 import Inventory from "@/pages/inventory";
 import Warehouses from "@/pages/warehouses";
@@ -82,6 +83,11 @@ function Router() {
           <Route path="/products">
             <ModuleGuard moduleId="products" fallback={<NotFound />}>
               <Products />
+            </ModuleGuard>
+          </Route>
+          <Route path="/add-product">
+            <ModuleGuard moduleId="products" fallback={<NotFound />}>
+              <AddProduct />
             </ModuleGuard>
           </Route>
           <Route path="/categories">

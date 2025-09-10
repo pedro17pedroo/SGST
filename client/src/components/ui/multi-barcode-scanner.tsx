@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './button';
-import { Input } from './input';
-import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { Card, CardContent } from './card';
 import { Badge } from './badge';
 import { useToast } from '../../hooks/use-toast';
-import { Scan, Camera, Keyboard, Zap, CheckCircle, Video } from 'lucide-react';
-import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
+import { Scan, Camera, Zap, CheckCircle, Play, Square } from 'lucide-react';
+import { BrowserMultiFormatReader, NotFoundException, BarcodeFormat, DecodeHintType } from '@zxing/library';
 
 interface MultiBarcodeReaderProps {
-  onScanResult: (code: string, method: 'laser' | 'camera' | 'manual') => void;
+  onScanResult: (code: string, method: 'laser' | 'camera') => void;
   className?: string;
+  hideMethodSelection?: boolean;
+  forcedMethod?: 'laser' | 'camera';
+  onCameraStart?: () => void;
+  onScanComplete?: () => void;
 }
 
-type ScanMethod = 'laser' | 'camera' | 'manual';
+type ScanMethod = 'laser' | 'camera';
 type ScanStatus = 'idle' | 'scanning' | 'success' | 'error';
 
 interface ScanMethodState {
@@ -25,10 +28,14 @@ interface ScanMethodState {
 
 export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
   onScanResult,
-  className = ''
+  className = '',
+  hideMethodSelection = false,
+  forcedMethod,
+  onCameraStart,
+  onScanComplete
 }) => {
   const { toast } = useToast();
-  const [manualInput, setManualInput] = useState('');
+
   const [currentMethod, setCurrentMethod] = useState<ScanMethod>('laser');
   const laserListenerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
   const laserBufferRef = useRef('');
@@ -38,12 +45,13 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const scanningIntervalRef = useRef<number | null>(null);
   
   // Estados para cada método de escaneamento
   const [methods, setMethods] = useState<Record<ScanMethod, ScanMethodState>>({
     laser: { available: false, active: false, status: 'idle' },
-    camera: { available: true, active: false, status: 'idle' },
-    manual: { available: true, active: false, status: 'idle' }
+    camera: { available: true, active: false, status: 'idle' }
   });
 
   // Detectar leitores laser conectados
@@ -193,62 +201,75 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
 
 
+  // Configurar leitor de código de barras com suporte a todos os formatos
+  const setupBarcodeReader = useCallback(() => {
+    if (!codeReaderRef.current) {
+      codeReaderRef.current = new BrowserMultiFormatReader();
+      
+      // Configurar hints para melhor detecção
+      const hints = new Map();
+      
+      // Suporte a todos os formatos de código de barras
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_93,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODABAR,
+        BarcodeFormat.ITF,
+        BarcodeFormat.RSS_14,
+        BarcodeFormat.RSS_EXPANDED,
+        BarcodeFormat.DATA_MATRIX,
+        BarcodeFormat.PDF_417,
+        BarcodeFormat.AZTEC
+      ]);
+      
+      // Melhorar precisão para códigos pequenos e grandes
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      hints.set(DecodeHintType.PURE_BARCODE, false);
+      
+      codeReaderRef.current.hints = hints;
+    }
+    return codeReaderRef.current;
+  }, []);
+
   // Iniciar câmera
   const startCamera = useCallback(async () => {
     console.log('📹 Iniciando câmera...');
     
+    // Chamar callback quando a câmera for iniciada
+    if (onCameraStart) {
+      onCameraStart();
+    }
+    
     try {
-      if (!codeReaderRef.current) {
-        codeReaderRef.current = new BrowserMultiFormatReader();
-      }
+      // Configurar leitor com suporte aprimorado
+      setupBarcodeReader();
       
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
+      // Solicitar câmera com configurações otimizadas
+      const constraints = {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920, min: 640 },
+          height: { ideal: 1080, min: 480 },
+          frameRate: { ideal: 30, min: 15 }
+        }
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setIsCameraActive(true);
         
-        // Timeout para detectar falha na câmera
-        const cameraTimeout = setTimeout(() => {
-          if (methods.camera.status === 'scanning' && !methods.camera.lastResult) {
-            console.log('⏰ Timeout da câmera detectado');
-            handleMethodError('camera', 'Timeout da câmera');
-          }
-        }, 45000); // 45 segundos para câmera
-        
-        // Iniciar escaneamento automático
-         codeReaderRef.current.decodeFromVideoDevice(
-           null,
-           videoRef.current,
-          (result, error) => {
-            if (result) {
-              const code = result.getText();
-              console.log('✅ Código detectado pela câmera:', code);
-              
-              clearTimeout(cameraTimeout);
-              
-              setMethods(prev => ({
-                ...prev,
-                camera: { ...prev.camera, status: 'success', lastResult: code }
-              }));
-              
-              onScanResult(code, 'camera');
-              
-              toast({
-                title: "Código detectado pela câmera!",
-                description: `Código: ${code}`,
-              });
-            }
-            
-            if (error && !(error instanceof NotFoundException)) {
-              console.error('❌ Erro na câmera:', error);
-              clearTimeout(cameraTimeout);
-              handleMethodError('camera', 'Erro durante o escaneamento');
-            }
-          }
-        );
+        // Aguardar o vídeo carregar antes de iniciar o escaneamento
+        videoRef.current.onloadedmetadata = () => {
+          startScanning();
+        };
       }
     } catch (error) {
       console.error('❌ Erro ao iniciar câmera:', error);
@@ -263,14 +284,119 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
         variant: "destructive",
       });
       
-      // Tratar erro da câmera
       handleMethodError('camera', 'Não foi possível acessar a câmera. Verifique as permissões.');
     }
-  }, [onScanResult, toast, methods.camera, handleMethodError]);
+  }, [setupBarcodeReader, onScanResult, toast, handleMethodError, onCameraStart]);
+
+  // Iniciar escaneamento
+   const startScanning = useCallback(() => {
+     if (!codeReaderRef.current || !videoRef.current || isScanning) return;
+     
+     console.log('🔍 Iniciando escaneamento...');
+     setIsScanning(true);
+     
+     setMethods(prev => ({
+       ...prev,
+       camera: { ...prev.camera, status: 'scanning' }
+     }));
+     
+     // Escaneamento contínuo com múltiplas tentativas
+     const scanFrame = async () => {
+       if (!codeReaderRef.current || !videoRef.current) return;
+       
+       try {
+         const result = await codeReaderRef.current.decodeFromVideoElement(videoRef.current);
+         
+         if (result) {
+           const code = result.getText();
+           console.log('✅ Código detectado pela câmera:', code);
+           
+           // Parar escaneamento após sucesso
+           setIsScanning(false);
+           
+           if (scanningIntervalRef.current) {
+             cancelAnimationFrame(scanningIntervalRef.current);
+             scanningIntervalRef.current = null;
+           }
+           
+           setMethods(prev => ({
+             ...prev,
+             camera: { ...prev.camera, status: 'success', lastResult: code }
+           }));
+           
+           onScanResult(code, 'camera');
+           
+           toast({
+             title: "Código detectado pela câmera!",
+             description: `Código: ${code}`,
+           });
+           
+           // Chamar callback quando o escaneamento for concluído
+           if (onScanComplete) {
+             onScanComplete();
+           }
+           
+           // Parar câmera automaticamente após leitura bem-sucedida
+           setTimeout(() => {
+             if (videoRef.current && videoRef.current.srcObject) {
+               const stream = videoRef.current.srcObject as MediaStream;
+               stream.getTracks().forEach(track => track.stop());
+               videoRef.current.srcObject = null;
+             }
+             
+             if (codeReaderRef.current) {
+               codeReaderRef.current.reset();
+             }
+             
+             setIsCameraActive(false);
+             
+             setMethods(prev => ({
+               ...prev,
+               camera: { ...prev.camera, status: 'idle', active: false }
+             }));
+           }, 2000);
+           
+           return;
+         }
+       } catch (error) {
+         // Ignorar erros de NotFoundException (normal durante escaneamento)
+         if (!(error instanceof NotFoundException)) {
+           console.error('❌ Erro durante escaneamento:', error);
+         }
+       }
+       
+       // Continuar escaneamento se ainda estiver ativo
+       if (isScanning) {
+         scanningIntervalRef.current = requestAnimationFrame(scanFrame);
+       }
+     };
+     
+     // Iniciar loop de escaneamento
+     scanFrame();
+   }, [isScanning, onScanResult, toast]);
+
+  // Parar escaneamento
+  const stopScanning = useCallback(() => {
+    console.log('⏹️ Parando escaneamento...');
+    setIsScanning(false);
+    
+    if (scanningIntervalRef.current) {
+      cancelAnimationFrame(scanningIntervalRef.current);
+      scanningIntervalRef.current = null;
+    }
+    
+    setMethods(prev => ({
+      ...prev,
+      camera: { ...prev.camera, status: 'idle' }
+    }));
+  }, []);
 
   // Parar câmera
   const stopCamera = useCallback(() => {
     console.log('📹 Parando câmera...');
+    
+    // Parar escaneamento primeiro
+    stopScanning();
     
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
@@ -283,7 +409,12 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
     }
     
     setIsCameraActive(false);
-  }, []);
+    
+    setMethods(prev => ({
+      ...prev,
+      camera: { ...prev.camera, status: 'idle', active: false }
+    }));
+  }, [stopScanning]);
 
   // Ativar método de escaneamento com priorização
   const activateMethod = useCallback(async (method: ScanMethod) => {
@@ -341,49 +472,45 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
           description: "Clique em 'Iniciar Câmera' para começar o escaneamento.",
         });
         break;
-      case 'manual':
-        setMethods(prev => ({
-          ...prev,
-          manual: { ...prev.manual, active: true, status: 'scanning' }
-        }));
-        toast({
-          title: "Entrada Manual Ativada",
-          description: "Digite o código de barras no campo abaixo.",
-        });
-        break;
     }
   }, [setupLaserListener, removeLaserListener, isCameraActive, stopCamera, toast]);
 
-  // Entrada manual
-  const handleManualSubmit = useCallback(() => {
-    if (manualInput.trim()) {
-      console.log('✅ Código manual inserido:', manualInput);
-      
-      setMethods(prev => ({
-        ...prev,
-        manual: { ...prev.manual, status: 'success', lastResult: manualInput }
-      }));
-      
-      onScanResult(manualInput.trim(), 'manual');
-      
-      toast({
-        title: "Código inserido manualmente!",
-        description: `Código: ${manualInput}`,
-      });
-      
-      setManualInput('');
-    }
-  }, [manualInput, onScanResult, toast]);
+
 
   // Efeitos
   useEffect(() => {
     detectLaserReaders();
     
     return () => {
+      // Limpeza completa ao desmontar componente
       removeLaserListener();
-      stopCamera();
+      
+      // Parar escaneamento
+      setIsScanning(false);
+      if (scanningIntervalRef.current) {
+        cancelAnimationFrame(scanningIntervalRef.current);
+        scanningIntervalRef.current = null;
+      }
+      
+      // Parar câmera
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+      
+      if (codeReaderRef.current) {
+        codeReaderRef.current.reset();
+      }
     };
-  }, [detectLaserReaders, removeLaserListener, stopCamera]);
+  }, [detectLaserReaders, removeLaserListener]);
+
+  // Ativar método forçado automaticamente
+  useEffect(() => {
+    if (forcedMethod && !methods[forcedMethod].active) {
+      activateMethod(forcedMethod);
+    }
+  }, [forcedMethod, methods, activateMethod]);
 
   // Renderizar ícone do método
   const renderMethodIcon = (method: ScanMethod) => {
@@ -394,8 +521,6 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
         return <Zap className={`w-5 h-5 ${state.active ? 'text-blue-500' : 'text-gray-400'}`} />;
       case 'camera':
         return <Camera className={`w-5 h-5 ${state.active ? 'text-green-500' : 'text-gray-400'}`} />;
-      case 'manual':
-        return <Keyboard className={`w-5 h-5 ${state.active ? 'text-orange-500' : 'text-gray-400'}`} />;
     }
   };
 
@@ -423,20 +548,11 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   return (
     <Card className={`w-full max-w-2xl mx-auto ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Scan className="w-6 h-6" />
-          Scanner de Código de Barras
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Escolha o método de escaneamento desejado
-        </p>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
+      <CardContent className="p-4 space-y-4">
         {/* Status dos Métodos */}
-        <div className="grid grid-cols-3 gap-4">
-          {(['laser', 'camera', 'manual'] as ScanMethod[]).map((method) => {
+        {!hideMethodSelection && (
+        <div className="grid grid-cols-2 gap-4">
+          {(['laser', 'camera'] as ScanMethod[]).map((method) => {
             const state = methods[method];
             const isActive = state.active;
             const isScanning = state.status === 'scanning';
@@ -474,7 +590,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
                 <div className="flex items-center gap-2 mb-3">
                   {renderMethodIcon(method)}
                   <span className="font-medium">
-                    {method === 'laser' ? 'Leitor Laser' : method === 'camera' ? 'Câmera' : 'Entrada Manual'}
+                    {method === 'laser' ? 'Leitor Laser' : 'Câmera'}
                   </span>
                 </div>
                 
@@ -493,7 +609,6 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
                   <div className="text-xs text-muted-foreground">
                     {method === 'laser' && isScanning && '🎯 Aguardando leitura...'}
                     {method === 'camera' && isScanning && '📹 Escaneando com câmera...'}
-                    {method === 'manual' && isScanning && '⌨️ Digite o código...'}
                     {hasSuccess && `✅ Último: ${state.lastResult?.substring(0, 10)}...`}
                     {hasError && `❌ ${state.error || 'Erro desconhecido'}`}
                   </div>
@@ -508,6 +623,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
             );
           })}
         </div>
+        )}
 
         {/* Método Ativo */}
         {Object.values(methods).some(method => method.active) && (
@@ -516,8 +632,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
               <CheckCircle className="w-4 h-4 text-green-500" />
               <span className="font-medium">Método Ativo:</span>
               <Badge variant="default">
-                {currentMethod === 'laser' ? 'Leitor Laser' : 
-                 currentMethod === 'camera' ? 'Câmera' : 'Entrada Manual'}
+                {currentMethod === 'laser' ? 'Leitor Laser' : 'Câmera'}
               </Badge>
             </div>
           
@@ -528,66 +643,144 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
           )}
           
           {currentMethod === 'camera' && methods.camera.active && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                📹 Use a câmera integrada abaixo
-              </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  📹 Use a câmera integrada para escanear códigos de barras
+                </p>
+                <div className="flex gap-2">
+                  {!isCameraActive ? (
+                    <Button 
+                      onClick={startCamera} 
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                      size="sm"
+                    >
+                      <Play className="w-4 h-4" />
+                      Iniciar Câmera
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      {!isScanning ? (
+                        <Button 
+                          onClick={startScanning} 
+                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                          size="sm"
+                        >
+                          <Scan className="w-4 h-4" />
+                          Iniciar Escaneamento
+                        </Button>
+                      ) : (
+                        <Button 
+                          onClick={stopScanning} 
+                          className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700"
+                          size="sm"
+                        >
+                          <Square className="w-4 h-4" />
+                          Parar Escaneamento
+                        </Button>
+                      )}
+                      <Button 
+                        onClick={stopCamera} 
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700"
+                        size="sm"
+                        variant="destructive"
+                      >
+                        <Square className="w-4 h-4" />
+                        Parar Câmera
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               <div className="relative bg-black rounded-lg overflow-hidden">
                  <video 
                    ref={videoRef}
-                   className="w-full h-64 object-cover"
+                   className="w-full h-80 object-cover"
                    autoPlay
                    playsInline
                    muted
                  />
-                 <div className="absolute inset-0 border-2 border-green-500 rounded-lg pointer-events-none">
-                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-32 border-2 border-green-400 rounded-lg">
-                     <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-green-400"></div>
-                     <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-green-400"></div>
-                     <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-green-400"></div>
-                     <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-green-400"></div>
+                 
+                 {/* Overlay de escaneamento */}
+                 <div className="absolute inset-0 pointer-events-none">
+                   {/* Área de foco principal */}
+                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-40 border-2 border-green-400 rounded-lg">
+                     {/* Cantos da área de foco */}
+                     <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-green-400 rounded-tl-lg"></div>
+                     <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
+                     <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
+                     <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
+                     
+                     {/* Linha de escaneamento animada */}
+                     {isScanning && (
+                       <div className="absolute inset-0 overflow-hidden">
+                         <div className="absolute w-full h-0.5 bg-green-400 animate-pulse" 
+                              style={{
+                                top: '50%',
+                                boxShadow: '0 0 10px rgba(34, 197, 94, 0.8)'
+                              }}>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                   
+                   {/* Status overlay */}
+                   <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                     <div className="bg-black bg-opacity-70 text-white px-3 py-2 rounded-lg text-sm">
+                       {!isCameraActive && '📷 Câmera Desligada'}
+                       {isCameraActive && !isScanning && '⏸️ Pronto para Escanear'}
+                       {isCameraActive && isScanning && '🔍 Escaneando...'}
+                     </div>
+                     
+                     {methods.camera.lastResult && (
+                       <div className="bg-green-600 bg-opacity-90 text-white px-3 py-2 rounded-lg text-sm">
+                         ✅ Último: {methods.camera.lastResult.substring(0, 12)}...
+                       </div>
+                     )}
+                   </div>
+                   
+                   {/* Instruções */}
+                   <div className="absolute bottom-4 left-4 right-4">
+                     <div className="bg-black bg-opacity-70 text-white px-4 py-3 rounded-lg text-center text-sm">
+                       {!isCameraActive && '🎯 Clique em "Iniciar Câmera" para começar'}
+                       {isCameraActive && !isScanning && '📱 Posicione o código de barras na área destacada e clique em "Iniciar Escaneamento"'}
+                       {isCameraActive && isScanning && '🔍 Mantenha o código de barras na área destacada. Suporta todos os formatos!'}
+                     </div>
                    </div>
                  </div>
+                 
+                 {/* Overlay quando câmera está desligada */}
                  {!isCameraActive && (
-                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                     <Button onClick={() => startCamera()} className="flex items-center gap-2">
-                       <Video className="w-4 h-4" />
-                       Iniciar Câmera
-                     </Button>
+                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80">
+                     <div className="text-center text-white">
+                       <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                       <p className="text-lg font-medium mb-2">Câmera Desligada</p>
+                       <p className="text-sm opacity-75">Clique em "Iniciar Câmera" para começar</p>
+                     </div>
                    </div>
                  )}
+               </div>
+               
+               {/* Informações técnicas */}
+               <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+                 <div className="space-y-1">
+                   <p className="font-medium">📊 Formatos Suportados:</p>
+                   <p>QR Code, Code 128, Code 39, EAN-13, UPC-A, Data Matrix, PDF417, e mais</p>
+                 </div>
+                 <div className="space-y-1">
+                   <p className="font-medium">🎯 Otimizações:</p>
+                   <p>Detecção aprimorada para códigos pequenos e grandes, múltiplos formatos</p>
+                 </div>
                </div>
             </div>
           )}
           
-          {currentMethod === 'manual' && methods.manual.active && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                ⌨️ Digite o código manualmente:
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  value={manualInput}
-                  onChange={(e) => setManualInput(e.target.value)}
-                  placeholder="Digite o código de barras..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleManualSubmit()}
-                  className="flex-1"
-                />
-                <Button onClick={handleManualSubmit} disabled={!manualInput.trim()}>
-                  Confirmar
-                </Button>
-              </div>
-            </div>
-          )}
+
         </div>
         )}
 
-        {/* Instruções */}
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Clique em um dos métodos acima para começar o escaneamento
-          </p>
-        </div>
+
       </CardContent>
     </Card>
   );

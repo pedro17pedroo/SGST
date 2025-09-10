@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-import { useCreateProduct, useUpdateProduct } from "@/hooks/api/use-products";
+import { useCreateProduct, useUpdateProduct, type Product as ApiProduct } from "@/hooks/api/use-products";
 import { 
   Scan, 
   Package, 
@@ -56,24 +56,15 @@ const productFormSchema = z.object({
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  sku: string;
-  barcode: string | null;
-  price: string;
+interface Product extends Omit<ApiProduct, 'minStockLevel'> {
   costPrice: string;
-  weight: string | null;
-  categoryId: string | null;
-  supplierId: string | null;
   minStockLevel: string | null;
 }
 
 interface ProductFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product?: Product;
+  product?: ApiProduct;
 }
 
 export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
@@ -111,7 +102,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       sku: product?.sku || "",
       barcode: product?.barcode || "",
       price: product?.price || "",
-      costPrice: product?.costPrice || "",
+      costPrice: "", // Campo não existe no produto da API, usar valor padrão
       weight: product?.weight || "",
       categoryId: product?.categoryId || "",
       supplierId: product?.supplierId || "",
@@ -128,11 +119,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         sku: product.sku || "",
         barcode: product.barcode || "",
         price: product.price || "",
-        costPrice: product.costPrice || "",
+        costPrice: "", // Campo não existe no produto da API, usar valor padrão
         weight: product.weight || "",
         categoryId: product.categoryId || "",
         supplierId: product.supplierId || "",
-        minStockLevel: product.minStockLevel || "",
+        minStockLevel: product.minStockLevel?.toString() || "",
       });
     } else {
       form.reset({

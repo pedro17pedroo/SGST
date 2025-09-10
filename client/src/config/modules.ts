@@ -87,7 +87,7 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
     description: 'Catálogo de produtos e categorias',
     enabled: true,
     dependencies: ['users'],
-    routes: ['/products', '/categories'],
+    routes: ['/products', '/categories', '/add-product'],
     menuItems: [{
       label: 'Produtos',
       icon: 'Package',

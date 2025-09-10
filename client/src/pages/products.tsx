@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Search, Edit, Power, PowerOff, Filter, ChevronLeft, ChevronRight } from "lucide-react";
-import { ProductForm } from "@/components/products/product-form";
 import { useProducts, useDeactivateProduct, useActivateProduct } from "@/hooks/api/use-products";
 import { useIsMobile } from "@/hooks/use-mobile.tsx";
 import Swal from "sweetalert2";
@@ -48,8 +48,6 @@ export default function Products() {
 
 function ProductsContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -97,15 +95,16 @@ function ProductsContent() {
 
 
 
+  // Hook para navegação
+  const [, setLocation] = useLocation();
+
   // Função para adicionar novo produto
   const handleAddNew = () => {
-    setSelectedProduct(undefined);
-    setShowForm(true);
+    setLocation('/add-product');
   };
 
   const handleEdit = (product: Product) => {
-    setSelectedProduct(product);
-    setShowForm(true);
+    setLocation(`/add-product?edit=${product.id}`);
   };
 
   const handleActivate = async (productId: string) => {
@@ -553,11 +552,7 @@ function ProductsContent() {
           )}
         </Card>
 
-        <ProductForm 
-          open={showForm} 
-          onOpenChange={setShowForm} 
-          product={selectedProduct}
-        />
+
       </div>
     </div>
   );

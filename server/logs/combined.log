@@ -253,3 +253,133 @@
 {"duration":1488,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:21:48"}
 {"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 00:21:48"}
 {"duration":282,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:21:48"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 00:33:15"}
+{"duration":1407,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:33:16"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 00:33:16"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 00:33:17"}
+{"duration":286,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:33:17"}
+{"duration":285,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:33:17"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 00:37:43"}
+{"duration":7092,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:37:50"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 00:37:54"}
+{"duration":286,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:37:54"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 00:41:06"}
+{"duration":1368,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 00:41:08"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:11:28"}
+{"duration":1361,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:11:30"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:11:30"}
+{"duration":285,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:11:30"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:19:01"}
+{"duration":1519,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:19:03"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:19:03"}
+{"duration":405,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:19:03"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:19:04"}
+{"duration":329,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:19:04"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:19:04"}
+{"duration":296,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:19:05"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:31:04"}
+{"duration":1436,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:31:06"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:31:06"}
+{"duration":290,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:31:07"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:31:52"}
+{"duration":1493,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:31:54"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:31:54"}
+{"duration":278,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:31:55"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:31:56"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:31:57"}
+{"duration":1399,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:31:57"}
+{"duration":275,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:31:57"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:33:36"}
+{"duration":1396,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:33:38"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:36:23"}
+{"duration":425,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:36:23"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:36:30"}
+{"duration":290,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:36:31"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:41:06"}
+{"duration":286,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:41:07"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 08:41:07"}
+{"duration":289,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 08:41:07"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:08:03"}
+{"duration":1395,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:08:04"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:09:11"}
+{"duration":1364,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:09:12"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:16:30"}
+{"duration":1374,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:16:31"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:24:50"}
+{"duration":2247,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:24:53"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:26:13"}
+{"duration":1378,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:26:15"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:32:37"}
+{"duration":288,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:32:37"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:32:39"}
+{"duration":1733,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:32:40"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:32:44"}
+{"duration":284,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:32:45"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:34:14"}
+{"duration":1470,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:34:15"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:45:47"}
+{"duration":1416,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:45:49"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:47:49"}
+{"duration":1423,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:47:50"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:51:38"}
+{"duration":1435,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:51:40"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 10:52:51"}
+{"duration":1358,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 10:52:52"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:03:52"}
+{"duration":1372,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:03:53"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:03:54"}
+{"duration":272,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:03:54"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:08:10"}
+{"duration":1479,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:08:11"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:29:50"}
+{"duration":1406,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:29:51"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:32:31"}
+{"duration":1527,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:32:33"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:33:16"}
+{"duration":1460,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:33:18"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:39:44"}
+{"duration":1373,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:39:46"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:43:40"}
+{"duration":1425,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:43:42"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 11:56:21"}
+{"duration":1373,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 11:56:22"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 12:09:29"}
+{"duration":376,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 12:09:29"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 12:09:30"}
+{"duration":1569,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 12:09:31"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 12:13:58"}
+{"duration":1377,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 12:13:59"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 12:46:32"}
+{"duration":1379,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 12:46:33"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:06:05"}
+{"duration":1370,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:06:07"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:06:25"}
+{"duration":285,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:06:26"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:39:15"}
+{"duration":1366,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:39:17"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:20"}
+{"duration":284,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:20"}
+{"level":"info","message":"Storage operation: createProduct","metadata":{"name":"Teste 2","price":"6000","sku":"TES2-DYWBE5"},"operation":"createProduct","resource":"products","resourceId":"d2f1f7bf-80e3-4911-971f-6d45561d1fb6","service":"sgst-backend","timestamp":"2025-09-10 13:40:20"}
+{"duration":1095,"level":"info","message":"Storage operation successful: createProduct","operation":"createProduct","resource":"products","resourceId":"d2f1f7bf-80e3-4911-971f-6d45561d1fb6","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:21"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:21"}
+{"duration":281,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:21"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:29"}
+{"duration":568,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:29"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:31"}
+{"duration":282,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:31"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:32"}
+{"duration":277,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:32"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:33"}
+{"duration":279,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:34"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:35"}
+{"duration":276,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:35"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:36"}
+{"duration":278,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:36"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:37"}
+{"duration":278,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:37"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:41"}
+{"duration":277,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:41"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:40:43"}
+{"duration":278,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:40:43"}
+{"level":"info","message":"Storage operation: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","timestamp":"2025-09-10 13:41:56"}
+{"duration":597,"level":"info","message":"Storage operation successful: getProducts","operation":"getProducts","resource":"products","service":"sgst-backend","status":"success","timestamp":"2025-09-10 13:41:56"}

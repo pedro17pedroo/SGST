@@ -6,29 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Power, PowerOff, Package } from "lucide-react";
 import { ProductForm } from "@/components/products/product-form";
-import { useProducts, useDeactivateProduct, useActivateProduct } from "@/hooks/api/use-products";
+import { useProducts, useDeactivateProduct, useActivateProduct, type Product } from "@/hooks/api/use-products";
 import { PermissionGuard } from "@/components/auth/permission-guard";
 import Swal from "sweetalert2";
 
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  sku: string;
-  barcode: string | null;
-  price: string;
-  weight: string | null;
-  categoryId: string | null;
-  supplierId: string | null;
-  minStockLevel: number | null;
-  isActive: boolean;
-  category?: {
-    name: string;
-  } | null;
-  supplier?: {
-    name: string;
-  } | null;
-}
+
 
 export default function ProductsProtected() {
   const [searchQuery, setSearchQuery] = useState("");

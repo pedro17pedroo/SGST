@@ -87,7 +87,7 @@ export default function AddProduct() {
         sku: product.sku || "",
         barcode: product.barcode || "",
         price: product.price ? (typeof product.price === 'string' ? product.price : String(product.price)) : "",
-        costPrice: product.price ? (typeof product.price === 'string' ? product.price : String(product.price)) : "", // Usando price como fallback já que costPrice não existe
+        costPrice: product.costPrice ? (typeof product.costPrice === 'string' ? product.costPrice : String(product.costPrice)) : "",
         weight: product.weight ? String(product.weight) : "",
         categoryId: product.categoryId || "",
         supplierId: product.supplierId || "",

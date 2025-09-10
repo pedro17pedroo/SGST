@@ -25,6 +25,7 @@ interface Product {
   sku: string;
   barcode: string | null;
   price: string;
+  costPrice: string;
   weight: string | null;
   categoryId: string | null;
   supplierId: string | null;

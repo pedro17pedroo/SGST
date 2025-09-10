@@ -101,6 +101,7 @@ export const INVENTORY_QUERY_KEYS = {
   list: (params?: Record<string, any>) => [...INVENTORY_QUERY_KEYS.lists(), params] as const,
   summary: () => [...INVENTORY_QUERY_KEYS.all, 'summary'] as const,
   movements: (params?: Record<string, any>) => [...INVENTORY_QUERY_KEYS.all, 'movements', params] as const,
+  lowStock: () => [...INVENTORY_QUERY_KEYS.all, 'low-stock'] as const,
   detail: (productId: string, warehouseId: string) => [...INVENTORY_QUERY_KEYS.all, 'detail', productId, warehouseId] as const,
 };
 
@@ -123,6 +124,32 @@ export function useInventory(params?: Record<string, any>) {
     refetchOnWindowFocus: false,
     retry: (failureCount, error: any) => {
       // Não tentar novamente para erros 4xx
+      if (error?.status >= 400 && error?.status < 500) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+  });
+}
+
+// Hook para obter produtos com baixo stock
+export function useLowStockProducts() {
+  const { isAuthenticated, isReady } = useAuth();
+  const { isLoading: isModulesLoading } = useModules();
+
+  // Calcular se pode carregar dados
+  const canLoadData = useMemo(() => {
+    return isAuthenticated && isReady && !isModulesLoading;
+  }, [isAuthenticated, isReady, isModulesLoading]);
+
+  return useQuery({
+    queryKey: INVENTORY_QUERY_KEYS.lowStock(),
+    queryFn: inventoryService.getLowStockProducts,
+    enabled: canLoadData,
+    staleTime: CACHE_CONFIG.dynamic.staleTime,
+    gcTime: CACHE_CONFIG.dynamic.gcTime,
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
       if (error?.status >= 400 && error?.status < 500) {
         return false;
       }

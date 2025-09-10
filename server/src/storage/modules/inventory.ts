@@ -75,15 +75,16 @@ export class InventoryStorage {
       .leftJoin(users, eq(stockMovements.userId, users.id))
       .orderBy(desc(stockMovements.createdAt));
 
-    let query = baseQuery;
-    if (limit !== undefined) {
-      query = query.limit(limit);
-    }
-    if (offset !== undefined) {
-      query = query.offset(offset);
-    }
+    // Aplicar limit e offset se fornecidos
+    const finalQuery = limit !== undefined && offset !== undefined 
+      ? baseQuery.limit(limit).offset(offset)
+      : limit !== undefined 
+        ? baseQuery.limit(limit)
+        : offset !== undefined
+          ? baseQuery.offset(offset)
+          : baseQuery;
 
-    const results = await query;
+    const results = await finalQuery;
     
     return results.map(result => ({
       ...result.stockMovement,

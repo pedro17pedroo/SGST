@@ -427,6 +427,14 @@ export const inventoryService = {
     const response = await apiRequest('POST', API_ENDPOINTS.inventory.createMovement, movementData);
     return processResponse<ApiResponse<any>>(response);
   },
+
+  /**
+   * Obter produtos com baixo stock
+   */
+  async getLowStockProducts() {
+    const response = await apiRequest('GET', API_ENDPOINTS.inventory.lowStock);
+    return processResponse<ApiResponse<any[]>>(response);
+  },
 };
 
 // === SERVIÇOS DE ENCOMENDAS ===

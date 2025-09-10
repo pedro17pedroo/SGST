@@ -148,6 +148,7 @@ export const API_ENDPOINTS = {
     update: '/api/inventory/update',
     movements: '/api/inventory/stock-movements',
     createMovement: '/api/inventory/stock-movements',
+    lowStock: '/api/inventory/low-stock',
   },
 
   // Encomendas

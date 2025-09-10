@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { useIsMobile } from "@/hooks/use-mobile.tsx";
 import { type Product, type Warehouse, type Inventory } from "@shared/schema";
-import { useInventoryMovements, useCreateInventoryMovement } from "@/hooks/api/use-inventory";
+import { useInventoryMovements, useCreateInventoryMovement, useLowStockProducts } from "@/hooks/api/use-inventory";
 import type { InventoryMovement } from "@/hooks/api/use-inventory";
 import { useProducts } from "@/hooks/api/use-products";
 import { useWarehouses } from "@/hooks/api/use-warehouses";
@@ -252,7 +252,7 @@ function LowStockAlert({ product }: { product: Product & { stock: number } }) {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Mínimo:</span>
-            <span>{product.minStockLevel} unidades</span>
+            <span>{(product as any).minStockLevel || 0} unidades</span>
           </div>
         </div>
       </CardContent>
@@ -370,10 +370,9 @@ function InventoryContent() {
     return params;
   }, [currentPage, itemsPerPage, search, selectedWarehouse, selectedType]);
 
-  // TODO: Implementar hook para produtos com baixo stock
-  // Por enquanto, usar dados vazios até o hook estar disponível
-  const lowStockProducts: Array<Product & { stock: number }> = [];
-  const isLoadingLowStock = false;
+  const { data: lowStockResponse, isLoading: isLoadingLowStock } = useLowStockProducts();
+  // O backend retorna um array diretamente, não um objeto com propriedade 'data'
+  const lowStockProducts: Array<Product & { stock: number }> = Array.isArray(lowStockResponse) ? lowStockResponse : (lowStockResponse?.data || []);
 
   const { data: movementsResponse, isLoading: isLoadingMovements, error: movementsError } = useInventoryMovements(queryParams);
   const recentMovements: InventoryMovement[] = (movementsResponse as any)?.data || [];

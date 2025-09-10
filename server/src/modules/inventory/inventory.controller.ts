@@ -3,6 +3,7 @@ import { InventoryModel } from './inventory.model';
 import { db } from '../../../database/db';
 import { stockMovements } from '@shared/schema';
 import { count, desc, asc } from 'drizzle-orm';
+import storage from '../../storage';
 
 export class InventoryController {
   static async getLowStockProducts(req: Request, res: Response) {
@@ -95,16 +96,11 @@ export class InventoryController {
       const limitNum = parseInt(limit as string);
       const offset = (pageNum - 1) * limitNum;
       
-      // Buscar movimentos com paginação
-      const movements = await db.select()
-        .from(stockMovements)
-        .orderBy(desc(stockMovements.createdAt))
-        .limit(limitNum)
-        .offset(offset);
+      // Buscar movimentos com paginação e relações incluídas
+      const movements = await storage.getStockMovements(limitNum, offset);
       
       // Buscar total de registros para paginação
-      const totalResult = await db.select({ count: count() }).from(stockMovements);
-      const totalMovements = totalResult[0]?.count || 0;
+      const totalMovements = await storage.getTotalStockMovements();
       const totalPages = Math.ceil(totalMovements / limitNum);
       
       res.json({

@@ -66,10 +66,14 @@ export class ProductStorage {
     try {
       // Validações obrigatórias
       ErrorHandler.validateRequired(product.name, 'name');
-      ErrorHandler.validateRequired(product.sku, 'sku');
       ErrorHandler.validateRequired(product.price, 'price');
       
-      Logger.validation.success('products', ['name', 'sku', 'price']);
+      // Gerar SKU automaticamente se não fornecido
+      if (!product.sku) {
+        product.sku = `SKU-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      }
+      
+      Logger.validation.success('products', ['name', 'price']);
       
       // Validações de formato e valores
       const priceNum = Number(product.price);
@@ -94,11 +98,13 @@ export class ProductStorage {
         }
       }
       
-      // Validação de SKU único
-      const existingProduct = await this.getProductsBySku(product.sku);
-      if (existingProduct.length > 0) {
-        Logger.validation.failed('sku', product.sku, 'must be unique', 'products');
-        throw new DuplicateError('Produto', 'SKU', product.sku);
+      // Validação de SKU único (se fornecido)
+      if (product.sku) {
+        const existingProduct = await this.getProductsBySku(product.sku);
+        if (existingProduct.length > 0) {
+          Logger.validation.failed('sku', product.sku, 'must be unique', 'products');
+          throw new DuplicateError('Produto', 'SKU', product.sku);
+        }
       }
       
       // Validação de código de barras único (se fornecido)

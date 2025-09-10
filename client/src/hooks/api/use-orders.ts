@@ -70,8 +70,16 @@ export const ORDERS_QUERY_KEYS = {
   recent: () => [...ORDERS_QUERY_KEYS.all, 'recent'] as const,
 };
 
-// Hook para listar pedidos
-export function useOrders(params?: Record<string, any>) {
+// Hook para listar pedidos com paginação
+export function useOrders(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  [key: string]: any;
+}) {
   const { user } = useAuth();
   const { isModuleEnabled } = useModules();
   
@@ -79,9 +87,16 @@ export function useOrders(params?: Record<string, any>) {
     return user && isModuleEnabled('orders');
   }, [user, isModuleEnabled]);
 
+  // Parâmetros padrão para paginação
+  const queryParams = {
+    page: 1,
+    limit: 5,
+    ...params
+  };
+
   return useQuery({
-    queryKey: ORDERS_QUERY_KEYS.list(params),
-    queryFn: () => ordersService.getOrders(params),
+    queryKey: ORDERS_QUERY_KEYS.list(queryParams),
+    queryFn: () => ordersService.getOrders(queryParams),
     staleTime: CACHE_CONFIG.dynamic.staleTime,
     gcTime: CACHE_CONFIG.dynamic.gcTime,
     enabled: !!canLoadData,

@@ -1,9 +1,9 @@
 URL do pedido
-http://localhost:4001/api/inventory/stock-movements?page=1&limit=10
+http://localhost:4001/api/inventory/stock-movements
 Método de pedido
-GET
+POST
 Código de estado
-304 Not Modified
+500 Internal Server Error
 Endereço remoto
 127.0.0.1:4001
 Política do referenciador
@@ -14,10 +14,14 @@ access-control-allow-origin
 http://localhost:3000
 connection
 keep-alive
+content-length
+333
+content-type
+application/json; charset=utf-8
 date
-Wed, 10 Sep 2025 19:12:04 GMT
+Wed, 10 Sep 2025 20:14:52 GMT
 etag
-W/"dec-TzK2TzQUwzizk9bpdzUeyCB/3iQ"
+W/"14d-D5tV8Vv2zHwDolX3b36VJV6KHtM"
 keep-alive
 timeout=5
 vary
@@ -34,10 +38,12 @@ authorization
 Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzUwMjU2OSwiZXhwIjoxNzU3NTg4OTY5LCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.8JvA4Dct5l7lEjMaBBoiRsaU78NU-1zHOB3Psoh9Nco
 connection
 keep-alive
+content-length
+95
+content-type
+application/json
 host
 localhost:4001
-if-none-match
-W/"dec-TzK2TzQUwzizk9bpdzUeyCB/3iQ"
 origin
 http://localhost:3000
 referer
@@ -59,126 +65,6 @@ Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like 
 
 Response:
 {
-    "success": true,
-    "message": "Movimentos de stock carregados com sucesso",
-    "data": [
-        {
-            "id": "00ec2161-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44ba9c-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "in",
-            "quantity": 259,
-            "reference": "REC-1757528932828-714",
-            "reason": "Recebimento inicial de stock",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec23b6-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44ba9c-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "out",
-            "quantity": 18,
-            "reference": "SALE-1757528932828-649",
-            "reason": "Venda para cliente",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec2477-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44ba9c-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "adjustment",
-            "quantity": 4,
-            "reference": "ADJ-1757528932828-174",
-            "reason": "Ajuste de inventário após contagem",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec24d7-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44bc93-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "in",
-            "quantity": 136,
-            "reference": "REC-1757528932828-353",
-            "reason": "Recebimento inicial de stock",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec2529-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44bc93-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "out",
-            "quantity": 22,
-            "reference": "SALE-1757528932828-663",
-            "reason": "Venda para cliente",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec2572-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44bbf7-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "in",
-            "quantity": 163,
-            "reference": "REC-1757528932828-378",
-            "reason": "Recebimento inicial de stock",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec25b8-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44bbf7-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "out",
-            "quantity": 29,
-            "reference": "SALE-1757528932828-320",
-            "reason": "Venda para cliente",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec25fa-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44bc6d-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "in",
-            "quantity": 286,
-            "reference": "REC-1757528932828-608",
-            "reason": "Recebimento inicial de stock",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec264e-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44bc6d-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "out",
-            "quantity": 19,
-            "reference": "SALE-1757528932828-337",
-            "reason": "Venda para cliente",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        },
-        {
-            "id": "00ec268d-8e74-11f0-aefa-34b4ed86d8a9",
-            "productId": "ff9a7cf9-8e73-11f0-aefa-34b4ed86d8a9",
-            "warehouseId": "ff44ba9c-8e73-11f0-aefa-34b4ed86d8a9",
-            "type": "in",
-            "quantity": 266,
-            "reference": "REC-1757528932828-900",
-            "reason": "Recebimento inicial de stock",
-            "userId": "fe17333c-8e73-11f0-aefa-34b4ed86d8a9",
-            "createdAt": "2025-09-10T18:28:53.000Z"
-        }
-    ],
-    "pagination": {
-        "page": 1,
-        "limit": 10,
-        "total": 132,
-        "totalPages": 14,
-        "hasNextPage": true,
-        "hasPreviousPage": false
-    }
+    "message": "Erro ao criar movimentação de stock",
+    "error": "Failed query: insert into `stock_movements` (`id`, `product_id`, `warehouse_id`, `type`, `quantity`, `reference`, `reason`, `user_id`, `created_at`) values (default, ?, default, ?, ?, default, ?, default, default)\nparams: ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9,IN,9,testes"
 }

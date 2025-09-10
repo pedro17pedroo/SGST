@@ -128,7 +128,48 @@ export class InventoryController {
 
   static async createStockMovement(req: Request, res: Response) {
     try {
-      await db.insert(stockMovements).values(req.body);
+      const { productId, warehouseId, type, quantity, reason, reference } = req.body;
+      
+      // Validação básica dos campos obrigatórios
+      if (!productId || !warehouseId || !type || !quantity || !reason) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Campos obrigatórios em falta: productId, warehouseId, type, quantity, reason" 
+        });
+      }
+      
+      // Validar que a quantidade é positiva
+      if (quantity <= 0) {
+        return res.status(400).json({ 
+          success: false,
+          message: "A quantidade deve ser maior que zero" 
+        });
+      }
+      
+      // Preparar dados para inserção usando apenas os campos necessários
+      const insertData: any = {
+        productId,
+        warehouseId,
+        type: type.toLowerCase(),
+        quantity,
+        reason,
+        userId: (req as any).user?.id || null
+      };
+      
+      // Adicionar reference apenas se fornecido
+      if (reference) {
+        insertData.reference = reference;
+      }
+
+      console.log('Dados para inserção:', insertData);
+
+      // Inserir o movimento no banco de dados
+      const [insertResult] = await db.insert(stockMovements).values(insertData);
+      console.log('Resultado da inserção:', insertResult);
+      
+      // Atualizar o inventário baseado no tipo de movimento
+      await InventoryController.updateInventoryFromMovement(productId, warehouseId, type.toLowerCase(), quantity);
+      
       res.status(201).json({ success: true, message: 'Movimentação criada com sucesso' });
     } catch (error) {
       console.error('Error creating stock movement:', error);
@@ -187,6 +228,62 @@ export class InventoryController {
         message: "Erro ao buscar alertas de stock", 
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  }
+
+  /**
+   * Atualiza o inventário baseado no tipo de movimento
+   */
+  private static async updateInventoryFromMovement(
+    productId: string, 
+    warehouseId: string, 
+    type: string, 
+    quantity: number
+  ): Promise<void> {
+    try {
+      // Obter o inventário atual
+      const currentInventory = await InventoryModel.getProductInventory(productId);
+      const warehouseInventory = currentInventory.find(inv => inv.warehouseId === warehouseId);
+      
+      let newQuantity = 0;
+      
+      if (warehouseInventory) {
+        // Calcular nova quantidade baseada no tipo de movimento
+        switch (type) {
+          case 'in':
+          case 'entrada':
+            newQuantity = warehouseInventory.quantity + quantity;
+            break;
+          case 'out':
+          case 'saida':
+            newQuantity = Math.max(0, warehouseInventory.quantity - quantity);
+            break;
+          case 'adjustment':
+          case 'ajuste':
+            newQuantity = quantity; // Para ajustes, a quantidade é absoluta
+            break;
+          default:
+            throw new Error(`Tipo de movimento inválido: ${type}`);
+        }
+      } else {
+        // Se não existe inventário para este produto/armazém
+        if (type === 'in' || type === 'entrada') {
+          newQuantity = quantity;
+        } else if (type === 'adjustment' || type === 'ajuste') {
+          newQuantity = quantity;
+        } else {
+          // Para saídas, não podemos ter estoque negativo
+          newQuantity = 0;
+        }
+      }
+      
+      // Atualizar o inventário
+      await InventoryModel.updateInventory(productId, warehouseId, newQuantity);
+      
+      console.log(`Inventário atualizado: Produto ${productId}, Armazém ${warehouseId}, Nova quantidade: ${newQuantity}`);
+    } catch (error) {
+      console.error('Erro ao atualizar inventário:', error);
+      throw error;
     }
   }
 }

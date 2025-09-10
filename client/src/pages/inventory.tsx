@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Search, Package, AlertTriangle, TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
+import { Plus, Search, Package, AlertTriangle, TrendingUp, TrendingDown, ArrowRightLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,7 @@ function StockMovementDialog({ trigger }: { trigger: React.ReactNode }) {
     
     createMovement.mutate({
       productId: data.productId,
+      warehouseId: data.warehouseId,
       type: movementType as 'IN' | 'OUT' | 'ADJUSTMENT',
       quantity: data.quantity,
       reason: data.reason,
@@ -348,7 +349,7 @@ function InventoryContent() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const isMobile = useIsMobile();
 
   // Reset da página quando a busca muda
@@ -546,32 +547,52 @@ function InventoryContent() {
               </div>
               
               {/* Paginação */}
-              {pagination && pagination.totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="text-sm text-muted-foreground">
-                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, pagination.total)} de {pagination.total} movimentos
+              {recentMovements.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">Itens por página:</span>
+                    <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">
+                      Página {pagination?.page || currentPage} de {pagination?.totalPages || 1} ({pagination?.total || 0} movimentos)
+                    </span>
+                  </div>
+                  
                   <div className="flex items-center space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCurrentPage(currentPage - 1)}
-                      disabled={!pagination.hasPreviousPage}
+                      disabled={currentPage === 1}
                       data-testid="pagination-previous"
                     >
+                      <ChevronLeft className="w-4 h-4" />
                       Anterior
                     </Button>
-                    <span className="text-sm px-2">
-                      Página {currentPage} de {pagination.totalPages}
-                    </span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCurrentPage(currentPage + 1)}
-                      disabled={!pagination.hasNextPage}
+                      disabled={currentPage === (pagination?.totalPages || 1)}
                       data-testid="pagination-next"
                     >
-                      Próxima
+                      Próximo
+                      <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

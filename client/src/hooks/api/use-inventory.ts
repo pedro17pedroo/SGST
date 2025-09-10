@@ -253,6 +253,7 @@ export function useCreateInventoryMovement() {
 
   return useMutation<ApiResponse<InventoryMovement>, Error, {
     productId: string;
+    warehouseId: string;
     type: 'IN' | 'OUT' | 'ADJUSTMENT';
     quantity: number;
     reason: string;

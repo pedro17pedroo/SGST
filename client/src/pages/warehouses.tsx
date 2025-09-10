@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Search, MapPin, Package, Edit, Power } from "lucide-react";
+import { Plus, Search, MapPin, Package, Edit, Power, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -416,53 +416,55 @@ export default function Warehouses() {
          </div>
        </LoadingState>
 
-        {/* Paginação */}
-        {warehouses.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">Itens por página:</span>
-              <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-                setItemsPerPage(Number(value));
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">
-                Página {pagination.page} de {pagination.totalPages} ({pagination.total} armazéns)
-              </span>
-              
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage <= 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
-                  disabled={currentPage >= pagination.totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
+      {/* Paginação */}
+      {warehouses.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">Itens por página:</span>
+            <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
+          
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">
+              Página {pagination.page} de {pagination.totalPages} ({pagination.total} armazéns)
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === pagination.totalPages}
+            >
+              Próximo
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -70,12 +70,18 @@ export const ORDERS_QUERY_KEYS = {
   recent: () => [...ORDERS_QUERY_KEYS.all, 'recent'] as const,
 };
 
-// Hook para listar pedidos com paginação
+// Hook para listar pedidos com paginação e filtros avançados
 export function useOrders(params?: {
   page?: number;
   limit?: number;
   search?: string;
   status?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  customerId?: string;
+  orderType?: string;
+  minValue?: number;
+  maxValue?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   [key: string]: any;

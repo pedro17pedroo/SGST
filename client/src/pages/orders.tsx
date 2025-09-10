@@ -15,6 +15,7 @@ import { useOrders, useCreateOrder, useUpdateOrder, useDeleteOrder } from "@/hoo
 import { useSuppliers } from "@/hooks/api/use-suppliers";
 import { CustomerCombobox } from "@/components/ui/customer-combobox";
 import { AddCustomerModal } from "@/components/ui/add-customer-modal";
+import { OrderFilters, type OrderFilters as OrderFiltersType } from "@/components/orders/order-filters";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type OrderFormData = {
@@ -514,18 +515,23 @@ function OrderCard({ order }: { order: Order & { supplier?: Supplier | null } })
 }
 
 export default function Orders() {
-  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [filters, setFilters] = useState<OrderFiltersType>({});
   const isMobile = useIsMobile();
   
-  // Parâmetros para o hook useOrders com paginação
+  // Parâmetros para o hook useOrders com paginação e filtros
   const queryParams = {
     page: currentPage,
     limit: itemsPerPage,
-    search: search || undefined,
-    status: statusFilter !== "all" ? statusFilter : undefined,
+    search: filters.search || undefined,
+    status: filters.status || undefined,
+    dateFrom: filters.dateFrom,
+    dateTo: filters.dateTo,
+    customerId: filters.customerId || undefined,
+    orderType: filters.orderType || undefined,
+    minValue: filters.minValue,
+    maxValue: filters.maxValue,
   };
   
   const { data: ordersResponse, isLoading } = useOrders(queryParams);
@@ -608,41 +614,15 @@ export default function Orders() {
           />
         </div>
 
-        {/* Filtros */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex items-center space-x-2 flex-1">
-            <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Input
-              placeholder="Pesquisar encomendas..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1); // Reset para primeira página ao pesquisar
-              }}
-              className="flex-1 sm:max-w-sm"
-              data-testid="input-search-orders"
-            />
-          </div>
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => {
-              setStatusFilter(value);
-              setCurrentPage(1); // Reset para primeira página ao filtrar
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filtrar por status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
-              <SelectItem value="processing">Processando</SelectItem>
-              <SelectItem value="shipped">Enviado</SelectItem>
-              <SelectItem value="delivered">Entregue</SelectItem>
-              <SelectItem value="cancelled">Cancelado</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Sistema de filtros avançados */}
+        <OrderFilters
+          filters={filters}
+          onFiltersChange={(newFilters) => {
+            setFilters(newFilters);
+            setCurrentPage(1); // Reset para primeira página ao filtrar
+          }}
+          className="mb-6"
+        />
 
         <Card>
           <CardContent className="p-0">
@@ -776,9 +756,9 @@ export default function Orders() {
                 <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
                 <h3 className="text-base sm:text-lg font-semibold mb-2">Nenhuma encomenda encontrada</h3>
                 <p className="text-sm sm:text-base text-muted-foreground mb-4 px-4">
-                  {search || statusFilter !== "all" ? "Tente ajustar os filtros de pesquisa." : "Comece criando a primeira encomenda."}
+                  {Object.values(filters).some(value => value && value !== "all" && value !== "") ? "Tente ajustar os filtros de pesquisa." : "Comece criando a primeira encomenda."}
                 </p>
-                {!search && statusFilter === "all" && (
+                {!Object.values(filters).some(value => value && value !== "all" && value !== "") && (
                   <OrderDialog
                     trigger={
                       <Button data-testid="button-add-first-order" className="w-full sm:w-auto">

@@ -147,14 +147,14 @@ export function OrderFilters({ filters, onFiltersChange, className }: OrderFilte
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Status</Label>
                   <Select
-                    value={localFilters.status || ""}
-                    onValueChange={(value) => updateLocalFilter('status', value || undefined)}
+                    value={localFilters.status || "all"}
+                    onValueChange={(value) => updateLocalFilter('status', value === "all" ? undefined : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todos os status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os status</SelectItem>
+                      <SelectItem value="all">Todos os status</SelectItem>
                       {ORDER_STATUSES.map((status) => (
                         <SelectItem key={status.value} value={status.value}>
                           {status.label}
@@ -200,14 +200,14 @@ export function OrderFilters({ filters, onFiltersChange, className }: OrderFilte
                     Tipo de Encomenda
                   </Label>
                   <Select
-                    value={localFilters.orderType || ""}
-                    onValueChange={(value) => updateLocalFilter('orderType', value || undefined)}
+                    value={localFilters.orderType || "all"}
+                    onValueChange={(value) => updateLocalFilter('orderType', value === "all" ? undefined : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todos os tipos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os tipos</SelectItem>
+                      <SelectItem value="all">Todos os tipos</SelectItem>
                       {ORDER_TYPES.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           {type.label}

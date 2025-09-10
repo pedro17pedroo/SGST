@@ -1,70 +1,288 @@
-URL do pedido
-http://localhost:4001/api/inventory/stock-movements
-Método de pedido
-POST
-Código de estado
-500 Internal Server Error
-Endereço remoto
-127.0.0.1:4001
-Política do referenciador
-strict-origin-when-cross-origin
-access-control-allow-credentials
-true
-access-control-allow-origin
-http://localhost:3000
-connection
-keep-alive
-content-length
-333
-content-type
-application/json; charset=utf-8
-date
-Wed, 10 Sep 2025 20:14:52 GMT
-etag
-W/"14d-D5tV8Vv2zHwDolX3b36VJV6KHtM"
-keep-alive
-timeout=5
-vary
-Origin
-x-powered-by
-Express
-accept
-application/json
-accept-encoding
-gzip, deflate, br, zstd
-accept-language
-en,es;q=0.9,es-ES;q=0.8,pt;q=0.7
-authorization
-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzUwMjU2OSwiZXhwIjoxNzU3NTg4OTY5LCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.8JvA4Dct5l7lEjMaBBoiRsaU78NU-1zHOB3Psoh9Nco
-connection
-keep-alive
-content-length
-95
-content-type
-application/json
-host
-localhost:4001
-origin
-http://localhost:3000
-referer
-http://localhost:3000/
-sec-ch-ua
-"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"
-sec-ch-ua-mobile
-?0
-sec-ch-ua-platform
-"macOS"
-sec-fetch-dest
-empty
-sec-fetch-mode
-cors
-sec-fetch-site
-same-site
-user-agent
-Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36
+2@radix-ui_react-select.js?v=d7f2fc1e:871 Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at @radix-ui_react-select.js?v=d7f2fc1e:871:13
+    at renderWithHooks (chunk-GNC7SI6A.js?v=d7f2fc1e:11548:26)
+    at updateForwardRef (chunk-GNC7SI6A.js?v=d7f2fc1e:14325:28)
+    at beginWork (chunk-GNC7SI6A.js?v=d7f2fc1e:15946:22)
+    at HTMLUnknownElement.callCallback2 (chunk-GNC7SI6A.js?v=d7f2fc1e:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-GNC7SI6A.js?v=d7f2fc1e:3699:24)
+    at invokeGuardedCallback (chunk-GNC7SI6A.js?v=d7f2fc1e:3733:39)
+    at beginWork$1 (chunk-GNC7SI6A.js?v=d7f2fc1e:19765:15)
+    at performUnitOfWork (chunk-GNC7SI6A.js?v=d7f2fc1e:19198:20)
+    at workLoopSync (chunk-GNC7SI6A.js?v=d7f2fc1e:19137:13)
+(anónimo) @ @radix-ui_react-select.js?v=d7f2fc1e:871
+renderWithHooks @ chunk-GNC7SI6A.js?v=d7f2fc1e:11548
+updateForwardRef @ chunk-GNC7SI6A.js?v=d7f2fc1e:14325
+beginWork @ chunk-GNC7SI6A.js?v=d7f2fc1e:15946
+callCallback2 @ chunk-GNC7SI6A.js?v=d7f2fc1e:3674
+invokeGuardedCallbackDev @ chunk-GNC7SI6A.js?v=d7f2fc1e:3699
+invokeGuardedCallback @ chunk-GNC7SI6A.js?v=d7f2fc1e:3733
+beginWork$1 @ chunk-GNC7SI6A.js?v=d7f2fc1e:19765
+performUnitOfWork @ chunk-GNC7SI6A.js?v=d7f2fc1e:19198
+workLoopSync @ chunk-GNC7SI6A.js?v=d7f2fc1e:19137
+renderRootSync @ chunk-GNC7SI6A.js?v=d7f2fc1e:19116
+recoverFromConcurrentError @ chunk-GNC7SI6A.js?v=d7f2fc1e:18736
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:18879
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=d7f2fc1e:9119
+(anónimo) @ chunk-GNC7SI6A.js?v=d7f2fc1e:18627Compreenda este erro
+hook.js:608 The above error occurred in the <SelectItem> component:
 
-Response:
-{
-    "message": "Erro ao criar movimentação de stock",
-    "error": "Failed query: insert into `stock_movements` (`id`, `product_id`, `warehouse_id`, `type`, `quantity`, `reference`, `reason`, `user_id`, `created_at`) values (default, ?, default, ?, ?, default, ?, default, default)\nparams: ff9a7d63-8e73-11f0-aefa-34b4ed86d8a9,IN,9,testes"
-}
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:844:7
+    at _c1 (http://localhost:3000/src/components/ui/select.tsx:196:12)
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-FMCXXCXN.js?v=d7f2fc1e:39:15
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:755:13
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-FMCXXCXN.js?v=d7f2fc1e:39:15
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:298:58
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-4J7NGP4M.js?v=d7f2fc1e:258:22
+    at SelectPortal
+    at _c7 (http://localhost:3000/src/components/ui/select.tsx:117:12)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at CollectionProvider (http://localhost:3000/node_modules/.vite/deps/chunk-FMCXXCXN.js?v=d7f2fc1e:29:13)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Popper (http://localhost:3000/node_modules/.vite/deps/chunk-YFRS4WMT.js?v=d7f2fc1e:1921:11)
+    at Select (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:86:5)
+    at div
+    at div
+    at _c9 (http://localhost:3000/src/components/ui/card.tsx:106:12)
+    at div
+    at _c (http://localhost:3000/src/components/ui/card.tsx:20:11)
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YFRS4WMT.js?v=d7f2fc1e:1946:7
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-4J7NGP4M.js?v=d7f2fc1e:59:7
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-NB3L5I63.js?v=d7f2fc1e:57:5
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:243:7
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:200:59
+    at Presence (http://localhost:3000/node_modules/.vite/deps/chunk-OGUQW6AW.js?v=d7f2fc1e:24:11)
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:149:64
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-4J7NGP4M.js?v=d7f2fc1e:258:22
+    at Presence (http://localhost:3000/node_modules/.vite/deps/chunk-OGUQW6AW.js?v=d7f2fc1e:24:11)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at PopoverPortal (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:141:11)
+    at _c (http://localhost:3000/src/components/ui/popover.tsx:23:11)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Popper (http://localhost:3000/node_modules/.vite/deps/chunk-YFRS4WMT.js?v=d7f2fc1e:1921:11)
+    at Popover (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:64:5)
+    at div
+    at div
+    at OrderFilters (http://localhost:3000/src/components/orders/order-filters.tsx:59:32)
+    at div
+    at div
+    at Orders (http://localhost:3000/src/pages/orders.tsx?t=1757540862019:991:41)
+    at ModuleGuard (http://localhost:3000/src/components/layout/module-guard.tsx:18:31)
+    at Route (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:144:16)
+    at Switch (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:200:17)
+    at div
+    at main
+    at div
+    at Router (http://localhost:3000/src/App.tsx?t=1757540862019:83:20)
+    at ProtectedRoute (http://localhost:3000/src/components/auth/protected-route.tsx:21:34)
+    at Route (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:144:16)
+    at Switch (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:200:17)
+    at Router (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:99:17)
+    at ModuleProvider (http://localhost:3000/src/contexts/module-context.tsx:23:34)
+    at AuthProvider (http://localhost:3000/src/contexts/auth-context.tsx:25:32)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at TooltipProvider (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=d7f2fc1e:63:5)
+    at ThemeProvider (http://localhost:3000/src/contexts/theme-context.tsx:20:33)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d7f2fc1e:2946:3)
+    at ErrorBoundary (http://localhost:3000/src/components/error-boundary.tsx:23:5)
+    at App (http://localhost:3000/src/App.tsx?t=1757540862019:624:9)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+overrideMethod @ hook.js:608
+logCapturedError @ chunk-GNC7SI6A.js?v=d7f2fc1e:14032
+callback @ chunk-GNC7SI6A.js?v=d7f2fc1e:14078
+callCallback @ chunk-GNC7SI6A.js?v=d7f2fc1e:11248
+commitUpdateQueue @ chunk-GNC7SI6A.js?v=d7f2fc1e:11265
+commitLayoutEffectOnFiber @ chunk-GNC7SI6A.js?v=d7f2fc1e:17075
+commitLayoutMountEffects_complete @ chunk-GNC7SI6A.js?v=d7f2fc1e:17980
+commitLayoutEffects_begin @ chunk-GNC7SI6A.js?v=d7f2fc1e:17969
+commitLayoutEffects @ chunk-GNC7SI6A.js?v=d7f2fc1e:17920
+commitRootImpl @ chunk-GNC7SI6A.js?v=d7f2fc1e:19353
+commitRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:19277
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:18895
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=d7f2fc1e:9119
+(anónimo) @ chunk-GNC7SI6A.js?v=d7f2fc1e:18627Compreenda este erro
+error-boundary.tsx:30 ErrorBoundary capturou um erro: Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at @radix-ui_react-select.js?v=d7f2fc1e:871:13
+    at renderWithHooks (chunk-GNC7SI6A.js?v=d7f2fc1e:11548:26)
+    at updateForwardRef (chunk-GNC7SI6A.js?v=d7f2fc1e:14325:28)
+    at beginWork (chunk-GNC7SI6A.js?v=d7f2fc1e:15946:22)
+    at beginWork$1 (chunk-GNC7SI6A.js?v=d7f2fc1e:19753:22)
+    at performUnitOfWork (chunk-GNC7SI6A.js?v=d7f2fc1e:19198:20)
+    at workLoopSync (chunk-GNC7SI6A.js?v=d7f2fc1e:19137:13)
+    at renderRootSync (chunk-GNC7SI6A.js?v=d7f2fc1e:19116:15)
+    at recoverFromConcurrentError (chunk-GNC7SI6A.js?v=d7f2fc1e:18736:28)
+    at performSyncWorkOnRoot (chunk-GNC7SI6A.js?v=d7f2fc1e:18879:28) {componentStack: '\n    at http://localhost:3000/node_modules/.vite/d…localhost:3000/src/App.tsx?t=1757540862019:624:9)'} Error Component Stack
+    at ErrorBoundary (error-boundary.tsx:19:5)
+    at App (App.tsx:234:9)
+overrideMethod @ hook.js:608
+componentDidCatch @ error-boundary.tsx:30
+callback @ chunk-GNC7SI6A.js?v=d7f2fc1e:14084
+callCallback @ chunk-GNC7SI6A.js?v=d7f2fc1e:11248
+commitUpdateQueue @ chunk-GNC7SI6A.js?v=d7f2fc1e:11265
+commitLayoutEffectOnFiber @ chunk-GNC7SI6A.js?v=d7f2fc1e:17075
+commitLayoutMountEffects_complete @ chunk-GNC7SI6A.js?v=d7f2fc1e:17980
+commitLayoutEffects_begin @ chunk-GNC7SI6A.js?v=d7f2fc1e:17969
+commitLayoutEffects @ chunk-GNC7SI6A.js?v=d7f2fc1e:17920
+commitRootImpl @ chunk-GNC7SI6A.js?v=d7f2fc1e:19353
+commitRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:19277
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:18895
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=d7f2fc1e:9119
+(anónimo) @ chunk-GNC7SI6A.js?v=d7f2fc1e:18627Compreenda este erro
+hook.js:608 The above error occurred in the <SelectItem> component:
+
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:844:7
+    at _c1 (http://localhost:3000/src/components/ui/select.tsx:196:12)
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-FMCXXCXN.js?v=d7f2fc1e:39:15
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:755:13
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-FMCXXCXN.js?v=d7f2fc1e:39:15
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:298:58
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-4J7NGP4M.js?v=d7f2fc1e:258:22
+    at SelectPortal
+    at _c7 (http://localhost:3000/src/components/ui/select.tsx:117:12)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at CollectionProvider (http://localhost:3000/node_modules/.vite/deps/chunk-FMCXXCXN.js?v=d7f2fc1e:29:13)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Popper (http://localhost:3000/node_modules/.vite/deps/chunk-YFRS4WMT.js?v=d7f2fc1e:1921:11)
+    at Select (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-select.js?v=d7f2fc1e:86:5)
+    at div
+    at div
+    at _c9 (http://localhost:3000/src/components/ui/card.tsx:106:12)
+    at div
+    at _c (http://localhost:3000/src/components/ui/card.tsx:20:11)
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at div
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YFRS4WMT.js?v=d7f2fc1e:1946:7
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-4J7NGP4M.js?v=d7f2fc1e:59:7
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-NB3L5I63.js?v=d7f2fc1e:57:5
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:243:7
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:200:59
+    at Presence (http://localhost:3000/node_modules/.vite/deps/chunk-OGUQW6AW.js?v=d7f2fc1e:24:11)
+    at http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:149:64
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:79:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-U5FBVDPR.js?v=d7f2fc1e:56:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-YPE7DW4C.js?v=d7f2fc1e:42:13
+    at http://localhost:3000/node_modules/.vite/deps/chunk-4J7NGP4M.js?v=d7f2fc1e:258:22
+    at Presence (http://localhost:3000/node_modules/.vite/deps/chunk-OGUQW6AW.js?v=d7f2fc1e:24:11)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at PopoverPortal (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:141:11)
+    at _c (http://localhost:3000/src/components/ui/popover.tsx:23:11)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at Popper (http://localhost:3000/node_modules/.vite/deps/chunk-YFRS4WMT.js?v=d7f2fc1e:1921:11)
+    at Popover (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-popover.js?v=d7f2fc1e:64:5)
+    at div
+    at div
+    at OrderFilters (http://localhost:3000/src/components/orders/order-filters.tsx:59:32)
+    at div
+    at div
+    at Orders (http://localhost:3000/src/pages/orders.tsx?t=1757540862019:991:41)
+    at ModuleGuard (http://localhost:3000/src/components/layout/module-guard.tsx:18:31)
+    at Route (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:144:16)
+    at Switch (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:200:17)
+    at div
+    at main
+    at div
+    at Router (http://localhost:3000/src/App.tsx?t=1757540862019:83:20)
+    at ProtectedRoute (http://localhost:3000/src/components/auth/protected-route.tsx:21:34)
+    at Route (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:144:16)
+    at Switch (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:200:17)
+    at Router (http://localhost:3000/node_modules/.vite/deps/wouter.js?v=d7f2fc1e:99:17)
+    at ModuleProvider (http://localhost:3000/src/contexts/module-context.tsx:23:34)
+    at AuthProvider (http://localhost:3000/src/contexts/auth-context.tsx:25:32)
+    at Provider (http://localhost:3000/node_modules/.vite/deps/chunk-5WETD4PZ.js?v=d7f2fc1e:38:15)
+    at TooltipProvider (http://localhost:3000/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=d7f2fc1e:63:5)
+    at ThemeProvider (http://localhost:3000/src/contexts/theme-context.tsx:20:33)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d7f2fc1e:2946:3)
+    at ErrorBoundary (http://localhost:3000/src/components/error-boundary.tsx:23:5)
+    at App (http://localhost:3000/src/App.tsx?t=1757540862019:624:9)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+overrideMethod @ hook.js:608
+logCapturedError @ chunk-GNC7SI6A.js?v=d7f2fc1e:14032
+callback @ chunk-GNC7SI6A.js?v=d7f2fc1e:14078
+callCallback @ chunk-GNC7SI6A.js?v=d7f2fc1e:11248
+commitUpdateQueue @ chunk-GNC7SI6A.js?v=d7f2fc1e:11265
+commitLayoutEffectOnFiber @ chunk-GNC7SI6A.js?v=d7f2fc1e:17075
+commitLayoutMountEffects_complete @ chunk-GNC7SI6A.js?v=d7f2fc1e:17980
+commitLayoutEffects_begin @ chunk-GNC7SI6A.js?v=d7f2fc1e:17969
+commitLayoutEffects @ chunk-GNC7SI6A.js?v=d7f2fc1e:17920
+commitRootImpl @ chunk-GNC7SI6A.js?v=d7f2fc1e:19353
+commitRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:19277
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:18895
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=d7f2fc1e:9119
+(anónimo) @ chunk-GNC7SI6A.js?v=d7f2fc1e:18627Compreenda este erro
+error-boundary.tsx:30 ErrorBoundary capturou um erro: Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    at @radix-ui_react-select.js?v=d7f2fc1e:871:13
+    at renderWithHooks (chunk-GNC7SI6A.js?v=d7f2fc1e:11548:26)
+    at updateForwardRef (chunk-GNC7SI6A.js?v=d7f2fc1e:14325:28)
+    at beginWork (chunk-GNC7SI6A.js?v=d7f2fc1e:15946:22)
+    at beginWork$1 (chunk-GNC7SI6A.js?v=d7f2fc1e:19753:22)
+    at performUnitOfWork (chunk-GNC7SI6A.js?v=d7f2fc1e:19198:20)
+    at workLoopSync (chunk-GNC7SI6A.js?v=d7f2fc1e:19137:13)
+    at renderRootSync (chunk-GNC7SI6A.js?v=d7f2fc1e:19116:15)
+    at recoverFromConcurrentError (chunk-GNC7SI6A.js?v=d7f2fc1e:18736:28)
+    at performSyncWorkOnRoot (chunk-GNC7SI6A.js?v=d7f2fc1e:18879:28) {componentStack: '\n    at http://localhost:3000/node_modules/.vite/d…localhost:3000/src/App.tsx?t=1757540862019:624:9)'} Error Component Stack
+    at ErrorBoundary (error-boundary.tsx:19:5)
+    at App (App.tsx:234:9)
+overrideMethod @ hook.js:608
+componentDidCatch @ error-boundary.tsx:30
+callback @ chunk-GNC7SI6A.js?v=d7f2fc1e:14084
+callCallback @ chunk-GNC7SI6A.js?v=d7f2fc1e:11248
+commitUpdateQueue @ chunk-GNC7SI6A.js?v=d7f2fc1e:11265
+commitLayoutEffectOnFiber @ chunk-GNC7SI6A.js?v=d7f2fc1e:17075
+commitLayoutMountEffects_complete @ chunk-GNC7SI6A.js?v=d7f2fc1e:17980
+commitLayoutEffects_begin @ chunk-GNC7SI6A.js?v=d7f2fc1e:17969
+commitLayoutEffects @ chunk-GNC7SI6A.js?v=d7f2fc1e:17920
+commitRootImpl @ chunk-GNC7SI6A.js?v=d7f2fc1e:19353
+commitRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:19277
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=d7f2fc1e:18895
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=d7f2fc1e:9119
+(anónimo) @ chunk-GNC7SI6A.js?v=d7f2fc1e:18627Compreenda este erro

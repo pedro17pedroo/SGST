@@ -52,9 +52,10 @@ export const CustomerCombobox = React.memo(function CustomerCombobox({
     
     const response = await apiRequest('GET', `/api/customers/search?q=${encodeURIComponent(searchQuery)}`)
     if (!response.ok) throw new Error('Erro ao buscar clientes')
-    const data = await response.json()
+    const result = await response.json()
 
-    return data
+    // O backend retorna { success: true, data: [...] }
+    return result.data || []
   }, [searchQuery])
 
   const { data: customers = [], isLoading } = useQuery({
@@ -72,7 +73,10 @@ export const CustomerCombobox = React.memo(function CustomerCombobox({
     
     const response = await apiRequest('GET', `/api/customers/${value}`)
     if (!response.ok) throw new Error('Erro ao buscar cliente')
-    return response.json()
+    const result = await response.json()
+    
+    // O backend pode retornar { success: true, data: {...} } ou diretamente o objeto
+    return result.data || result
   }, [value])
 
   const { data: currentCustomer } = useQuery({

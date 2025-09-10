@@ -56,11 +56,6 @@ const productFormSchema = z.object({
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
-interface Product extends Omit<ApiProduct, 'minStockLevel'> {
-  costPrice: string;
-  minStockLevel: string | null;
-}
-
 interface ProductFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

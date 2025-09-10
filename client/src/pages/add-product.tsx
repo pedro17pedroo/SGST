@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+
 import { Separator } from "@/components/ui/separator";
 import {
   Form,
@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ArrowLeft, Package, Scan, CheckCircle, AlertCircle, DollarSign, Tag } from "lucide-react";
+import { ArrowLeft, Package, Scan, AlertCircle, DollarSign, Tag } from "lucide-react";
 import { MultiBarcodeReader } from "@/components/ui/multi-barcode-scanner";
 import { CategoryCombobox } from "@/components/ui/category-combobox";
 import { SupplierCombobox } from "@/components/ui/supplier-combobox";

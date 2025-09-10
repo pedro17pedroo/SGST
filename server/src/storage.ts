@@ -64,7 +64,8 @@ export interface IStorage {
   updateInventory(productId: string, warehouseId: string, quantity: number): Promise<Inventory>;
   
   // Stock Movements
-  getStockMovements(limit?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User | null }>>;
+  getStockMovements(limit?: number, offset?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User | null }>>;
+  getTotalStockMovements(): Promise<number>;
   createStockMovement(movement: InsertStockMovement): Promise<StockMovement>;
   
   // Orders
@@ -191,8 +192,12 @@ export class StorageImpl implements IStorage {
   }
 
   // Stock Movements
-  async getStockMovements(limit?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User | null }>> {
-    return storage.inventory.getStockMovements(limit);
+  async getStockMovements(limit?: number, offset?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User | null }>> {
+    return storage.inventory.getStockMovements(limit, offset);
+  }
+
+  async getTotalStockMovements(): Promise<number> {
+    return storage.inventory.getTotalStockMovements();
   }
 
   async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> {

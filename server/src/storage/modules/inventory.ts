@@ -1,6 +1,6 @@
 import { db } from "../../../database/db";
 import { inventory, stockMovements, products, warehouses, users, type Inventory, type InsertInventory, type StockMovement, type InsertStockMovement, type Product, type Warehouse, type User } from "../../../../shared/schema";
-import { eq, desc, and, sum } from "drizzle-orm";
+import { eq, desc, and, sum, sql } from "drizzle-orm";
 import { insertAndReturn, updateAndReturn, getSingleRecord } from "../utils";
 
 export class InventoryStorage {
@@ -61,7 +61,7 @@ export class InventoryStorage {
     }
   }
 
-  async getStockMovements(limit?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User | null }>> {
+  async getStockMovements(limit?: number, offset?: number): Promise<Array<StockMovement & { product: Product; warehouse: Warehouse; user?: User | null }>> {
     const baseQuery = db
       .select({
         stockMovement: stockMovements,
@@ -75,7 +75,15 @@ export class InventoryStorage {
       .leftJoin(users, eq(stockMovements.userId, users.id))
       .orderBy(desc(stockMovements.createdAt));
 
-    const results = limit ? await baseQuery.limit(limit) : await baseQuery;
+    let query = baseQuery;
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+    if (offset !== undefined) {
+      query = query.offset(offset);
+    }
+
+    const results = await query;
     
     return results.map(result => ({
       ...result.stockMovement,
@@ -83,6 +91,14 @@ export class InventoryStorage {
       warehouse: result.warehouse,
       user: result.user
     }));
+  }
+
+  async getTotalStockMovements(): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(stockMovements);
+    
+    return result[0]?.count || 0;
   }
 
   async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> {

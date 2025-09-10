@@ -35,16 +35,41 @@ interface InventoryItem {
 //   totalValue: number;
 // }
 
-interface InventoryMovement {
+export interface InventoryMovement {
   id: string;
   productId: string;
-  productName: string;
-  type: 'IN' | 'OUT' | 'ADJUSTMENT';
+  warehouseId: string;
+  type: 'in' | 'out' | 'transfer' | 'adjustment';
   quantity: number;
-  reason: string;
+  reason?: string;
   reference?: string;
   createdAt: string;
-  createdBy: string;
+  userId?: string;
+  product: {
+    id: string;
+    name: string;
+    sku: string;
+    description?: string;
+    categoryId?: string;
+    supplierId?: string;
+    unitPrice?: number;
+    costPrice?: number;
+    minStock?: number;
+    maxStock?: number;
+    isActive?: boolean;
+  };
+  warehouse: {
+    id: string;
+    name: string;
+    address?: string;
+    isActive?: boolean;
+  };
+  user?: {
+    id: string;
+    username: string;
+    email?: string;
+    role?: string;
+  } | null;
 }
 
 interface InventoryUpdateData {
@@ -142,7 +167,7 @@ export function useInventoryMovements(params?: Record<string, any>) {
     return isAuthenticated && isReady && !isModulesLoading;
   }, [isAuthenticated, isReady, isModulesLoading]);
 
-  return useQuery({
+  return useQuery<any, Error>({
     queryKey: INVENTORY_QUERY_KEYS.movements(params),
     queryFn: () => inventoryService.getInventoryMovements(params),
     enabled: canLoadData,

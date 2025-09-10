@@ -1,130 +1,9 @@
-[API] GET http://localhost:4001/api/suppliers/search?q=ref 
-queryClient.ts:134 [API] POST http://localhost:4001/api/products {data: {…}}
-queryClient.ts:134 [API] GET http://localhost:4001/api/products?page=1&limit=5&sortBy=name&sortOrder=asc 
-error-handler.ts:206 🚨 Erro em Criar Produto
-error-handler.ts:207 Código: UNKNOWN_ERROR
-overrideMethod @ hook.js:608
-logError @ error-handler.ts:207
-handleError @ error-handler.ts:269
-(anónimo) @ use-api-error.ts:47
-onError @ use-products.ts:118
-execute @ @tanstack_react-query.js?v=2772409f:1307
-await in execute
-mutate @ @tanstack_react-query.js?v=2772409f:2704
-handleCreateProduct @ product-form.tsx:159
-onSubmit @ product-form.tsx:198
-(anónimo) @ chunk-6DS3Q4DS.js?v=2772409f:1506
-await in (anónimo)
-callCallback2 @ chunk-GNC7SI6A.js?v=2772409f:3674
-invokeGuardedCallbackDev @ chunk-GNC7SI6A.js?v=2772409f:3699
-invokeGuardedCallback @ chunk-GNC7SI6A.js?v=2772409f:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-GNC7SI6A.js?v=2772409f:3736
-executeDispatch @ chunk-GNC7SI6A.js?v=2772409f:7014
-processDispatchQueueItemsInOrder @ chunk-GNC7SI6A.js?v=2772409f:7034
-processDispatchQueue @ chunk-GNC7SI6A.js?v=2772409f:7043
-dispatchEventsForPlugins @ chunk-GNC7SI6A.js?v=2772409f:7051
-(anónimo) @ chunk-GNC7SI6A.js?v=2772409f:7174
-batchedUpdates$1 @ chunk-GNC7SI6A.js?v=2772409f:18913
-batchedUpdates @ chunk-GNC7SI6A.js?v=2772409f:3579
-dispatchEventForPluginEventSystem @ chunk-GNC7SI6A.js?v=2772409f:7173
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-GNC7SI6A.js?v=2772409f:5478
-dispatchEvent @ chunk-GNC7SI6A.js?v=2772409f:5472
-dispatchDiscreteEvent @ chunk-GNC7SI6A.js?v=2772409f:5449Compreenda este erro
-error-handler.ts:208 Mensagem: Cannot read properties of undefined (reading 'name')
-overrideMethod @ hook.js:608
-logError @ error-handler.ts:208
-handleError @ error-handler.ts:269
-(anónimo) @ use-api-error.ts:47
-onError @ use-products.ts:118
-execute @ @tanstack_react-query.js?v=2772409f:1307
-await in execute
-mutate @ @tanstack_react-query.js?v=2772409f:2704
-handleCreateProduct @ product-form.tsx:159
-onSubmit @ product-form.tsx:198
-(anónimo) @ chunk-6DS3Q4DS.js?v=2772409f:1506
-await in (anónimo)
-callCallback2 @ chunk-GNC7SI6A.js?v=2772409f:3674
-invokeGuardedCallbackDev @ chunk-GNC7SI6A.js?v=2772409f:3699
-invokeGuardedCallback @ chunk-GNC7SI6A.js?v=2772409f:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-GNC7SI6A.js?v=2772409f:3736
-executeDispatch @ chunk-GNC7SI6A.js?v=2772409f:7014
-processDispatchQueueItemsInOrder @ chunk-GNC7SI6A.js?v=2772409f:7034
-processDispatchQueue @ chunk-GNC7SI6A.js?v=2772409f:7043
-dispatchEventsForPlugins @ chunk-GNC7SI6A.js?v=2772409f:7051
-(anónimo) @ chunk-GNC7SI6A.js?v=2772409f:7174
-batchedUpdates$1 @ chunk-GNC7SI6A.js?v=2772409f:18913
-batchedUpdates @ chunk-GNC7SI6A.js?v=2772409f:3579
-dispatchEventForPluginEventSystem @ chunk-GNC7SI6A.js?v=2772409f:7173
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-GNC7SI6A.js?v=2772409f:5478
-dispatchEvent @ chunk-GNC7SI6A.js?v=2772409f:5472
-dispatchDiscreteEvent @ chunk-GNC7SI6A.js?v=2772409f:5449Compreenda este erro
-error-handler.ts:213 Detalhes: TypeError: Cannot read properties of undefined (reading 'name')
-    at Object.onSuccess (http://localhost:3000/src/hooks/api/use-products.ts:58:78)
-    at _a6.execute (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=2772409f:1286:73)
-    at async handleCreateProduct (http://localhost:3000/src/components/products/product-form.tsx:138:7)
-overrideMethod @ hook.js:608
-logError @ error-handler.ts:213
-handleError @ error-handler.ts:269
-(anónimo) @ use-api-error.ts:47
-onError @ use-products.ts:118
-execute @ @tanstack_react-query.js?v=2772409f:1307
-await in execute
-mutate @ @tanstack_react-query.js?v=2772409f:2704
-handleCreateProduct @ product-form.tsx:159
-onSubmit @ product-form.tsx:198
-(anónimo) @ chunk-6DS3Q4DS.js?v=2772409f:1506
-await in (anónimo)
-callCallback2 @ chunk-GNC7SI6A.js?v=2772409f:3674
-invokeGuardedCallbackDev @ chunk-GNC7SI6A.js?v=2772409f:3699
-invokeGuardedCallback @ chunk-GNC7SI6A.js?v=2772409f:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-GNC7SI6A.js?v=2772409f:3736
-executeDispatch @ chunk-GNC7SI6A.js?v=2772409f:7014
-processDispatchQueueItemsInOrder @ chunk-GNC7SI6A.js?v=2772409f:7034
-processDispatchQueue @ chunk-GNC7SI6A.js?v=2772409f:7043
-dispatchEventsForPlugins @ chunk-GNC7SI6A.js?v=2772409f:7051
-(anónimo) @ chunk-GNC7SI6A.js?v=2772409f:7174
-batchedUpdates$1 @ chunk-GNC7SI6A.js?v=2772409f:18913
-batchedUpdates @ chunk-GNC7SI6A.js?v=2772409f:3579
-dispatchEventForPluginEventSystem @ chunk-GNC7SI6A.js?v=2772409f:7173
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-GNC7SI6A.js?v=2772409f:5478
-dispatchEvent @ chunk-GNC7SI6A.js?v=2772409f:5472
-dispatchDiscreteEvent @ chunk-GNC7SI6A.js?v=2772409f:5449Compreenda este erro
-error-handler.ts:215 Timestamp: 2025-09-09T20:28:22.126Z
-overrideMethod @ hook.js:608
-logError @ error-handler.ts:215
-handleError @ error-handler.ts:269
-(anónimo) @ use-api-error.ts:47
-onError @ use-products.ts:118
-execute @ @tanstack_react-query.js?v=2772409f:1307
-await in execute
-mutate @ @tanstack_react-query.js?v=2772409f:2704
-handleCreateProduct @ product-form.tsx:159
-onSubmit @ product-form.tsx:198
-(anónimo) @ chunk-6DS3Q4DS.js?v=2772409f:1506
-await in (anónimo)
-callCallback2 @ chunk-GNC7SI6A.js?v=2772409f:3674
-invokeGuardedCallbackDev @ chunk-GNC7SI6A.js?v=2772409f:3699
-invokeGuardedCallback @ chunk-GNC7SI6A.js?v=2772409f:3733
-invokeGuardedCallbackAndCatchFirstError @ chunk-GNC7SI6A.js?v=2772409f:3736
-executeDispatch @ chunk-GNC7SI6A.js?v=2772409f:7014
-processDispatchQueueItemsInOrder @ chunk-GNC7SI6A.js?v=2772409f:7034
-processDispatchQueue @ chunk-GNC7SI6A.js?v=2772409f:7043
-dispatchEventsForPlugins @ chunk-GNC7SI6A.js?v=2772409f:7051
-(anónimo) @ chunk-GNC7SI6A.js?v=2772409f:7174
-batchedUpdates$1 @ chunk-GNC7SI6A.js?v=2772409f:18913
-batchedUpdates @ chunk-GNC7SI6A.js?v=2772409f:3579
-dispatchEventForPluginEventSystem @ chunk-GNC7SI6A.js?v=2772409f:7173
-dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-GNC7SI6A.js?v=2772409f:5478
-dispatchEvent @ chunk-GNC7SI6A.js?v=2772409f:5472
-dispatchDiscreteEvent @ chunk-GNC7SI6A.js?v=2772409f:5449Compreenda este erro
-
-Request:
 URL do pedido
-http://localhost:4001/api/products
+http://localhost:4001/api/warehouses
 Método de pedido
-POST
+GET
 Código de estado
-500 Internal Server Error
+304 Not Modified
 Endereço remoto
 127.0.0.1:4001
 Política do referenciador
@@ -135,14 +14,10 @@ access-control-allow-origin
 http://localhost:3000
 connection
 keep-alive
-content-length
-102
-content-type
-application/json; charset=utf-8
 date
-Tue, 09 Sep 2025 20:29:46 GMT
+Wed, 10 Sep 2025 15:31:52 GMT
 etag
-W/"66-onT0g8OtJuvu4KKJzqwuO9e4jfE"
+W/"45a-787W72zset5+A+pBTl8obLzRvLg"
 keep-alive
 timeout=5
 vary
@@ -156,15 +31,13 @@ gzip, deflate, br, zstd
 accept-language
 en,es;q=0.9,es-ES;q=0.8,pt;q=0.7
 authorization
-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzQxNTU0MCwiZXhwIjoxNzU3NTAxOTQwLCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.nFwZQ69dN9QOkvreO4Z0o1NqZ2JNgfI-0NvQXWcwlTI
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhYTJhZWRhZS04YjQ1LTExZjAtYWVmYS0zNGI0ZWQ4NmQ4YTkiLCJlbWFpbCI6ImFkbWluQGJlYmlkYXMtYW5nb2xhLmFvIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc1NzUwMjU2OSwiZXhwIjoxNzU3NTg4OTY5LCJhdWQiOiJzZ3N0LWNsaWVudCIsImlzcyI6InNnc3QtYXBpIn0.8JvA4Dct5l7lEjMaBBoiRsaU78NU-1zHOB3Psoh9Nco
 connection
 keep-alive
-content-length
-237
-content-type
-application/json
 host
 localhost:4001
+if-none-match
+W/"45a-787W72zset5+A+pBTl8obLzRvLg"
 origin
 http://localhost:3000
 referer
@@ -183,19 +56,59 @@ sec-fetch-site
 same-site
 user-agent
 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36
-{
-    "name": "Teste 1",
-    "description": "teste",
-    "barcode": "6201234567003",
-    "price": "1000",
-    "costPrice": "900",
-    "weight": "5",
-    "categoryId": "aaa91ea7-8b45-11f0-aefa-34b4ed86d8a9",
-    "supplierId": "aafc6e32-8b45-11f0-aefa-34b4ed86d8a9",
-    "minStockLevel": "22"
-}
+
 Response:
 {
-    "message": "Erro ao criar produto",
-    "error": "Produto com código de barras '6201234567003' já existe"
+    "success": true,
+    "message": "Armazéns carregados com sucesso",
+    "data": [
+        {
+            "id": "ab4fc975-8b45-11f0-aefa-34b4ed86d8a9",
+            "name": "Armazém Central Luanda",
+            "type": "central",
+            "address": "Zona Industrial de Viana, Luanda, Angola",
+            "isActive": true,
+            "createdAt": "2025-09-06T17:19:39.000Z"
+        },
+        {
+            "id": "ab4fcad3-8b45-11f0-aefa-34b4ed86d8a9",
+            "name": "Armazém Lobito",
+            "type": "local",
+            "address": "Porto do Lobito, Benguela, Angola",
+            "isActive": true,
+            "createdAt": "2025-09-06T17:19:39.000Z"
+        },
+        {
+            "id": "ab4fca52-8b45-11f0-aefa-34b4ed86d8a9",
+            "name": "Centro de Distribuição Benguela",
+            "type": "regional",
+            "address": "Zona Industrial de Benguela, Angola",
+            "isActive": true,
+            "createdAt": "2025-09-06T17:19:39.000Z"
+        },
+        {
+            "id": "ab4fcab1-8b45-11f0-aefa-34b4ed86d8a9",
+            "name": "Depósito Huambo",
+            "type": "local",
+            "address": "Rua da Independência, Huambo, Angola",
+            "isActive": true,
+            "createdAt": "2025-09-06T17:19:39.000Z"
+        },
+        {
+            "id": "cc6e4626-8d79-11f0-aefa-34b4ed86d8a9",
+            "name": "Teste 3",
+            "type": "local",
+            "address": "g",
+            "isActive": true,
+            "createdAt": "2025-09-09T12:37:50.000Z"
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 5,
+        "totalPages": 1,
+        "hasNextPage": false,
+        "hasPreviousPage": false
+    }
 }

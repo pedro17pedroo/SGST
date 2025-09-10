@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { InventoryModel } from './inventory.model';
-import { storage } from '../../storage/index';
+import { db } from '../../../database/db';
+import { stockMovements } from '@shared/schema';
+import { count, desc, asc } from 'drizzle-orm';
 
 export class InventoryController {
   static async getLowStockProducts(req: Request, res: Response) {
@@ -88,12 +90,40 @@ export class InventoryController {
 
   static async getStockMovements(req: Request, res: Response) {
     try {
-      const { limit } = req.query;
-      const movements = await storage.getStockMovements(limit ? parseInt(limit as string) : undefined);
-      res.json(movements);
+      const { page = 1, limit = 10 } = req.query;
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const offset = (pageNum - 1) * limitNum;
+      
+      // Buscar movimentos com paginação
+      const movements = await db.select()
+        .from(stockMovements)
+        .orderBy(desc(stockMovements.createdAt))
+        .limit(limitNum)
+        .offset(offset);
+      
+      // Buscar total de registros para paginação
+      const totalResult = await db.select({ count: count() }).from(stockMovements);
+      const totalMovements = totalResult[0]?.count || 0;
+      const totalPages = Math.ceil(totalMovements / limitNum);
+      
+      res.json({
+        success: true,
+        message: "Movimentos de stock carregados com sucesso",
+        data: movements,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalMovements,
+          totalPages,
+          hasNextPage: pageNum < totalPages,
+          hasPreviousPage: pageNum > 1
+        }
+      });
     } catch (error) {
       console.error('Error fetching stock movements:', error);
       res.status(500).json({ 
+        success: false,
         message: "Erro ao buscar movimentações de stock", 
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -102,8 +132,8 @@ export class InventoryController {
 
   static async createStockMovement(req: Request, res: Response) {
     try {
-      const movement = await storage.createStockMovement(req.body);
-      res.status(201).json(movement);
+      await db.insert(stockMovements).values(req.body);
+      res.status(201).json({ success: true, message: 'Movimentação criada com sucesso' });
     } catch (error) {
       console.error('Error creating stock movement:', error);
       res.status(500).json({ 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus, Search, Package, AlertTriangle, TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { useIsMobile } from "@/hooks/use-mobile.tsx";
 import { type Product, type Warehouse, type Inventory } from "@shared/schema";
 import { useInventoryMovements, useCreateInventoryMovement } from "@/hooks/api/use-inventory";
+import type { InventoryMovement } from "@/hooks/api/use-inventory";
 import { useProducts } from "@/hooks/api/use-products";
 import { useWarehouses } from "@/hooks/api/use-warehouses";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -21,12 +22,24 @@ interface StockMovement {
   id: string;
   productId: string;
   warehouseId: string;
-  type: "in" | "out" | "transfer";
+  type: "in" | "out" | "transfer" | "adjustment";
   quantity: number;
   reason: string;
   createdAt: string;
-  product?: Product;
-  warehouse?: Warehouse;
+  userId?: string;
+  product: {
+    id: string;
+    name: string;
+    sku: string;
+  };
+  warehouse: {
+    id: string;
+    name: string;
+  };
+  user?: {
+    id: string;
+    username: string;
+  } | null;
 }
 
 type MovementFormData = {
@@ -247,7 +260,7 @@ function LowStockAlert({ product }: { product: Product & { stock: number } }) {
   );
 }
 
-function MovementCard({ movement }: { movement: StockMovement }) {
+function MovementCard({ movement }: { movement: InventoryMovement }) {
   const getMovementIcon = (type: string) => {
     switch (type) {
       case "in":
@@ -332,21 +345,46 @@ export default function Inventory() {
 
 function InventoryContent() {
   const [search, setSearch] = useState("");
+  const [selectedWarehouse, setSelectedWarehouse] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const isMobile = useIsMobile();
+
+  // Reset da página quando a busca muda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedWarehouse, selectedType]);
+
+  // Construir parâmetros de consulta
+  const queryParams = useMemo(() => {
+    const params: any = {
+      page: currentPage,
+      limit: itemsPerPage,
+    };
+    
+    if (search) params.search = search;
+    if (selectedWarehouse !== 'all') params.warehouseId = selectedWarehouse;
+    if (selectedType !== 'all') params.type = selectedType;
+    
+    return params;
+  }, [currentPage, itemsPerPage, search, selectedWarehouse, selectedType]);
 
   // TODO: Implementar hook para produtos com baixo stock
   // Por enquanto, usar dados vazios até o hook estar disponível
   const lowStockProducts: Array<Product & { stock: number }> = [];
   const isLoadingLowStock = false;
 
-  const { data: movementsResponse, isLoading: isLoadingMovements } = useInventoryMovements();
-  const recentMovements = movementsResponse?.data || [];
-
-  const filteredMovements = recentMovements.filter((movement: StockMovement) =>
-    movement.product?.name.toLowerCase().includes(search.toLowerCase()) ||
-    movement.warehouse?.name.toLowerCase().includes(search.toLowerCase()) ||
-    movement.reason.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: movementsResponse, isLoading: isLoadingMovements, error: movementsError } = useInventoryMovements(queryParams);
+  const recentMovements: InventoryMovement[] = (movementsResponse as any)?.data || [];
+  const pagination = (movementsResponse as any)?.pagination || {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -403,18 +441,73 @@ function InventoryContent() {
         </TabsContent>
 
         <TabsContent value="movements" className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar movimentos..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:max-w-sm"
-              data-testid="input-search-movements"
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-2 flex-1">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar movimentos..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full"
+                data-testid="input-search-movements"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  <SelectItem value="in">Entrada</SelectItem>
+                  <SelectItem value="out">Saída</SelectItem>
+                  <SelectItem value="transfer">Transferência</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={selectedWarehouse} onValueChange={setSelectedWarehouse}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Armazém" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos armazéns</SelectItem>
+                  {/* TODO: Adicionar lista de armazéns quando disponível */}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {isLoadingMovements ? (
+          {movementsError ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="h-12 w-12 mx-auto text-destructive mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Erro ao carregar movimentos</h3>
+              <p className="text-muted-foreground mb-4">
+                {(movementsError as any)?.message || 'Ocorreu um erro ao carregar os movimentos de inventário. Verifique sua conexão e tente novamente.'}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.reload()}
+                  data-testid="button-reload-page"
+                >
+                  Recarregar página
+                </Button>
+                <Button 
+                  variant="default" 
+                  onClick={() => {
+                    setCurrentPage(1);
+                    setSearch('');
+                    setSelectedType('all');
+                    setSelectedWarehouse('all');
+                  }}
+                  data-testid="button-reset-filters"
+                >
+                  Limpar filtros
+                </Button>
+              </div>
+            </div>
+          ) : isLoadingMovements ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
                 <Card key={i} className="h-24">
@@ -425,19 +518,81 @@ function InventoryContent() {
                 </Card>
               ))}
             </div>
-          ) : filteredMovements.length > 0 ? (
-            <div className="space-y-4">
-              {filteredMovements.map((movement) => (
-                <MovementCard key={movement.id} movement={movement} />
-              ))}
+          ) : !isLoadingMovements && recentMovements.length === 0 && (search || selectedType !== 'all' || selectedWarehouse !== 'all') ? (
+            <div className="text-center py-12">
+              <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhum movimento encontrado</h3>
+              <p className="text-muted-foreground mb-4">
+                Não foram encontrados movimentos com os filtros aplicados. Tente ajustar os critérios de pesquisa.
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearch('');
+                  setSelectedType('all');
+                  setSelectedWarehouse('all');
+                  setCurrentPage(1);
+                }}
+                data-testid="button-clear-filters"
+              >
+                Limpar filtros
+              </Button>
             </div>
+          ) : recentMovements.length > 0 ? (
+            <>
+              <div className="space-y-4">
+                {recentMovements.map((movement) => (
+                  <MovementCard key={movement.id} movement={movement} />
+                ))}
+              </div>
+              
+              {/* Paginação */}
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-muted-foreground">
+                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, pagination.total)} de {pagination.total} movimentos
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={!pagination.hasPreviousPage}
+                      data-testid="pagination-previous"
+                    >
+                      Anterior
+                    </Button>
+                    <span className="text-sm px-2">
+                      Página {currentPage} de {pagination.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={!pagination.hasNextPage}
+                      data-testid="pagination-next"
+                    >
+                      Próxima
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-12">
               <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum movimento encontrado</h3>
+              <h3 className="text-lg font-semibold mb-2">Nenhum movimento registrado</h3>
               <p className="text-muted-foreground mb-4">
-                {search ? "Tente ajustar os termos de pesquisa." : "Nenhum movimento de stock registrado ainda."}
+                Ainda não há movimentos de inventário registrados no sistema. Comece registrando o primeiro movimento.
               </p>
+              <StockMovementDialog
+                trigger={
+                  <Button data-testid="button-first-movement">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Registrar primeiro movimento
+                  </Button>
+                }
+              />
             </div>
           )}
         </TabsContent>

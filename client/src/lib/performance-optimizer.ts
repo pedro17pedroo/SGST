@@ -152,15 +152,15 @@ export class PerformanceOptimizer {
     const preloadQueries = {
       '/products': ['/api/products?limit=20', '/api/products/categories', '/api/suppliers'],
       '/inventory': ['/api/inventory/summary', '/api/warehouses', '/api/inventory/stock-alerts'],
-      '/orders': ['/api/orders/recent'],
-      '/shipping': ['/api/shipping/active', '/api/shipping/carriers'],
+      '/orders': [], // Desabilitado temporariamente
+      '/shipping': ['/api/shipping'], // Removido /api/orders
       '/warehouses': ['/api/warehouses'],
       '/reports': ['/api/reports/inventory-turnover'],
       '/digital-twin': ['/api/warehouses']
     };
 
     const queries = preloadQueries[path as keyof typeof preloadQueries];
-    if (queries) {
+    if (queries && queries.length > 0) {
       queries.forEach(query => {
         queryClient.prefetchQuery({
           queryKey: [query],
@@ -169,6 +169,7 @@ export class PerformanceOptimizer {
               const response = await apiRequest('GET', query);
               return await response.json();
             } catch (error) {
+              console.warn(`Prefetch failed for ${query}:`, error);
               throw error;
             }
           },

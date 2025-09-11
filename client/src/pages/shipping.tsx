@@ -209,11 +209,15 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {orders.map((order) => (
+                      {orders && orders.length > 0 ? orders.map((order) => (
                         <SelectItem key={order.id} value={order.id}>
                           {order.orderNumber} - {order.customerName}
                         </SelectItem>
-                      ))}
+                      )) : (
+                        <SelectItem value="" disabled>
+                          Nenhuma encomenda disponível
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -52,6 +52,31 @@ export function TableSkeleton({
   );
 }
 
+// Skeleton para tabelas dentro de TableBody (evita DOM nesting issues)
+export function TableRowsSkeleton({ 
+  rows = 5, 
+  columns = 4, 
+  className 
+}: { 
+  rows?: number; 
+  columns?: number; 
+  className?: string; 
+}) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, rowIndex) => (
+        <tr key={rowIndex} className={cn("border-b", className)}>
+          {Array.from({ length: columns }).map((_, colIndex) => (
+            <td key={colIndex} className="p-4">
+              <Skeleton className="h-6 w-full" />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
+  );
+}
+
 // Skeleton para lista de produtos
 export function ProductListSkeleton({ 
   count = 5, 

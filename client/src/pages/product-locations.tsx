@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -227,6 +227,9 @@ export default function ProductLocationsPage() {
               <DialogTitle>
                 {editingLocation ? "Editar" : "Nova"} Localização de Produto
               </DialogTitle>
+              <DialogDescription>
+                {editingLocation ? "Edite a localização do produto selecionado." : "Defina a localização de um produto no armazém."}
+              </DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

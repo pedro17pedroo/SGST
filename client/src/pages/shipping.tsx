@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -147,6 +147,9 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
           <DialogTitle>
             {shipment ? "Editar Envio" : "Novo Envio"}
           </DialogTitle>
+          <DialogDescription>
+            {shipment ? "Edite as informações do envio selecionado." : "Preencha os dados para criar um novo envio."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -209,12 +212,12 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {orders && orders.length > 0 ? orders.map((order) => (
+                      {orders && orders.length > 0 ? orders.filter(order => order.id && order.id.trim() !== '').map((order) => (
                         <SelectItem key={order.id} value={order.id}>
                           {order.orderNumber} - {order.customerName}
                         </SelectItem>
                       )) : (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="no-orders" disabled>
                           Nenhuma encomenda disponível
                         </SelectItem>
                       )}
@@ -520,7 +523,7 @@ export default function Shipping() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <LoadingComponents.Table rows={itemsPerPage} columns={7} />
+                <LoadingComponents.TableRows rows={itemsPerPage} columns={7} />
               </TableBody>
             </Table>
           </div>

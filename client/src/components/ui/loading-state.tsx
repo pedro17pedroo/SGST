@@ -3,6 +3,7 @@ import { InlineLoading, CardLoading } from "@/components/ui/loading-spinner";
 import { 
   KPISkeleton, 
   TableSkeleton, 
+  TableRowsSkeleton,
   ProductListSkeleton, 
   FormSkeleton, 
   CardSkeleton, 
@@ -164,6 +165,7 @@ export function useLoadingStates<T>(data: T[] | null, isLoading: boolean, error:
 export const LoadingComponents = {
   KPI: () => <KPISkeleton />,
   Table: (props?: { rows?: number; columns?: number }) => <TableSkeleton {...props} />,
+  TableRows: (props?: { rows?: number; columns?: number }) => <TableRowsSkeleton {...props} />,
   ProductList: (props?: { count?: number; isMobile?: boolean }) => <ProductListSkeleton {...props} />,
   Form: (props?: { fields?: number }) => <FormSkeleton {...props} />,
   Cards: (props?: { count?: number }) => <CardSkeleton {...props} />,

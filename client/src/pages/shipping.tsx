@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Edit, Truck, Package, Calendar, MapPin } from "lucide-react";
+import { Plus, Search, Edit, Truck, Package, Calendar, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -342,15 +343,15 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
   );
 }
 
-function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | null } }) {
+function ShipmentRow({ shipment }: { shipment: Shipment & { order?: Order | null } }) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "preparing": return "bg-yellow-100 text-yellow-800";
-      case "shipped": return "bg-blue-100 text-blue-800";
-      case "in_transit": return "bg-purple-100 text-purple-800";
-      case "delivered": return "bg-green-100 text-green-800";
-      case "cancelled": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "preparing": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "shipped": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+      case "in_transit": return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300";
+      case "delivered": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      case "cancelled": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   };
 
@@ -366,83 +367,87 @@ function ShipmentCard({ shipment }: { shipment: Shipment & { order?: Order | nul
   };
 
   return (
-    <Card className="h-full" data-testid={`card-shipment-${shipment.id}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Truck className="h-5 w-5 text-primary-foreground" />
+    <TableRow data-testid={`row-shipment-${shipment.id}`}>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <Truck className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <div>
+            <div className="font-medium" data-testid={`text-shipment-number-${shipment.id}`}>
+              {shipment.shipmentNumber}
             </div>
-            <div>
-              <CardTitle className="text-lg" data-testid={`text-shipment-number-${shipment.id}`}>
-                {shipment.shipmentNumber}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {shipment.carrier || "Sem transportadora"}
-              </p>
+            <div className="text-sm text-muted-foreground">
+              {shipment.carrier || "Sem transportadora"}
             </div>
           </div>
-          <div className="flex gap-1">
-            <ShipmentDialog
-              shipment={shipment}
-              trigger={
-                <Button variant="ghost" size="sm" data-testid={`button-edit-${shipment.id}`}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-              }
-            />
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge className={getStatusColor(shipment.status)}>
+          {getStatusLabel(shipment.status)}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        {shipment.order ? (
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-muted-foreground" />
+            <span data-testid={`text-order-${shipment.id}`}>
+              {shipment.order.orderNumber}
+            </span>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <Badge className={getStatusColor(shipment.status)}>
-            {getStatusLabel(shipment.status)}
-          </Badge>
-          
-          {shipment.order && (
-            <div className="flex items-center gap-2 text-sm">
-              <Package className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground" data-testid={`text-order-${shipment.id}`}>
-                {shipment.order.orderNumber}
-              </span>
-            </div>
-          )}
-
-          {shipment.trackingNumber && (
-            <div className="flex items-center gap-2 text-sm">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground font-mono" data-testid={`text-tracking-${shipment.id}`}>
-                {shipment.trackingNumber}
-              </span>
-            </div>
-          )}
-
-          {shipment.shippingAddress && (
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground text-xs line-clamp-2">
-                {shipment.shippingAddress}
-              </span>
-            </div>
-          )}
-
-          {shipment.estimatedDelivery && (
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">
-                {new Date(shipment.estimatedDelivery).toLocaleDateString('pt-AO')}
-              </span>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {shipment.trackingNumber ? (
+          <span className="font-mono text-sm" data-testid={`text-tracking-${shipment.id}`}>
+            {shipment.trackingNumber}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {shipment.shippingAddress ? (
+          <div className="max-w-xs truncate" title={shipment.shippingAddress}>
+            {shipment.shippingAddress}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {shipment.estimatedDelivery ? (
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span>
+              {new Date(shipment.estimatedDelivery).toLocaleDateString('pt-AO')}
+            </span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <ShipmentDialog
+          shipment={shipment}
+          trigger={
+            <Button variant="ghost" size="sm" data-testid={`button-edit-${shipment.id}`}>
+              <Edit className="h-4 w-4" />
+            </Button>
+          }
+        />
+      </TableCell>
+    </TableRow>
   );
 }
 
 export default function Shipping() {
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   
   const { data: shipments = [], isLoading, error } = useQuery<Array<Shipment & { order?: Order | null }>>({    queryKey: ["/api/shipping"],
   });
@@ -453,7 +458,14 @@ export default function Shipping() {
     (shipment.carrier && shipment.carrier.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const loadingStates = useLoadingStates(filteredShipments, isLoading, error);
+  // Paginação
+  const totalItems = filteredShipments.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedShipments = filteredShipments.slice(startIndex, endIndex);
+
+  const loadingStates = useLoadingStates(paginatedShipments, isLoading, error);
 
   return (
     <div className="min-h-screen bg-background">
@@ -490,35 +502,118 @@ export default function Shipping() {
         error={loadingStates.error}
         isEmpty={loadingStates.isEmpty}
         loadingComponent={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <LoadingComponents.Cards count={6} />
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Envio</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Encomenda</TableHead>
+                  <TableHead>Rastreamento</TableHead>
+                  <TableHead>Endereço</TableHead>
+                  <TableHead>Entrega Prevista</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <LoadingComponents.Table rows={itemsPerPage} columns={7} />
+              </TableBody>
+            </Table>
           </div>
         }
         emptyComponent={
-          <div className="col-span-full text-center py-12">
-            <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum envio encontrado</h3>
-            <p className="text-muted-foreground mb-4">
-              {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro envio."}
-            </p>
-            {!search && (
-              <ShipmentDialog
-                trigger={
-                  <Button data-testid="button-add-first-shipment">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Criar Primeiro Envio
-                  </Button>
-                }
-              />
-            )}
-          </div>
+          <Card>
+            <CardContent className="text-center py-12">
+              <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhum envio encontrado</h3>
+              <p className="text-muted-foreground mb-4">
+                {search ? "Tente ajustar os termos de pesquisa." : "Comece criando o primeiro envio."}
+              </p>
+              {!search && (
+                <ShipmentDialog
+                  trigger={
+                    <Button data-testid="button-add-first-shipment">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Criar Primeiro Envio
+                    </Button>
+                  }
+                />
+              )}
+            </CardContent>
+          </Card>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredShipments.map((shipment: Shipment & { order?: Order | null }) => (
-            <ShipmentCard key={shipment.id} shipment={shipment} />
-          ))}
-        </div>
+        {totalItems > 0 ? (
+          <div className="space-y-4">
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Envio</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Encomenda</TableHead>
+                    <TableHead>Rastreamento</TableHead>
+                    <TableHead>Endereço</TableHead>
+                    <TableHead>Entrega Prevista</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedShipments.map((shipment: Shipment & { order?: Order | null }) => (
+                    <ShipmentRow key={shipment.id} shipment={shipment} />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Itens por página:</span>
+                <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">
+                  Página {currentPage} de {totalPages} ({totalItems} envios)
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Próximo
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </LoadingState>
       </div>
     </div>

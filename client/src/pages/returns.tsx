@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -410,16 +411,14 @@ export default function ReturnsPage() {
   }) || [];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground" data-testid="page-title">
-            Gestão de Devoluções
-          </h1>
-          <p className="text-muted-foreground mt-2">
+    <div className="min-h-screen bg-background">
+      <Header title="Gestão de Devoluções" breadcrumbs={["Gestão de Devoluções"]} />
+      
+      <div className="px-6 py-4 space-y-6">
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground">
             Gerir devoluções de clientes, fornecedores e reembolsos
           </p>
-        </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -873,6 +872,7 @@ export default function ReturnsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

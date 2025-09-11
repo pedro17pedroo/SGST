@@ -20,6 +20,7 @@
     "deploy:server": "npm run build:server && echo 'Configure upload para VPS backend'"
   },
   "devDependencies": {
+    "@types/uuid": "^10.0.0",
     "concurrently": "^8.2.2"
   },
   "dependencies": {

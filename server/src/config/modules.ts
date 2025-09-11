@@ -159,7 +159,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'returns',
     name: 'Gestão de Devoluções',
     description: 'Processamento de devoluções e reembolsos',
-    enabled: false,
+    enabled: true,
     dependencies: ['orders', 'inventory'],
     routes: ['/api/returns'],
     tables: ['returns', 'return_items'],

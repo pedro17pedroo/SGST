@@ -4,12 +4,18 @@ import { ModuleManager } from '../config/modules';
 // Middleware para verificar se um módulo está ativo
 export function moduleGuard(moduleId: string) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!ModuleManager.isModuleEnabled(moduleId)) {
+    console.log(`🔍 DEBUG moduleGuard: Verificando módulo '${moduleId}' para rota ${req.path}`);
+    const isEnabled = ModuleManager.isModuleEnabled(moduleId);
+    console.log(`🔍 DEBUG moduleGuard: Módulo '${moduleId}' habilitado: ${isEnabled}`);
+    
+    if (!isEnabled) {
+      console.log(`❌ DEBUG moduleGuard: Módulo '${moduleId}' não está ativo`);
       return res.status(404).json({
         message: `Módulo '${moduleId}' não está ativo`,
         error: 'MODULE_DISABLED'
       });
     }
+    console.log(`✅ DEBUG moduleGuard: Módulo '${moduleId}' ativo, prosseguindo...`);
     next();
   };
 }

@@ -40,6 +40,7 @@ import { ediModule } from './edi';
 import { anomalyFraudModule } from './anomaly-fraud-detection';
 import reportsModule from './reports';
 import alertsModule from './alerts';
+import returnsModule from './returns';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -77,6 +78,7 @@ export class ModuleRegistry {
     this.modules.set('anomaly_fraud_detection', anomalyFraudModule);
     this.modules.set('reports', reportsModule);
     this.modules.set('alerts', alertsModule);
+    this.modules.set('returns', returnsModule);
     // this.modules.set('gps_tracking', gpsModule); // Module not available
     
     // Temporary direct registration for barcode scanning

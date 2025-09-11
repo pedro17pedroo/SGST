@@ -487,6 +487,15 @@ export const ordersService = {
     const response = await apiRequest('GET', API_ENDPOINTS.orders.recent);
     return processResponse<ApiResponse<any[]>>(response);
   },
+
+  /**
+   * Pesquisar encomendas
+   */
+  async searchOrders(query: string) {
+    const url = buildApiUrl(API_ENDPOINTS.orders.search, { q: query });
+    const response = await apiRequest('GET', url);
+    return processResponse<ApiResponse<any[]>>(response);
+  },
 };
 
 // === SERVIÇOS DE ENVIOS ===

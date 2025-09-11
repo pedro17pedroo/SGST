@@ -190,4 +190,32 @@ export class OrdersController extends BaseController {
       });
     }
   }
+
+  static async searchOrders(req: Request, res: Response) {
+    const controller = new OrdersController();
+    try {
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string') {
+        return controller.sendSuccess(res, [], 'Parâmetro de pesquisa é obrigatório');
+      }
+      
+      // Buscar todas as encomendas e filtrar
+      const allOrders = await OrdersModel.getOrders();
+      const searchLower = q.toLowerCase();
+      
+      const filteredOrders = allOrders.filter(order => 
+        order.orderNumber.toLowerCase().includes(searchLower) ||
+        (order.customerName && order.customerName.toLowerCase().includes(searchLower)) ||
+        (order.customerEmail && order.customerEmail.toLowerCase().includes(searchLower))
+      );
+      
+      // Limitar a 50 resultados para performance
+      const limitedResults = filteredOrders.slice(0, 50);
+      
+      return controller.sendSuccess(res, limitedResults, 'Encomendas encontradas com sucesso');
+    } catch (error) {
+      return controller.handleError(res, error, 'Erro ao pesquisar encomendas');
+    }
+  }
 }

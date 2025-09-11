@@ -177,9 +177,26 @@ export async function apiRequest(
       return response;
     } catch (error) {
       clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Tempo limite da requisição excedido');
+      
+      if (error instanceof Error) {
+        // Tratar diferentes tipos de erros de rede
+        if (error.name === 'AbortError') {
+          throw new Error('Tempo limite da requisição excedido');
+        }
+        
+        // Erros de conectividade de rede
+        if (error.message.includes('ERR_NETWORK_CHANGED') || 
+            error.message.includes('NetworkError') ||
+            error.message.includes('Failed to fetch')) {
+          throw new Error('Problema de conectividade de rede. Verifique sua conexão.');
+        }
+        
+        // Erro de conexão recusada
+        if (error.message.includes('ECONNREFUSED')) {
+          throw new Error('Servidor indisponível. Tente novamente em alguns momentos.');
+        }
       }
+      
       throw error;
     }
   };
@@ -256,6 +273,22 @@ export const queryClient = new QueryClient({
         if (error instanceof Error && error.name === 'AbortError') {
           return false
         }
+        
+        // Não tentar novamente para erros de autenticação
+        if (error instanceof Error && error.message.includes('401')) {
+          return false
+        }
+        
+        // Tentar novamente para erros de rede temporários
+        if (error instanceof Error && (
+          error.message.includes('ERR_NETWORK_CHANGED') ||
+          error.message.includes('NetworkError') ||
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('Problema de conectividade')
+        )) {
+          return failureCount < 5; // Mais tentativas para problemas de rede
+        }
+        
         // Usar configuração padrão para outros erros
         return failureCount < RETRY_CONFIG.read.retry
       },
@@ -267,6 +300,22 @@ export const queryClient = new QueryClient({
         if (error instanceof Error && error.name === 'AbortError') {
           return false
         }
+        
+        // Não tentar novamente para erros de autenticação
+        if (error instanceof Error && error.message.includes('401')) {
+          return false
+        }
+        
+        // Tentar novamente para erros de rede temporários (menos agressivo para writes)
+        if (error instanceof Error && (
+          error.message.includes('ERR_NETWORK_CHANGED') ||
+          error.message.includes('NetworkError') ||
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('Problema de conectividade')
+        )) {
+          return failureCount < 2; // Menos tentativas para operações de escrita
+        }
+        
         // Usar configuração padrão para outros erros
         return failureCount < RETRY_CONFIG.write.retry
       },

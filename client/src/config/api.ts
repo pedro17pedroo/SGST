@@ -158,6 +158,7 @@ export const API_ENDPOINTS = {
     get: (id: string) => `/api/orders/${id}`,
     update: (id: string) => `/api/orders/${id}`,
     delete: (id: string) => `/api/orders/${id}`,
+    search: '/api/orders/search',
     recent: '/api/orders/recent',
   },
 
@@ -209,6 +210,18 @@ export const API_ENDPOINTS = {
   // Rastreamento público
   publicTracking: {
     track: (trackingNumber: string) => `/api/public/track/${trackingNumber}`,
+  },
+
+  // Endpoints para devoluções
+  returns: {
+    list: '/api/returns',
+    create: '/api/returns',
+    get: (id: string) => `/api/returns/${id}`,
+    update: (id: string) => `/api/returns/${id}`,
+    delete: (id: string) => `/api/returns/${id}`,
+    approve: (id: string) => `/api/returns/${id}/approve`,
+    process: (id: string) => `/api/returns/${id}/process`,
+    stats: '/api/returns/stats',
   },
 
   // Relatórios

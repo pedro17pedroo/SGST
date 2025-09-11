@@ -11,22 +11,23 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Criar pool de conexões MySQL com configurações otimizadas para evitar timeouts e ECONNRESET
+// Criar pool de conexões MySQL com configurações otimizadas
 const pool = mysql.createPool({
   uri: process.env.DATABASE_URL,
   waitForConnections: true,
   connectionLimit: 10,
   maxIdle: 3,
-  idleTimeout: 30000,
+  idleTimeout: 60000, // Aumentado para 60 segundos
   queueLimit: 0,
   // Configurações para lidar com ECONNRESET
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
-  // SSL configuração segura
+  // SSL configuração
   ssl: {
     rejectUnauthorized: false
   }
 });
+
 export const db = drizzle(pool, { schema, mode: 'default' });
 
 // Wrapper para retry automático em queries

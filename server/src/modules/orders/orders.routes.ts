@@ -13,6 +13,7 @@ router.use(requireAuth);
 
 // Rotas dos pedidos
 router.get('/', OrdersController.getOrders);
+router.get('/search', OrdersController.searchOrders);
 router.get('/recent', OrdersController.getRecentOrders);
 router.get('/pending', OrdersController.getPendingOrders);
 router.get('/:id', OrdersController.getOrder);

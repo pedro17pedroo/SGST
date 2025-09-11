@@ -647,27 +647,22 @@ export default function Orders() {
       <Header title="Gestão de Encomendas" breadcrumbs={["Gestão de Encomendas"]} />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Gestão de Encomendas</h1>
-            <p className="text-muted-foreground mt-1">Gerir e acompanhar todas as encomendas</p>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <OrderFilters 
+            filters={filters} 
+            onFiltersChange={setFilters}
+            className="flex-1"
+          />
           
           <OrderDialog
             trigger={
-              <Button className="w-full sm:w-auto">
+              <Button className="whitespace-nowrap">
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Encomenda
               </Button>
             }
           />
         </div>
-
-        <OrderFilters 
-          filters={filters} 
-          onFiltersChange={setFilters}
-          className="mb-6"
-        />
 
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
@@ -702,12 +697,32 @@ export default function Orders() {
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-              <div className="text-sm text-muted-foreground">
-                Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, pagination.total)} de {pagination.total} encomendas
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Itens por página:</span>
+                <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">
+                  Página {pagination.page} de {pagination.totalPages} ({pagination.total} encomendas)
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -717,11 +732,6 @@ export default function Orders() {
                   <ChevronLeft className="w-4 h-4" />
                   Anterior
                 </Button>
-                
-                <span className="text-sm font-medium px-3 py-1 bg-muted rounded">
-                  {currentPage} de {pagination.totalPages}
-                </span>
-                
                 <Button
                   variant="outline"
                   size="sm"

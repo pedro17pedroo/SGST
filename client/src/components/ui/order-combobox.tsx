@@ -29,14 +29,19 @@ interface Order {
   customerEmail?: string
   customerPhone?: string
   customerAddress?: string
+  supplierId?: string | null
   customer?: {
     id: string
     name: string
     email?: string
     phone?: string
   }
-  totalAmount?: number
+  supplier?: any
+  user?: any
+  totalAmount?: string | number // API retorna como string
   status?: string
+  notes?: string
+  userId?: string | null
   createdAt?: string
 }
 
@@ -123,12 +128,13 @@ export const OrderCombobox = React.memo(function OrderCombobox({
     setSearchQuery("")
   }, [onValueChange, onOrderSelect])
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: string | number) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount
     return new Intl.NumberFormat('pt-AO', {
       style: 'currency',
       currency: 'AOA',
       minimumFractionDigits: 2
-    }).format(amount)
+    }).format(numericAmount)
   }
 
   const getStatusBadge = (status?: string) => {

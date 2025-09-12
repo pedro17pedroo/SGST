@@ -5,7 +5,52 @@ import {
 } from '@shared/schema';
 import { desc, eq, sql, and } from 'drizzle-orm';
 
+// Contador para geração de números de envio
+let nextShipmentNumber = 1;
+
 export class ShippingModel {
+  /**
+   * Gera um número único de envio
+   */
+  static async generateShipmentNumber(): Promise<string> {
+    const currentYear = new Date().getFullYear();
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    while (attempts < maxAttempts) {
+      const shipmentNumber = `SHP-${currentYear}-${String(nextShipmentNumber).padStart(6, '0')}`;
+      
+      // Verifica se o número já existe no banco de dados
+      const existingShipment = await db.select()
+        .from(shipments)
+        .where(eq(shipments.shipmentNumber, shipmentNumber))
+        .limit(1);
+      
+      if (existingShipment.length === 0) {
+        nextShipmentNumber++;
+        return shipmentNumber;
+      }
+      
+      // Se já existe, incrementa e tenta novamente
+      nextShipmentNumber++;
+      attempts++;
+    }
+    
+    // Se não conseguir gerar após muitas tentativas, usa timestamp
+    const timestamp = Date.now().toString().slice(-6);
+    return `SHP-${currentYear}-${timestamp}`;
+  }
+  
+  /**
+   * Valida se um número de envio é único
+   */
+  static async validateShipmentNumberUniqueness(shipmentNumber: string): Promise<boolean> {
+    const existingShipment = await db.select()
+      .from(shipments)
+      .where(eq(shipments.shipmentNumber, shipmentNumber))
+      .limit(1);
+    return existingShipment.length === 0;
+  }
   static async getShipments(): Promise<Array<Shipment & { order?: Order | null; user?: User | null }>> {
     const results = await db.select({
       id: shipments.id,
@@ -123,8 +168,17 @@ export class ShippingModel {
     };
   }
 
-  static async createShipment(shipment: InsertShipment): Promise<Shipment> {
-    await db.insert(shipments).values(shipment);
+  static async createShipment(shipment: Omit<InsertShipment, 'shipmentNumber'>): Promise<Shipment> {
+    // Gera automaticamente o número do envio
+    const shipmentNumber = await this.generateShipmentNumber();
+    
+    // Cria o objeto completo do envio com o número gerado
+    const completeShipment: InsertShipment = {
+      ...shipment,
+      shipmentNumber
+    };
+    
+    await db.insert(shipments).values(completeShipment);
     const newShipment = await db.select().from(shipments).orderBy(desc(shipments.createdAt)).limit(1);
     return newShipment[0];
   }

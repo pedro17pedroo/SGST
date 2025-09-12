@@ -62,6 +62,9 @@ export class ShippingController {
         shipmentData.estimatedDelivery = new Date(shipmentData.estimatedDelivery);
       }
       
+      // Remove o shipmentNumber dos dados se fornecido, pois será gerado automaticamente
+      delete shipmentData.shipmentNumber;
+      
       const shipment = await ShippingModel.createShipment(shipmentData);
       res.status(201).json(shipment);
     } catch (error) {

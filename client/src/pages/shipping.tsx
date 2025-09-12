@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, Edit, Truck, Package, Calendar, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit, Truck, Package, Calendar, MapPin, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,37 +17,40 @@ import { type Shipment, type Order } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
+import { OrderCombobox } from "@/components/ui/order-combobox";
 import { LoadingState, LoadingComponents, useLoadingStates } from "@/components/ui/loading-state";
 import { z } from "zod";
 
 // Schema personalizado para o formulário de envios
 const shipmentFormSchema = z.object({
-  shipmentNumber: z.string().optional(),
-  orderId: z.string().min(1, "Pedido é obrigatório"),
-  vehicleId: z.string().min(1, "Veículo é obrigatório"),
-  status: z.string().min(1, "Status é obrigatório"),
-  carrier: z.string().optional(),
+  orderId: z.string().min(1, "Selecione uma encomenda"),
+  vehicleId: z.string().min(1, "Selecione um veículo"),
+  status: z.string().min(1, "Selecione o status do envio"),
+  carrier: z.string().min(1, "Nome da transportadora é obrigatório"),
   trackingNumber: z.string().optional(),
-  shippingAddress: z.string().optional(),
-  estimatedDelivery: z.string().optional(),
+  shippingAddress: z.string().min(10, "Endereço deve ter pelo menos 10 caracteres"),
+  estimatedDelivery: z.string().min(1, "Data prevista de entrega é obrigatória"),
 });
 
 type ShipmentFormData = z.infer<typeof shipmentFormSchema>;
+
+// Função para gerar número de rastreamento único
+const generateTrackingNumber = (): string => {
+  const prefix = "TRK";
+  const timestamp = Date.now().toString().slice(-8); // Últimos 8 dígitos do timestamp
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase(); // 4 caracteres aleatórios
+  return `${prefix}${timestamp}${random}`;
+};
 
 function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   
-  const { data: orders = [] } = useQuery<Order[]>({
-    queryKey: ["/api/orders"],
-  });
-  
-  // Removido: query de veículos agora é feita pelo VehicleCombobox
+  // Removido: query de orders e veículos agora são feitas pelos respectivos combobox
   
   const form = useForm<ShipmentFormData>({
     resolver: zodResolver(shipmentFormSchema),
     defaultValues: {
-      shipmentNumber: `SHP-${Date.now()}`,
       orderId: "",
       vehicleId: "",
       status: "preparing",
@@ -58,11 +61,20 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
     },
   });
 
+  // Função para gerar novo número de rastreamento
+  const handleGenerateTrackingNumber = () => {
+    const newTrackingNumber = generateTrackingNumber();
+    form.setValue("trackingNumber", newTrackingNumber);
+    toast({
+      title: "Número gerado",
+      description: `Novo número de rastreamento: ${newTrackingNumber}`,
+    });
+  };
+
   // Reset form values when shipment changes
   useEffect(() => {
     if (shipment) {
       form.reset({
-        shipmentNumber: shipment.shipmentNumber || `SHP-${Date.now()}`,
         orderId: shipment.orderId || "",
         vehicleId: (shipment as any).vehicleId || "",
         status: (shipment.status as any) || "preparing",
@@ -72,13 +84,14 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
         estimatedDelivery: shipment.estimatedDelivery ? new Date(shipment.estimatedDelivery).toISOString().split('T')[0] : "",
       });
     } else {
+      // Para novos envios, gerar automaticamente o número de rastreamento
+      const autoTrackingNumber = generateTrackingNumber();
       form.reset({
-        shipmentNumber: `SHP-${Date.now()}`,
         orderId: "",
         vehicleId: "",
         status: "preparing",
         carrier: "",
-        trackingNumber: "",
+        trackingNumber: autoTrackingNumber,
         shippingAddress: "",
         estimatedDelivery: "",
       });
@@ -131,7 +144,46 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
     },
   });
 
-  const onSubmit = (data: ShipmentFormData) => {
+  // Função para verificar unicidade do número de rastreamento
+  const checkTrackingNumberUniqueness = async (trackingNumber: string): Promise<boolean> => {
+    if (!trackingNumber) return true; // Se não há número, não precisa verificar
+    
+    try {
+      const response = await apiRequest("GET", `/api/shipping?trackingNumber=${encodeURIComponent(trackingNumber)}`);
+      const data = await response.json();
+      
+      // Se estamos editando um envio, excluir o próprio envio da verificação
+      if (shipment) {
+        return !data.some((s: Shipment) => s.trackingNumber === trackingNumber && s.id !== shipment.id);
+      }
+      
+      // Para novos envios, verificar se não existe nenhum com esse número
+      return !data.some((s: Shipment) => s.trackingNumber === trackingNumber);
+    } catch (error) {
+      console.error("Erro ao verificar unicidade do número de rastreamento:", error);
+      return true; // Em caso de erro, permitir o envio
+    }
+  };
+
+  const onSubmit = async (data: ShipmentFormData) => {
+    // Verificar unicidade do número de rastreamento se fornecido
+    if (data.trackingNumber) {
+      const isUnique = await checkTrackingNumberUniqueness(data.trackingNumber);
+      
+      if (!isUnique) {
+        form.setError("trackingNumber", {
+          type: "manual",
+          message: "Este número de rastreamento já está em uso. Por favor, gere um novo ou use um número diferente."
+        });
+        toast({
+          title: "Número duplicado",
+          description: "O número de rastreamento já está em uso no sistema.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     if (shipment) {
       updateMutation.mutate(data);
     } else {
@@ -142,47 +194,46 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="dialog-shipment">
-        <DialogHeader>
-          <DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="dialog-shipment">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             {shipment ? "Editar Envio" : "Novo Envio"}
           </DialogTitle>
-          <DialogDescription>
-            {shipment ? "Edite as informações do envio selecionado." : "Preencha os dados para criar um novo envio."}
+          <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+            {shipment ? "Edite as informações do envio selecionado." : "Preencha os dados para criar um novo envio. O número será gerado automaticamente."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="shipmentNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número do Envio</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="SHP-001" 
-                        {...field}
-                        value={field.value as string}
-                        data-testid="input-shipment-number"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Informação sobre geração automática do número */}
+            {!shipment && (
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      Número do Envio
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      Será gerado automaticamente após a criação
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Campos principais em grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Estado</FormLabel>
+                    <FormLabel className="text-sm font-medium">Estado *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value as string}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-shipment-status">
-                          <SelectValue placeholder="Estado do envio" />
+                        <SelectTrigger data-testid="select-shipment-status" className="h-11">
+                          <SelectValue placeholder="Selecione o estado do envio" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -197,88 +248,21 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                   </FormItem>
                 )}
               />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="orderId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Encomenda</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-order">
-                        <SelectValue placeholder="Selecione a encomenda" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {orders && orders.length > 0 ? orders.filter(order => order.id && order.id.trim() !== '').map((order) => (
-                        <SelectItem key={order.id} value={order.id}>
-                          {order.orderNumber} - {order.customerName}
-                        </SelectItem>
-                      )) : (
-                        <SelectItem value="no-orders" disabled>
-                          Nenhuma encomenda disponível
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="vehicleId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Veículo</FormLabel>
-                  <FormControl>
-                    <VehicleCombobox
-                      value={(field.value as string) || ""}
-                      onValueChange={field.onChange}
-                      placeholder="Selecione o veículo"
-                      disabled={form.formState.isSubmitting}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+              
               <FormField
                 control={form.control}
-                name="carrier"
+                name="estimatedDelivery"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Transportadora</FormLabel>
+                    <FormLabel className="text-sm font-medium">Data Prevista de Entrega *</FormLabel>
                     <FormControl>
                       <Input 
-                          placeholder="Nome da transportadora" 
-                          {...field}
-                          value={(field.value as string) || ""}
-                          data-testid="input-carrier"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="trackingNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número de Rastreamento</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="ABC123456789" 
+                        type="date"
                         {...field} 
                         value={field.value || ""}
-                        data-testid="input-tracking-number"
+                        data-testid="input-estimated-delivery"
+                        className="h-11"
+                        min={new Date().toISOString().split('T')[0]}
                       />
                     </FormControl>
                     <FormMessage />
@@ -287,51 +271,155 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="shippingAddress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Endereço de Entrega</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Endereço completo para entrega"
-                      className="resize-none"
-                      {...field}
-                      value={field.value || ""}
-                      data-testid="textarea-shipping-address"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Seção de Encomenda e Veículo */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                Informações da Encomenda
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="orderId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Encomenda *</FormLabel>
+                      <FormControl>
+                        <OrderCombobox
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                          placeholder="Pesquisar e selecionar encomenda..."
+                          disabled={createMutation.isPending || updateMutation.isPending}
+                          className="h-11"
+                          orderType="sale"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="estimatedDelivery"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data Prevista de Entrega</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="date"
-                      {...field} 
-                      value={field.value || ""}
-                      data-testid="input-estimated-delivery"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="vehicleId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Veículo *</FormLabel>
+                      <FormControl>
+                        <VehicleCombobox
+                          value={(field.value as string) || ""}
+                          onValueChange={field.onChange}
+                          placeholder="Selecione o veículo"
+                          disabled={form.formState.isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
-            <div className="flex justify-end space-x-2">
+            {/* Seção de Transportadora e Rastreamento */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                Informações de Transporte
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="carrier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Transportadora *</FormLabel>
+                      <FormControl>
+                        <Input 
+                            placeholder="Nome da transportadora" 
+                            {...field}
+                            value={(field.value as string) || ""}
+                            data-testid="input-carrier"
+                            className="h-11"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="trackingNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Número de Rastreamento</FormLabel>
+                      <div className="flex space-x-2">
+                        <FormControl>
+                          <Input 
+                            placeholder="ABC123456789" 
+                            {...field} 
+                            value={field.value || ""}
+                            data-testid="input-tracking-number"
+                            className="h-11 flex-1"
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleGenerateTrackingNumber}
+                          className="h-11 px-3"
+                          title="Gerar novo número de rastreamento"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Número gerado automaticamente. Clique no botão para gerar um novo ou edite manualmente.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Seção de Endereço de Entrega */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                Endereço de Entrega
+              </h3>
+              
+              <FormField
+                control={form.control}
+                name="shippingAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Endereço Completo *</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Rua, número, bairro, cidade, província...&#10;Exemplo: Rua das Flores, 123, Maianga, Luanda, Luanda"
+                        className="resize-none min-h-[100px]"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="textarea-shipping-address"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Botões de ação */}
+            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setOpen(false)}
                 data-testid="button-cancel"
+                className="w-full sm:w-auto h-11 font-medium"
+                disabled={createMutation.isPending || updateMutation.isPending}
               >
                 Cancelar
               </Button>
@@ -339,8 +427,19 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
                 type="submit" 
                 disabled={createMutation.isPending || updateMutation.isPending}
                 data-testid="button-save-shipment"
+                className="w-full sm:w-auto h-11 font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                {createMutation.isPending || updateMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Package className="h-4 w-4 mr-2" />
+                    {shipment ? "Atualizar Envio" : "Criar Envio"}
+                  </>
+                )}
               </Button>
             </div>
           </form>

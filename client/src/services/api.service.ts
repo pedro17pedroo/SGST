@@ -598,7 +598,13 @@ export const fleetService = {
    */
   async getVehicles(params?: QueryParams) {
     const response = await apiRequest('GET', buildApiUrl('/api/fleet/vehicles', params));
-    return processResponse<ApiResponse<any[]>>(response);
+    const data = await response.json();
+    // O backend retorna diretamente um array, então criamos a estrutura ApiResponse
+    return {
+      data: data,
+      success: true,
+      message: 'Veículos carregados com sucesso'
+    } as ApiResponse<any[]>;
   },
 
   /**
@@ -658,10 +664,26 @@ export const fleetService = {
   },
 
   /**
-   * Obter localizações de todos os veículos
+   * Obter todas as localizações de veículos
    */
   async getAllVehicleLocations() {
-    const response = await apiRequest('GET', '/api/fleet/vehicles/locations/all');
+    const response = await apiRequest('GET', '/api/fleet/locations');
+    return processResponse<ApiResponse<any[]>>(response);
+  },
+
+  /**
+   * Obter tipos de veículo
+   */
+  async getVehicleTypes(params?: QueryParams) {
+    const response = await apiRequest('GET', buildApiUrl('/api/vehicle-types', params));
+    return processResponse<ApiResponse<any[]>>(response);
+  },
+
+  /**
+   * Obter tipos de combustível
+   */
+  async getFuelTypes(params?: QueryParams) {
+    const response = await apiRequest('GET', buildApiUrl('/api/fuel-types', params));
     return processResponse<ApiResponse<any[]>>(response);
   },
 };
@@ -1037,6 +1059,59 @@ export const alertsService = {
 };
 
 // Exportar todos os serviços como um objeto único para facilitar importação
+// === SERVIÇOS DE LOCALIZAÇÕES DE PRODUTOS ===
+export const productLocationsService = {
+  /**
+   * Buscar localizações com paginação
+   */
+  async getProductLocations(params?: QueryParams) {
+    const queryParams = {
+      page: params?.page || 1,
+      limit: params?.limit || 5,
+      search: params?.search || '',
+      sortBy: params?.sortBy || 'created_at',
+      sortOrder: params?.sortOrder || 'desc',
+      ...params,
+    };
+
+    const url = buildApiUrl(API_ENDPOINTS.productLocations.paginated, queryParams);
+    const response = await apiRequest('GET', url);
+    return processResponse<PaginatedResponse<any>>(response);
+  },
+
+  /**
+   * Buscar localização específica
+   */
+  async getProductLocation(id: string) {
+    const response = await apiRequest('GET', API_ENDPOINTS.productLocations.get(id));
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Criar nova localização
+   */
+  async createProductLocation(locationData: any) {
+    const response = await apiRequest('POST', API_ENDPOINTS.productLocations.create, locationData);
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Atualizar localização
+   */
+  async updateProductLocation(id: string, locationData: any) {
+    const response = await apiRequest('PUT', API_ENDPOINTS.productLocations.update(id), locationData);
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Eliminar localização
+   */
+  async deleteProductLocation(id: string) {
+    const response = await apiRequest('DELETE', API_ENDPOINTS.productLocations.delete(id));
+    return processResponse<ApiResponse>(response);
+  },
+};
+
 export const apiServices = {
   auth: authService,
   dashboard: dashboardService,
@@ -1058,6 +1133,7 @@ export const apiServices = {
   batches: batchesService,
   roles: rolesService,
   alerts: alertsService,
+  productLocations: productLocationsService,
 };
 
 // Exportar como default para facilitar importação

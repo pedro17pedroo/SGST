@@ -18,12 +18,14 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { VehicleCombobox } from "@/components/ui/vehicle-combobox";
 import { OrderCombobox } from "@/components/ui/order-combobox";
+import { CarrierVehicleCombobox } from "@/components/ui/carrier-vehicle-combobox";
 import { LoadingState, LoadingComponents, useLoadingStates } from "@/components/ui/loading-state";
 import { z } from "zod";
 
 // Schema personalizado para o formulário de envios
 const shipmentFormSchema = z.object({
   orderId: z.string().min(1, "Selecione uma encomenda"),
+  carrierId: z.string().min(1, "Selecione uma transportadora"),
   vehicleId: z.string().min(1, "Selecione um veículo"),
   status: z.string().min(1, "Selecione o status do envio"),
   carrier: z.string().min(1, "Nome da transportadora é obrigatório"),
@@ -52,6 +54,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
     resolver: zodResolver(shipmentFormSchema),
     defaultValues: {
       orderId: "",
+      carrierId: "",
       vehicleId: "",
       status: "preparing",
       carrier: "",
@@ -76,6 +79,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
     if (shipment) {
       form.reset({
         orderId: shipment.orderId || "",
+        carrierId: (shipment as any).carrierId || "",
         vehicleId: (shipment as any).vehicleId || "",
         status: (shipment.status as any) || "preparing",
         carrier: shipment.carrier || "",
@@ -88,6 +92,7 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
       const autoTrackingNumber = generateTrackingNumber();
       form.reset({
         orderId: "",
+        carrierId: "",
         vehicleId: "",
         status: "preparing",
         carrier: "",
@@ -271,117 +276,114 @@ function ShipmentDialog({ shipment, trigger }: { shipment?: Shipment; trigger: R
               />
             </div>
 
-            {/* Seção de Encomenda e Veículo */}
+            {/* Seção de Encomenda */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
                 Informações da Encomenda
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="orderId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Encomenda *</FormLabel>
-                      <FormControl>
-                        <OrderCombobox
-                          value={field.value || ""}
-                          onValueChange={field.onChange}
-                          placeholder="Pesquisar e selecionar encomenda..."
-                          disabled={createMutation.isPending || updateMutation.isPending}
-                          className="h-11"
-                          orderType="sale"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="vehicleId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Veículo *</FormLabel>
-                      <FormControl>
-                        <VehicleCombobox
-                          value={(field.value as string) || ""}
-                          onValueChange={field.onChange}
-                          placeholder="Selecione o veículo"
-                          disabled={form.formState.isSubmitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="orderId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Encomenda *</FormLabel>
+                    <FormControl>
+                      <OrderCombobox
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
+                        placeholder="Pesquisar e selecionar encomenda..."
+                        disabled={createMutation.isPending || updateMutation.isPending}
+                        className="h-11"
+                        orderType="sale"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            {/* Seção de Transportadora e Rastreamento */}
+            {/* Seção de Transportadora e Veículo */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
-                Informações de Transporte
+                Seleção de Transportadora e Veículo
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="carrier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Transportadora *</FormLabel>
+              <CarrierVehicleCombobox
+                carrierValue={form.watch("carrierId") || ""}
+                vehicleValue={form.watch("vehicleId") || ""}
+                onCarrierChange={(carrierId) => {
+                  form.setValue("carrierId", carrierId);
+                  form.clearErrors("carrierId");
+                }}
+                onVehicleChange={(vehicleId) => {
+                  form.setValue("vehicleId", vehicleId);
+                  form.clearErrors("vehicleId");
+                }}
+                onCarrierSelect={(carrier) => {
+                  if (carrier) {
+                    form.setValue("carrier", carrier.name);
+                    form.clearErrors("carrier");
+                  }
+                }}
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="w-full"
+              />
+              
+              {/* Mostrar erros de validação */}
+              {form.formState.errors.carrierId && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.carrierId.message}
+                </p>
+              )}
+              {form.formState.errors.vehicleId && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.vehicleId.message}
+                </p>
+              )}
+            </div>
+
+            {/* Seção de Rastreamento */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+                Informações de Rastreamento
+              </h3>
+              
+              <FormField
+                control={form.control}
+                name="trackingNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Número de Rastreamento</FormLabel>
+                    <div className="flex space-x-2">
                       <FormControl>
                         <Input 
-                            placeholder="Nome da transportadora" 
-                            {...field}
-                            value={(field.value as string) || ""}
-                            data-testid="input-carrier"
-                            className="h-11"
+                          placeholder="ABC123456789" 
+                          {...field} 
+                          value={field.value || ""}
+                          data-testid="input-tracking-number"
+                          className="h-11 flex-1"
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="trackingNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Número de Rastreamento</FormLabel>
-                      <div className="flex space-x-2">
-                        <FormControl>
-                          <Input 
-                            placeholder="ABC123456789" 
-                            {...field} 
-                            value={field.value || ""}
-                            data-testid="input-tracking-number"
-                            className="h-11 flex-1"
-                          />
-                        </FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleGenerateTrackingNumber}
-                          className="h-11 px-3"
-                          title="Gerar novo número de rastreamento"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Número gerado automaticamente. Clique no botão para gerar um novo ou edite manualmente.
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateTrackingNumber}
+                        className="h-11 px-3"
+                        title="Gerar novo número de rastreamento"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Número gerado automaticamente. Clique no botão para gerar um novo ou edite manualmente.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Seção de Endereço de Entrega */}

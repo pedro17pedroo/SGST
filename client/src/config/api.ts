@@ -102,6 +102,16 @@ export const API_ENDPOINTS = {
     deactivate: (id: string) => `/api/products/${id}/deactivate`,
   },
 
+  // Localizações de Produtos
+  productLocations: {
+    list: '/api/product-locations',
+    paginated: '/api/product-locations/paginated',
+    create: '/api/product-locations',
+    get: (id: string) => `/api/product-locations/${id}`,
+    update: (id: string) => `/api/product-locations/${id}`,
+    delete: (id: string) => `/api/product-locations/${id}`,
+  },
+
   // Categorias
   categories: {
     list: '/api/categories',

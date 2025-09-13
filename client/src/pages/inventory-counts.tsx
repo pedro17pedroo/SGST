@@ -73,7 +73,7 @@ export default function InventoryCountsPage() {
     queryKey: ['/api/inventory-counts'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/inventory-counts');
-      return response.json() as Promise<InventoryCount[]>;
+      return await response.json() as InventoryCount[];
     }
   });
 
@@ -82,7 +82,8 @@ export default function InventoryCountsPage() {
     queryKey: ['/api/warehouses'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/warehouses');
-      return response.json() as Promise<Warehouse[]>;
+      const result = await response.json();
+      return result.data as Warehouse[];
     }
   });
 

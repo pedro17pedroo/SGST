@@ -190,7 +190,9 @@ export default function PickingPackingPage() {
       const warehouseId = pickingForm.getValues('warehouseId');
       if (!warehouseId) return [];
       const response = await apiRequest('GET', `/api/product-locations?warehouseId=${warehouseId}`);
-      return await response.json();
+      const result = await response.json();
+      // Extrair os dados da resposta paginada
+      return result.data || [];
     },
     enabled: !!pickingForm.watch('warehouseId')
   });

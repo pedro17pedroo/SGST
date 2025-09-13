@@ -31,7 +31,7 @@ const productFormSchema = z.object({
   sku: z.string().optional(),
   barcode: z.string().optional(),
   price: z.string().min(1, "Preço é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço deve ser um número positivo"),
-  costPrice: z.string().min(1, "Preço de custo é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço de custo deve ser um número positivo"),
+  costPrice: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), "Preço de custo deve ser um número não negativo"),
   weight: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) > 0), "Peso deve ser um número positivo"),
   categoryId: z.string().optional(),
   supplierId: z.string().optional(),

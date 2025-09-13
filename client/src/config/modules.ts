@@ -418,6 +418,22 @@ export const FRONTEND_MODULE_CONFIG: Record<string, FrontendModuleConfig> = {
       order: 37
     }],
     permissions: ['fleet.read']
+  },
+
+  carriers: {
+    id: 'carriers',
+    name: 'Gestão de Transportadoras',
+    description: 'Gestão de transportadoras e empresas de transporte',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/carriers'],
+    menuItems: [{
+      label: 'Transportadoras',
+      icon: 'Truck',
+      path: '/carriers',
+      order: 38
+    }],
+    permissions: ['carriers.read']
   }
 };
 

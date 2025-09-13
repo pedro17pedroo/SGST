@@ -4,7 +4,7 @@ import { Icon, LatLngExpression } from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Truck, Navigation, Clock, MapPin, RefreshCw } from 'lucide-react';
+import { Truck, Navigation, Clock, MapPin, RefreshCw, Smartphone, Satellite, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useVehicleLocations } from '@/hooks/api/use-fleet';
 import 'leaflet/dist/leaflet.css';
@@ -90,9 +90,152 @@ export function FleetTrackingMap({
   onVehicleSelect 
 }: FleetTrackingMapProps) {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [currentDeviceLocation, setCurrentDeviceLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [gpsPermission, setGpsPermission] = useState<'granted' | 'denied' | 'prompt' | 'checking'>('checking');
+  const [watchId, setWatchId] = useState<number | null>(null);
+  const [useDeviceGPS, setUseDeviceGPS] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [centerOnDevice, setCenterOnDevice] = useState(false);
   const { toast } = useToast();
+
+  // Função para solicitar permissão de GPS
+  const requestGPSPermission = async () => {
+    if (!navigator.geolocation) {
+      setGpsError('GPS não é suportado neste dispositivo');
+      setGpsPermission('denied');
+      return false;
+    }
+
+    try {
+      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      setGpsPermission(permission.state as 'granted' | 'denied' | 'prompt');
+      return permission.state === 'granted';
+    } catch (error) {
+      console.error('Erro ao verificar permissão GPS:', error);
+      return false;
+    }
+  };
+
+  // Função para iniciar rastreamento GPS
+  const startGPSTracking = () => {
+    if (!navigator.geolocation) {
+      setGpsError('GPS não é suportado neste dispositivo');
+      return;
+    }
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000
+    };
+
+    const successCallback = (position: GeolocationPosition) => {
+      const { latitude, longitude } = position.coords;
+      setCurrentDeviceLocation({ lat: latitude, lng: longitude });
+      setGpsError(null);
+      toast({
+        title: "GPS Ativo",
+        description: `Localização atualizada: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+      });
+    };
+
+    const errorCallback = (error: GeolocationPositionError) => {
+      let errorMessage = 'Erro desconhecido';
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'Permissão de GPS negada';
+          setGpsPermission('denied');
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'Localização indisponível';
+          break;
+        case error.TIMEOUT:
+          errorMessage = 'Timeout na obtenção da localização';
+          break;
+      }
+      setGpsError(errorMessage);
+      toast({
+        title: "Erro GPS",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    };
+
+    const id = navigator.geolocation.watchPosition(successCallback, errorCallback, options);
+    setWatchId(id);
+    setUseDeviceGPS(true);
+  };
+
+  // Função para parar rastreamento GPS
+  const stopGPSTracking = () => {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+    setUseDeviceGPS(false);
+    setCurrentDeviceLocation(null);
+    setGpsError(null);
+    toast({
+      title: "GPS Desativado",
+      description: "Rastreamento do dispositivo parado"
+    });
+  };
+
+  // Função para alternar GPS
+  const toggleDeviceGPS = async () => {
+    if (useDeviceGPS) {
+      stopGPSTracking();
+    } else {
+      const hasPermission = await requestGPSPermission();
+      if (hasPermission || gpsPermission === 'granted') {
+        startGPSTracking();
+        setCenterOnDevice(true);
+      } else {
+        toast({
+          title: "Permissão Necessária",
+          description: "É necessário permitir acesso à localização",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  // Componente para controlar o centro do mapa
+  const MapController = () => {
+    const map = useMap();
+    
+    useEffect(() => {
+      if (centerOnDevice && currentDeviceLocation) {
+        map.setView([currentDeviceLocation.lat, currentDeviceLocation.lng], 15);
+        setCenterOnDevice(false);
+      }
+    }, [currentDeviceLocation, centerOnDevice, map]);
+    
+    return null;
+  };
   
   const { data: locationsResponse, isLoading: loading, error, refetch } = useVehicleLocations();
+
+  // Verificar permissão GPS ao montar o componente
+  useEffect(() => {
+    requestGPSPermission();
+    
+    // Cleanup ao desmontar
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, []);
+
+  // Cleanup do watchId quando ele muda
+  useEffect(() => {
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [watchId]);
   const vehicleLocations = locationsResponse?.data || [];
 
   useEffect(() => {
@@ -220,6 +363,76 @@ export function FleetTrackingMap({
       </CardHeader>
       
       <CardContent className="p-0">
+        {/* Controles GPS do Dispositivo */}
+        <Card className="m-4 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <Smartphone className="h-5 w-5 text-blue-600" />
+                <span className="font-medium">GPS do Dispositivo</span>
+              </div>
+              
+              {useDeviceGPS && currentDeviceLocation && (
+                <div className="flex items-center space-x-2 text-sm text-green-600">
+                  <Satellite className="h-4 w-4" />
+                  <span>
+                    {currentDeviceLocation.lat.toFixed(6)}, {currentDeviceLocation.lng.toFixed(6)}
+                  </span>
+                </div>
+              )}
+              
+              {gpsError && (
+                <div className="flex items-center space-x-2 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{gpsError}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Badge 
+                variant={gpsPermission === 'granted' ? 'default' : gpsPermission === 'denied' ? 'destructive' : 'secondary'}
+              >
+                {gpsPermission === 'granted' ? 'Permitido' : 
+                 gpsPermission === 'denied' ? 'Negado' : 
+                 gpsPermission === 'checking' ? 'Verificando...' : 'Pendente'}
+              </Badge>
+              
+              <div className="flex items-center space-x-2">
+                 {useDeviceGPS && currentDeviceLocation && (
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => setCenterOnDevice(true)}
+                     title="Centralizar no meu dispositivo"
+                   >
+                     <Satellite className="h-4 w-4" />
+                   </Button>
+                 )}
+                 
+                 <Button
+                   variant={useDeviceGPS ? "destructive" : "default"}
+                   size="sm"
+                   onClick={toggleDeviceGPS}
+                   disabled={gpsPermission === 'denied'}
+                 >
+                   {useDeviceGPS ? (
+                     <>
+                       <Satellite className="h-4 w-4 mr-2" />
+                       Parar GPS
+                     </>
+                   ) : (
+                     <>
+                       <Smartphone className="h-4 w-4 mr-2" />
+                       Ativar GPS
+                     </>
+                   )}
+                 </Button>
+               </div>
+            </div>
+          </div>
+        </Card>
+
         <div style={{ height }}>
           {vehicleLocations.length === 0 && !loading ? (
             <div className="flex items-center justify-center h-full bg-gray-50">
@@ -238,6 +451,7 @@ export function FleetTrackingMap({
               style={{ height: '100%', width: '100%' }}
               className="rounded-b-lg"
             >
+              <MapController />
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -297,6 +511,37 @@ export function FleetTrackingMap({
                   </Popup>
                 </Marker>
               ))}
+              
+              {/* Marcador do dispositivo atual */}
+              {useDeviceGPS && currentDeviceLocation && (
+                <Marker
+                  position={[currentDeviceLocation.lat, currentDeviceLocation.lng]}
+                  icon={new Icon({
+                    iconUrl: `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Ccircle cx='12' cy='12' r='8' stroke='white' stroke-width='3'/%3E%3C/svg%3E`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                    popupAnchor: [0, -10],
+                  })}
+                >
+                  <Popup>
+                    <div className="p-2">
+                      <h3 className="font-semibold flex items-center">
+                        <Smartphone className="h-4 w-4 mr-2 text-blue-600" />
+                        Meu Dispositivo
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Localização atual do dispositivo
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Atualização: {new Date().toLocaleString('pt-AO')}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Coordenadas: {currentDeviceLocation.lat.toFixed(6)}, {currentDeviceLocation.lng.toFixed(6)}
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
             </MapContainer>
           )}
         </div>

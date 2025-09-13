@@ -41,6 +41,9 @@ import { anomalyFraudModule } from './anomaly-fraud-detection';
 import reportsModule from './reports';
 import alertsModule from './alerts';
 import returnsModule from './returns';
+import carriersModule from './carriers';
+import vehicleTypesModule from './vehicle_types';
+import fuelTypesModule from './fuel_types';
 // Outros módulos serão adicionados aqui conforme forem criados
 
 export class ModuleRegistry {
@@ -79,6 +82,9 @@ export class ModuleRegistry {
     this.modules.set('reports', reportsModule);
     this.modules.set('alerts', alertsModule);
     this.modules.set('returns', returnsModule);
+    this.modules.set('carriers', carriersModule);
+    this.modules.set('vehicle_types', vehicleTypesModule);
+    this.modules.set('fuel_types', fuelTypesModule);
     // this.modules.set('gps_tracking', gpsModule); // Module not available
     
     // Temporary direct registration for barcode scanning

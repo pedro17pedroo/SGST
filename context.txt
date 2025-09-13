@@ -1,218 +1,324 @@
-queryClient.ts:134 [API] POST http://localhost:4001/api/returns/generate-number 
-queryClient.ts:134 [API] GET http://localhost:4001/api/orders/search?q=sa 
-queryClient.ts:134 [API] GET http://localhost:4001/api/orders/search?q=sal 
-hook.js:608 Warning: A component is changing an uncontrolled input to be controlled. This is likely caused by the value changing from undefined to a defined value, which should not happen. Decide between using a controlled or uncontrolled input element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components Error Component Stack
-    at input (<anonymous>)
-    at _c (input.tsx:6:6)
-    at chunk-U5FBVDPR.js?v=851ef8ef:79:13
-    at chunk-U5FBVDPR.js?v=851ef8ef:56:13
-    at form.tsx:109:9
-    at div (<anonymous>)
-    at form.tsx:78:6
-    at Controller (chunk-6DS3Q4DS.js?v=851ef8ef:345:35)
-    at FormField (form.tsx:35:6)
-    at div (<anonymous>)
-    at div (<anonymous>)
-    at form (<anonymous>)
-    at FormProvider (chunk-6DS3Q4DS.js?v=851ef8ef:101:11)
-    at div (<anonymous>)
-    at chunk-YPE7DW4C.js?v=851ef8ef:42:13
-    at chunk-4J7NGP4M.js?v=851ef8ef:59:7
-    at chunk-U5FBVDPR.js?v=851ef8ef:79:13
-    at chunk-U5FBVDPR.js?v=851ef8ef:56:13
-    at chunk-YPE7DW4C.js?v=851ef8ef:42:13
-    at chunk-NB3L5I63.js?v=851ef8ef:57:5
-    at chunk-XU4N2ZC6.js?v=851ef8ef:235:13
-    at chunk-XU4N2ZC6.js?v=851ef8ef:158:58
-    at Presence (chunk-OGUQW6AW.js?v=851ef8ef:24:11)
-    at chunk-XU4N2ZC6.js?v=851ef8ef:149:64
-    at chunk-U5FBVDPR.js?v=851ef8ef:79:13
-    at chunk-U5FBVDPR.js?v=851ef8ef:56:13
-    at chunk-YPE7DW4C.js?v=851ef8ef:42:13
-    at chunk-4J7NGP4M.js?v=851ef8ef:258:22
-    at Presence (chunk-OGUQW6AW.js?v=851ef8ef:24:11)
-    at Provider (chunk-5WETD4PZ.js?v=851ef8ef:38:15)
-    at DialogPortal (chunk-XU4N2ZC6.js?v=851ef8ef:111:11)
-    at _c3 (dialog.tsx:35:6)
-    at Provider (chunk-5WETD4PZ.js?v=851ef8ef:38:15)
-    at Dialog (chunk-XU4N2ZC6.js?v=851ef8ef:52:5)
-    at div (<anonymous>)
-    at div (<anonymous>)
-    at div (<anonymous>)
-    at ReturnsPage (returns.tsx:192:37)
-    at ModuleGuard (module-guard.tsx:11:31)
-    at Route (wouter.js?v=851ef8ef:144:16)
-    at Switch (wouter.js?v=851ef8ef:200:17)
-    at div (<anonymous>)
-    at main (<anonymous>)
-    at div (<anonymous>)
-    at Router (App.tsx:65:20)
-    at ProtectedRoute (protected-route.tsx:9:34)
-    at Route (wouter.js?v=851ef8ef:144:16)
-    at Switch (wouter.js?v=851ef8ef:200:17)
-    at Router (wouter.js?v=851ef8ef:99:17)
-    at ModuleProvider (module-context.tsx:23:34)
-    at AuthProvider (auth-context.tsx:38:32)
-    at Provider (chunk-5WETD4PZ.js?v=851ef8ef:38:15)
-    at TooltipProvider (@radix-ui_react-tooltip.js?v=851ef8ef:63:5)
-    at ThemeProvider (theme-context.tsx:13:33)
-    at QueryClientProvider (@tanstack_react-query.js?v=851ef8ef:2946:3)
-    at ErrorBoundary (error-boundary.tsx:19:5)
-    at App (App.tsx:234:9)
-overrideMethod @ hook.js:608
-printWarning @ chunk-GNC7SI6A.js?v=851ef8ef:521
-error @ chunk-GNC7SI6A.js?v=851ef8ef:505
-updateWrapper @ chunk-GNC7SI6A.js?v=851ef8ef:1968
-updateProperties @ chunk-GNC7SI6A.js?v=851ef8ef:7762
-commitUpdate @ chunk-GNC7SI6A.js?v=851ef8ef:8419
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17763
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17813
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17737
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17896
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17727
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17699
-recursivelyTraverseMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17685
-commitMutationEffectsOnFiber @ chunk-GNC7SI6A.js?v=851ef8ef:17794
-commitMutationEffects @ chunk-GNC7SI6A.js?v=851ef8ef:17663
-commitRootImpl @ chunk-GNC7SI6A.js?v=851ef8ef:19347
-commitRoot @ chunk-GNC7SI6A.js?v=851ef8ef:19277
-performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=851ef8ef:18895
-flushSyncCallbacks @ chunk-GNC7SI6A.js?v=851ef8ef:9119
-(anónimo) @ chunk-GNC7SI6A.js?v=851ef8ef:18627Compreenda este erro
+[API] GET http://localhost:4001/api/dashboard/stats 
+queryClient.ts:134 [API] GET http://localhost:4001/api/inventory/summary 
+queryClient.ts:134 [API] GET http://localhost:4001/api/warehouses 
+queryClient.ts:134 [API] GET http://localhost:4001/api/products?limit=50 
+queryClient.ts:134 [API] GET http://localhost:4001/api/orders/recent 
+tab.js:1 Refused to execute inline script because it violates the following Content Security Policy directive: "script-src 'self' 'wasm-unsafe-eval' 'inline-speculation-rules' chrome-extension://3782f5f8-a14e-4abf-8eb9-901f6ab7692d/". Either the 'unsafe-inline' keyword, a hash ('sha256-kPx0AsF0oz2kKiZ875xSvv693TBHkQ/0SkMJZnnNpnQ='), or a nonce ('nonce-...') is required to enable inline execution.
+
+(anónimo) @ tab.js:1
+(anónimo) @ tab.js:1
+Promise.then
+i @ tab.js:1
+128 @ tab.js:1
+n @ tab.js:1
+(anónimo) @ tab.js:1
+(anónimo) @ tab.js:1Compreenda este erro
+tab.js:1 Refused to execute inline script because it violates the following Content Security Policy directive: "script-src 'self' 'wasm-unsafe-eval' 'inline-speculation-rules' chrome-extension://df75fe79-bf62-449c-8f07-dc144f44c464/". Either the 'unsafe-inline' keyword, a hash ('sha256-kPx0AsF0oz2kKiZ875xSvv693TBHkQ/0SkMJZnnNpnQ='), or a nonce ('nonce-...') is required to enable inline execution.
+
+(anónimo) @ tab.js:1
+(anónimo) @ tab.js:1
+Promise.then
+i @ tab.js:1
+122 @ tab.js:1
+n @ tab.js:1
+(anónimo) @ tab.js:1
+(anónimo) @ tab.js:1Compreenda este erro
+product-locations.tsx:106 🔄 ProductLocationsPage renderizado
+product-locations.tsx:107 🔄 Estado do diálogo: false
+product-locations.tsx:218 🏢 SafeWarehouses processados: 0 itens
+product-locations.tsx:219 🏢 Estado de carregamento: {warehousesLoading: true, warehousesError: null}
+product-locations.tsx:241 🏢 Armazéns filtrados: 0 itens
+product-locations.tsx:242 🏢 Lista filtrada: []
+product-locations.tsx:111 🔄 Componente montado - iniciando carregamento de dados
+queryClient.ts:134 [API] GET http://localhost:4001/api/product-locations/paginated?page=1&limit=5&sortBy=createdAt&sortOrder=desc 
+product-locations.tsx:178 🏢 Iniciando chamada para carregar armazéns...
+product-locations.tsx:223 🏢 Dados de armazéns mudaram: {warehouses: 0, safeWarehouses: 0, loading: true, error: null}
+product-locations.tsx:106 🔄 ProductLocationsPage renderizado
+product-locations.tsx:107 🔄 Estado do diálogo: false
+product-locations.tsx:218 🏢 SafeWarehouses processados: 0 itens
+product-locations.tsx:219 🏢 Estado de carregamento: {warehousesLoading: true, warehousesError: null}
+product-locations.tsx:241 🏢 Armazéns filtrados: 0 itens
+product-locations.tsx:242 🏢 Lista filtrada: []
+product-locations.tsx:223 🏢 Dados de armazéns mudaram: {warehouses: 0, safeWarehouses: 0, loading: true, error: null}
+product-locations.tsx:106 🔄 ProductLocationsPage renderizado
+product-locations.tsx:107 🔄 Estado do diálogo: false
+product-locations.tsx:218 🏢 SafeWarehouses processados: 0 itens
+product-locations.tsx:219 🏢 Estado de carregamento: {warehousesLoading: true, warehousesError: null}
+product-locations.tsx:241 🏢 Armazéns filtrados: 0 itens
+product-locations.tsx:242 🏢 Lista filtrada: []
+product-locations.tsx:223 🏢 Dados de armazéns mudaram: {warehouses: 0, safeWarehouses: 0, loading: true, error: null}
+frame_ant.js:2  GET http://localhost:3000/api/products?limit=1000 401 (Unauthorized)
+(anónimo) @ frame_ant.js:2
+queryFn @ product-locations.tsx:156
+fetchFn @ @tanstack_react-query.js?v=4a384d91:883
+run @ @tanstack_react-query.js?v=4a384d91:511
+start @ @tanstack_react-query.js?v=4a384d91:554
+fetch @ @tanstack_react-query.js?v=4a384d91:930
+executeFetch_fn @ @tanstack_react-query.js?v=4a384d91:2288
+onSubscribe @ @tanstack_react-query.js?v=4a384d91:1984
+subscribe @ @tanstack_react-query.js?v=4a384d91:24
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:3163
+subscribeToStore @ chunk-GNC7SI6A.js?v=4a384d91:11984
+commitHookEffectListMount @ chunk-GNC7SI6A.js?v=4a384d91:16915
+commitPassiveMountOnFiber @ chunk-GNC7SI6A.js?v=4a384d91:18156
+commitPassiveMountEffects_complete @ chunk-GNC7SI6A.js?v=4a384d91:18129
+commitPassiveMountEffects_begin @ chunk-GNC7SI6A.js?v=4a384d91:18119
+commitPassiveMountEffects @ chunk-GNC7SI6A.js?v=4a384d91:18109
+flushPassiveEffectsImpl @ chunk-GNC7SI6A.js?v=4a384d91:19490
+flushPassiveEffects @ chunk-GNC7SI6A.js?v=4a384d91:19447
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18868
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=4a384d91:9119
+commitRootImpl @ chunk-GNC7SI6A.js?v=4a384d91:19432
+commitRoot @ chunk-GNC7SI6A.js?v=4a384d91:19277
+finishConcurrentRender @ chunk-GNC7SI6A.js?v=4a384d91:18805
+performConcurrentWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18718
+workLoop @ chunk-GNC7SI6A.js?v=4a384d91:197
+flushWork @ chunk-GNC7SI6A.js?v=4a384d91:176
+performWorkUntilDeadline @ chunk-GNC7SI6A.js?v=4a384d91:384Compreenda este erro
+frame_ant.js:2  GET http://localhost:3000/api/products?limit=1000 401 (Unauthorized)
+(anónimo) @ frame_ant.js:2
+queryFn @ product-locations.tsx:156
+fetchFn @ @tanstack_react-query.js?v=4a384d91:883
+run @ @tanstack_react-query.js?v=4a384d91:511
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+start @ @tanstack_react-query.js?v=4a384d91:554
+fetch @ @tanstack_react-query.js?v=4a384d91:930
+executeFetch_fn @ @tanstack_react-query.js?v=4a384d91:2288
+onSubscribe @ @tanstack_react-query.js?v=4a384d91:1984
+subscribe @ @tanstack_react-query.js?v=4a384d91:24
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:3163
+subscribeToStore @ chunk-GNC7SI6A.js?v=4a384d91:11984
+commitHookEffectListMount @ chunk-GNC7SI6A.js?v=4a384d91:16915
+commitPassiveMountOnFiber @ chunk-GNC7SI6A.js?v=4a384d91:18156
+commitPassiveMountEffects_complete @ chunk-GNC7SI6A.js?v=4a384d91:18129
+commitPassiveMountEffects_begin @ chunk-GNC7SI6A.js?v=4a384d91:18119
+commitPassiveMountEffects @ chunk-GNC7SI6A.js?v=4a384d91:18109
+flushPassiveEffectsImpl @ chunk-GNC7SI6A.js?v=4a384d91:19490
+flushPassiveEffects @ chunk-GNC7SI6A.js?v=4a384d91:19447
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18868
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=4a384d91:9119
+commitRootImpl @ chunk-GNC7SI6A.js?v=4a384d91:19432
+commitRoot @ chunk-GNC7SI6A.js?v=4a384d91:19277
+finishConcurrentRender @ chunk-GNC7SI6A.js?v=4a384d91:18805
+performConcurrentWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18718
+workLoop @ chunk-GNC7SI6A.js?v=4a384d91:197
+flushWork @ chunk-GNC7SI6A.js?v=4a384d91:176
+performWorkUntilDeadline @ chunk-GNC7SI6A.js?v=4a384d91:384Compreenda este erro
+frame_ant.js:2  GET http://localhost:4001/api/product-locations/paginated?page=1&limit=5&sortBy=createdAt&sortOrder=desc 400 (Bad Request)
+(anónimo) @ frame_ant.js:2
+makeRequest @ queryClient.ts:169
+apiRequest @ queryClient.ts:204
+getProductLocations @ api.service.ts:1078
+queryFn @ use-product-locations.ts:91
+fetchFn @ @tanstack_react-query.js?v=4a384d91:883
+run @ @tanstack_react-query.js?v=4a384d91:511
+start @ @tanstack_react-query.js?v=4a384d91:554
+fetch @ @tanstack_react-query.js?v=4a384d91:930
+executeFetch_fn @ @tanstack_react-query.js?v=4a384d91:2288
+onSubscribe @ @tanstack_react-query.js?v=4a384d91:1984
+subscribe @ @tanstack_react-query.js?v=4a384d91:24
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:3163
+subscribeToStore @ chunk-GNC7SI6A.js?v=4a384d91:11984
+commitHookEffectListMount @ chunk-GNC7SI6A.js?v=4a384d91:16915
+commitPassiveMountOnFiber @ chunk-GNC7SI6A.js?v=4a384d91:18156
+commitPassiveMountEffects_complete @ chunk-GNC7SI6A.js?v=4a384d91:18129
+commitPassiveMountEffects_begin @ chunk-GNC7SI6A.js?v=4a384d91:18119
+commitPassiveMountEffects @ chunk-GNC7SI6A.js?v=4a384d91:18109
+flushPassiveEffectsImpl @ chunk-GNC7SI6A.js?v=4a384d91:19490
+flushPassiveEffects @ chunk-GNC7SI6A.js?v=4a384d91:19447
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18868
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=4a384d91:9119
+commitRootImpl @ chunk-GNC7SI6A.js?v=4a384d91:19432
+commitRoot @ chunk-GNC7SI6A.js?v=4a384d91:19277
+finishConcurrentRender @ chunk-GNC7SI6A.js?v=4a384d91:18805
+performConcurrentWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18718
+workLoop @ chunk-GNC7SI6A.js?v=4a384d91:197
+flushWork @ chunk-GNC7SI6A.js?v=4a384d91:176
+performWorkUntilDeadline @ chunk-GNC7SI6A.js?v=4a384d91:384Compreenda este erro
+product-locations.tsx:180 🏢 Resposta da API de armazéns: 200 OK
+product-locations.tsx:188 🏢 Dados recebidos da API de armazéns: {success: true, message: 'Armazéns carregados com sucesso', data: Array(4), pagination: {…}}
+product-locations.tsx:192 🏢 Armazéns carregados com sucesso: 4 itens
+product-locations.tsx:193 🏢 Lista de armazéns: (4) [{…}, {…}, {…}, {…}]
+product-locations.tsx:106 🔄 ProductLocationsPage renderizado
+product-locations.tsx:107 🔄 Estado do diálogo: false
+product-locations.tsx:218 🏢 SafeWarehouses processados: 4 itens
+product-locations.tsx:219 🏢 Estado de carregamento: {warehousesLoading: false, warehousesError: null}
+product-locations.tsx:241 🏢 Armazéns filtrados: 4 itens
+product-locations.tsx:242 🏢 Lista filtrada: (4) [{…}, {…}, {…}, {…}]
+product-locations.tsx:223 🏢 Dados de armazéns mudaram: {warehouses: 4, safeWarehouses: 4, loading: false, error: null}
+queryClient.ts:134 [API] GET http://localhost:4001/api/product-locations/paginated?page=1&limit=5&sortBy=createdAt&sortOrder=desc 
+frame_ant.js:2  GET http://localhost:4001/api/product-locations/paginated?page=1&limit=5&sortBy=createdAt&sortOrder=desc 400 (Bad Request)
+(anónimo) @ frame_ant.js:2
+makeRequest @ queryClient.ts:169
+apiRequest @ queryClient.ts:204
+getProductLocations @ api.service.ts:1078
+queryFn @ use-product-locations.ts:91
+fetchFn @ @tanstack_react-query.js?v=4a384d91:883
+run @ @tanstack_react-query.js?v=4a384d91:511
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+start @ @tanstack_react-query.js?v=4a384d91:554
+fetch @ @tanstack_react-query.js?v=4a384d91:930
+executeFetch_fn @ @tanstack_react-query.js?v=4a384d91:2288
+onSubscribe @ @tanstack_react-query.js?v=4a384d91:1984
+subscribe @ @tanstack_react-query.js?v=4a384d91:24
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:3163
+subscribeToStore @ chunk-GNC7SI6A.js?v=4a384d91:11984
+commitHookEffectListMount @ chunk-GNC7SI6A.js?v=4a384d91:16915
+commitPassiveMountOnFiber @ chunk-GNC7SI6A.js?v=4a384d91:18156
+commitPassiveMountEffects_complete @ chunk-GNC7SI6A.js?v=4a384d91:18129
+commitPassiveMountEffects_begin @ chunk-GNC7SI6A.js?v=4a384d91:18119
+commitPassiveMountEffects @ chunk-GNC7SI6A.js?v=4a384d91:18109
+flushPassiveEffectsImpl @ chunk-GNC7SI6A.js?v=4a384d91:19490
+flushPassiveEffects @ chunk-GNC7SI6A.js?v=4a384d91:19447
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18868
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=4a384d91:9119
+commitRootImpl @ chunk-GNC7SI6A.js?v=4a384d91:19432
+commitRoot @ chunk-GNC7SI6A.js?v=4a384d91:19277
+finishConcurrentRender @ chunk-GNC7SI6A.js?v=4a384d91:18805
+performConcurrentWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18718
+workLoop @ chunk-GNC7SI6A.js?v=4a384d91:197
+flushWork @ chunk-GNC7SI6A.js?v=4a384d91:176
+performWorkUntilDeadline @ chunk-GNC7SI6A.js?v=4a384d91:384Compreenda este erro
+frame_ant.js:2  GET http://localhost:3000/api/products?limit=1000 401 (Unauthorized)
+(anónimo) @ frame_ant.js:2
+queryFn @ product-locations.tsx:156
+fetchFn @ @tanstack_react-query.js?v=4a384d91:883
+run @ @tanstack_react-query.js?v=4a384d91:511
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+start @ @tanstack_react-query.js?v=4a384d91:554
+fetch @ @tanstack_react-query.js?v=4a384d91:930
+executeFetch_fn @ @tanstack_react-query.js?v=4a384d91:2288
+onSubscribe @ @tanstack_react-query.js?v=4a384d91:1984
+subscribe @ @tanstack_react-query.js?v=4a384d91:24
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:3163
+subscribeToStore @ chunk-GNC7SI6A.js?v=4a384d91:11984
+commitHookEffectListMount @ chunk-GNC7SI6A.js?v=4a384d91:16915
+commitPassiveMountOnFiber @ chunk-GNC7SI6A.js?v=4a384d91:18156
+commitPassiveMountEffects_complete @ chunk-GNC7SI6A.js?v=4a384d91:18129
+commitPassiveMountEffects_begin @ chunk-GNC7SI6A.js?v=4a384d91:18119
+commitPassiveMountEffects @ chunk-GNC7SI6A.js?v=4a384d91:18109
+flushPassiveEffectsImpl @ chunk-GNC7SI6A.js?v=4a384d91:19490
+flushPassiveEffects @ chunk-GNC7SI6A.js?v=4a384d91:19447
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18868
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=4a384d91:9119
+commitRootImpl @ chunk-GNC7SI6A.js?v=4a384d91:19432
+commitRoot @ chunk-GNC7SI6A.js?v=4a384d91:19277
+finishConcurrentRender @ chunk-GNC7SI6A.js?v=4a384d91:18805
+performConcurrentWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18718
+workLoop @ chunk-GNC7SI6A.js?v=4a384d91:197
+flushWork @ chunk-GNC7SI6A.js?v=4a384d91:176
+performWorkUntilDeadline @ chunk-GNC7SI6A.js?v=4a384d91:384Compreenda este erro
+queryClient.ts:134 [API] GET http://localhost:4001/api/product-locations/paginated?page=1&limit=5&sortBy=createdAt&sortOrder=desc 
+frame_ant.js:2  GET http://localhost:4001/api/product-locations/paginated?page=1&limit=5&sortBy=createdAt&sortOrder=desc 400 (Bad Request)
+(anónimo) @ frame_ant.js:2
+makeRequest @ queryClient.ts:169
+apiRequest @ queryClient.ts:204
+getProductLocations @ api.service.ts:1078
+queryFn @ use-product-locations.ts:91
+fetchFn @ @tanstack_react-query.js?v=4a384d91:883
+run @ @tanstack_react-query.js?v=4a384d91:511
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+start @ @tanstack_react-query.js?v=4a384d91:554
+fetch @ @tanstack_react-query.js?v=4a384d91:930
+executeFetch_fn @ @tanstack_react-query.js?v=4a384d91:2288
+onSubscribe @ @tanstack_react-query.js?v=4a384d91:1984
+subscribe @ @tanstack_react-query.js?v=4a384d91:24
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:3163
+subscribeToStore @ chunk-GNC7SI6A.js?v=4a384d91:11984
+commitHookEffectListMount @ chunk-GNC7SI6A.js?v=4a384d91:16915
+commitPassiveMountOnFiber @ chunk-GNC7SI6A.js?v=4a384d91:18156
+commitPassiveMountEffects_complete @ chunk-GNC7SI6A.js?v=4a384d91:18129
+commitPassiveMountEffects_begin @ chunk-GNC7SI6A.js?v=4a384d91:18119
+commitPassiveMountEffects @ chunk-GNC7SI6A.js?v=4a384d91:18109
+flushPassiveEffectsImpl @ chunk-GNC7SI6A.js?v=4a384d91:19490
+flushPassiveEffects @ chunk-GNC7SI6A.js?v=4a384d91:19447
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18868
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=4a384d91:9119
+commitRootImpl @ chunk-GNC7SI6A.js?v=4a384d91:19432
+commitRoot @ chunk-GNC7SI6A.js?v=4a384d91:19277
+finishConcurrentRender @ chunk-GNC7SI6A.js?v=4a384d91:18805
+performConcurrentWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18718
+workLoop @ chunk-GNC7SI6A.js?v=4a384d91:197
+flushWork @ chunk-GNC7SI6A.js?v=4a384d91:176
+performWorkUntilDeadline @ chunk-GNC7SI6A.js?v=4a384d91:384Compreenda este erro
+product-locations.tsx:106 🔄 ProductLocationsPage renderizado
+product-locations.tsx:107 🔄 Estado do diálogo: false
+product-locations.tsx:218 🏢 SafeWarehouses processados: 4 itens
+product-locations.tsx:219 🏢 Estado de carregamento: {warehousesLoading: false, warehousesError: null}
+product-locations.tsx:241 🏢 Armazéns filtrados: 4 itens
+product-locations.tsx:242 🏢 Lista filtrada: (4) [{…}, {…}, {…}, {…}]
+frame_ant.js:2  GET http://localhost:3000/api/products?limit=1000 401 (Unauthorized)
+(anónimo) @ frame_ant.js:2
+queryFn @ product-locations.tsx:156
+fetchFn @ @tanstack_react-query.js?v=4a384d91:883
+run @ @tanstack_react-query.js?v=4a384d91:511
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:536
+Promise.then
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:532
+Promise.catch
+run @ @tanstack_react-query.js?v=4a384d91:515
+start @ @tanstack_react-query.js?v=4a384d91:554
+fetch @ @tanstack_react-query.js?v=4a384d91:930
+executeFetch_fn @ @tanstack_react-query.js?v=4a384d91:2288
+onSubscribe @ @tanstack_react-query.js?v=4a384d91:1984
+subscribe @ @tanstack_react-query.js?v=4a384d91:24
+(anónimo) @ @tanstack_react-query.js?v=4a384d91:3163
+subscribeToStore @ chunk-GNC7SI6A.js?v=4a384d91:11984
+commitHookEffectListMount @ chunk-GNC7SI6A.js?v=4a384d91:16915
+commitPassiveMountOnFiber @ chunk-GNC7SI6A.js?v=4a384d91:18156
+commitPassiveMountEffects_complete @ chunk-GNC7SI6A.js?v=4a384d91:18129
+commitPassiveMountEffects_begin @ chunk-GNC7SI6A.js?v=4a384d91:18119
+commitPassiveMountEffects @ chunk-GNC7SI6A.js?v=4a384d91:18109
+flushPassiveEffectsImpl @ chunk-GNC7SI6A.js?v=4a384d91:19490
+flushPassiveEffects @ chunk-GNC7SI6A.js?v=4a384d91:19447
+performSyncWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18868
+flushSyncCallbacks @ chunk-GNC7SI6A.js?v=4a384d91:9119
+commitRootImpl @ chunk-GNC7SI6A.js?v=4a384d91:19432
+commitRoot @ chunk-GNC7SI6A.js?v=4a384d91:19277
+finishConcurrentRender @ chunk-GNC7SI6A.js?v=4a384d91:18805
+performConcurrentWorkOnRoot @ chunk-GNC7SI6A.js?v=4a384d91:18718
+workLoop @ chunk-GNC7SI6A.js?v=4a384d91:197
+flushWork @ chunk-GNC7SI6A.js?v=4a384d91:176
+performWorkUntilDeadline @ chunk-GNC7SI6A.js?v=4a384d91:384Compreenda este erro
+product-locations.tsx:106 🔄 ProductLocationsPage renderizado
+product-locations.tsx:107 🔄 Estado do diálogo: false
+product-locations.tsx:218 🏢 SafeWarehouses processados: 4 itens
+product-locations.tsx:219 🏢 Estado de carregamento: {warehousesLoading: false, warehousesError: null}
+product-locations.tsx:241 🏢 Armazéns filtrados: 4 itens
+product-locations.tsx:242 🏢 Lista filtrada: (4) [{…}, {…}, {…}, {…}]

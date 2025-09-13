@@ -9,7 +9,7 @@ import {
   stockMovements, orders, orderItems, shipments, productLocations, 
   inventoryCounts, inventoryCountItems, barcodeScans, pickingLists, pickingListItems,
   vehicles, vehicleMaintenance, gpsTracking, geofences, vehicleAssignments, geofenceAlerts, gpsSessions,
-  roles, permissions, rolePermissions, userRoles
+  carriers, roles, permissions, rolePermissions, userRoles
 } from "@shared/schema";
 import bcrypt from "bcryptjs";
 
@@ -39,6 +39,7 @@ async function seed() {
     await db.delete(products as unknown as MySqlTable<any>);
     await db.delete(geofences as unknown as MySqlTable<any>);
     await db.delete(vehicles as unknown as MySqlTable<any>);
+    await db.delete(carriers as unknown as MySqlTable<any>);
     await db.delete(warehouses as unknown as MySqlTable<any>);
     await db.delete(customers as unknown as MySqlTable<any>);
     await db.delete(suppliers as unknown as MySqlTable<any>);
@@ -93,6 +94,12 @@ async function seed() {
       { name: "suppliers.create", description: "Criar fornecedores", module: "suppliers", action: "create", resource: "suppliers" },
       { name: "suppliers.update", description: "Editar fornecedores", module: "suppliers", action: "update", resource: "suppliers" },
       { name: "suppliers.delete", description: "Eliminar fornecedores", module: "suppliers", action: "delete", resource: "suppliers" },
+      
+      // Gestão de Transportadoras
+      { name: "carriers.read", description: "Visualizar transportadoras", module: "carriers", action: "read", resource: "carriers" },
+      { name: "carriers.create", description: "Criar transportadoras", module: "carriers", action: "create", resource: "carriers" },
+      { name: "carriers.update", description: "Editar transportadoras", module: "carriers", action: "update", resource: "carriers" },
+      { name: "carriers.delete", description: "Eliminar transportadoras", module: "carriers", action: "delete", resource: "carriers" },
       
       // Gestão de Frota e Veículos
       { name: "fleet.read", description: "Visualizar frota", module: "fleet", action: "read", resource: "vehicles" },
@@ -158,6 +165,7 @@ async function seed() {
         "inventory.read", "inventory.update", "inventory.count", "inventory.adjust",
         "orders.read", "orders.create", "orders.update", "orders.cancel",
         "suppliers.read", "suppliers.create", "suppliers.update",
+        "carriers.read", "carriers.create", "carriers.update", "carriers.delete",
         "fleet.read", "fleet.update", "fleet.maintenance", "fleet.tracking",
         "picking.read", "picking.create", "picking.execute",
         "reports.read", "reports.export",
@@ -228,6 +236,7 @@ async function seed() {
         "orders.read",
         "customers.read",
         "suppliers.read",
+        "carriers.read",
         "fleet.read",
         "reports.read", "reports.export"
       ].includes(p.name))
@@ -945,7 +954,45 @@ async function seed() {
      await db.insert(customers).values(customersData);
      const insertedCustomers = await db.select().from(customers).orderBy(customers.name);
 
-     // Criar veículos para distribuição
+     // 10. CARRIERS - Criar transportadoras
+     console.log('🚚 Criando transportadoras...');
+     const carriersData = [
+       {
+         name: "Transportes Internos SGST",
+         code: "SGST-INT",
+         type: "internal",
+         email: "frota@sgst.ao",
+         phone: "+244 222 123 456",
+         address: "Zona Industrial de Viana, Luanda, Angola",
+         contactPerson: "Carlos Silva",
+         taxId: "5418000001",
+         isActive: true,
+         notes: "Frota própria da empresa"
+       },
+       {
+         name: "Transportes Rápidos Angola",
+         code: "TRA-EXT",
+         type: "external",
+         email: "comercial@transportesrapidos.ao",
+         phone: "+244 222 234 567",
+         address: "Rua da Independência, 123, Luanda, Angola",
+         contactPerson: "Maria Santos",
+         taxId: "5418000002",
+         isActive: true,
+         notes: "Parceiro logístico para rotas especiais"
+       }
+     ];
+     
+     await db.insert(carriers).values(carriersData);
+     const insertedCarriers = await db.select().from(carriers).orderBy(carriers.name);
+     
+     // Mapear transportadoras por código
+     const carrierMap = insertedCarriers.reduce((acc, carrier) => {
+       acc[carrier.code] = carrier;
+       return acc;
+     }, {} as Record<string, any>);
+
+     // 11. VEHICLES - Criar veículos para distribuição
      console.log('🚛 Criando veículos para distribuição...');
      const vehiclesData = [
        // Camiões para distribuição de longa distância
@@ -959,6 +1006,7 @@ async function seed() {
          capacity: "7500.00", // 7.5 toneladas
          fuelType: "diesel",
          status: "available",
+         carrierId: carrierMap["SGST-INT"].id,
          driverId: null,
          currentLocation: JSON.stringify({
            lat: -8.8390,
@@ -977,6 +1025,7 @@ async function seed() {
          capacity: "6000.00", // 6 toneladas
          fuelType: "diesel",
          status: "available",
+         carrierId: carrierMap["SGST-INT"].id,
          driverId: null,
          currentLocation: JSON.stringify({
            lat: -12.5844,
@@ -995,6 +1044,7 @@ async function seed() {
          capacity: "5000.00", // 5 toneladas
          fuelType: "diesel",
          status: "available",
+         carrierId: carrierMap["SGST-INT"].id,
          driverId: null,
          currentLocation: JSON.stringify({
            lat: -12.7761,
@@ -1015,6 +1065,7 @@ async function seed() {
          capacity: "2000.00", // 2 toneladas
          fuelType: "diesel",
          status: "available",
+         carrierId: carrierMap["SGST-INT"].id,
          driverId: null,
          currentLocation: JSON.stringify({
            lat: -8.8390,
@@ -1033,6 +1084,7 @@ async function seed() {
          capacity: "1800.00", // 1.8 toneladas
          fuelType: "diesel",
          status: "available",
+         carrierId: carrierMap["SGST-INT"].id,
          driverId: null,
          currentLocation: JSON.stringify({
            lat: -8.8390,
@@ -1053,6 +1105,7 @@ async function seed() {
          capacity: "1000.00", // 1 tonelada
          fuelType: "diesel",
          status: "available",
+         carrierId: carrierMap["SGST-INT"].id,
          driverId: null,
          currentLocation: JSON.stringify({
            lat: -8.8390,
@@ -1071,6 +1124,7 @@ async function seed() {
          capacity: "1000.00", // 1 tonelada
          fuelType: "diesel",
          status: "available",
+         carrierId: carrierMap["SGST-INT"].id,
          driverId: null,
          currentLocation: JSON.stringify({
            lat: -8.8390,

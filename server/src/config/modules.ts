@@ -155,6 +155,17 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     permissions: ['shipments.read', 'shipments.write', 'shipments.delete']
   },
 
+  carriers: {
+    id: 'carriers',
+    name: 'Gestão de Transportadoras',
+    description: 'Gestão de transportadoras internas e externas para envios',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/carriers'],
+    tables: ['carriers'],
+    permissions: ['carriers.read', 'carriers.write', 'carriers.delete']
+  },
+
   returns: {
     id: 'returns',
     name: 'Gestão de Devoluções',
@@ -522,6 +533,38 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
       'inventory_alerts.acknowledge',
       'inventory_alerts.resolve',
       'inventory_alerts.settings'
+    ]
+  },
+
+  vehicle_types: {
+    id: 'vehicle_types',
+    name: 'Tipos de Veículo',
+    description: 'Gestão de tipos de veículo para categorização da frota',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/vehicle-types'],
+    tables: ['vehicle_types'],
+    permissions: [
+      'vehicle_types.read',
+      'vehicle_types.create',
+      'vehicle_types.update',
+      'vehicle_types.delete'
+    ]
+  },
+
+  fuel_types: {
+    id: 'fuel_types',
+    name: 'Tipos de Combustível',
+    description: 'Gestão de tipos de combustível para controlo de consumo da frota',
+    enabled: true,
+    dependencies: ['users'],
+    routes: ['/api/fuel-types'],
+    tables: ['fuel_types'],
+    permissions: [
+      'fuel_types.read',
+      'fuel_types.create',
+      'fuel_types.update',
+      'fuel_types.delete'
     ]
   }
 };

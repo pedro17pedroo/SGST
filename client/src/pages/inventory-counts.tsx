@@ -83,7 +83,8 @@ export default function InventoryCountsPage() {
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/warehouses');
       const result = await response.json();
-      return result.data as Warehouse[];
+      // Garantir que sempre retornamos um array
+      return (result.data || []) as Warehouse[];
     }
   });
 
@@ -223,7 +224,7 @@ export default function InventoryCountsPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {warehouses?.map((warehouse) => (
+                          {Array.isArray(warehouses) && warehouses.map((warehouse) => (
                             <SelectItem key={warehouse.id} value={warehouse.id}>
                               {warehouse.name}
                             </SelectItem>

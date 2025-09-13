@@ -4,6 +4,7 @@ import { ProductLocationsController } from './product-locations.controller';
 const router = Router();
 
 // Product locations endpoints
+router.get('/product-locations/paginated', ProductLocationsController.getProductLocationsWithPagination);
 router.get('/product-locations', ProductLocationsController.getProductLocations);
 router.get('/product-locations/:id', ProductLocationsController.getProductLocation);
 router.post('/product-locations', ProductLocationsController.createProductLocation);

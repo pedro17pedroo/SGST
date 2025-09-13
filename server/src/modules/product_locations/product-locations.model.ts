@@ -45,6 +45,94 @@ export class ProductLocationsModel {
     }));
   }
 
+  /**
+   * Buscar localizações de produtos com paginação e filtros
+   */
+  static async getProductLocationsWithPagination(params: {
+    page: number;
+    limit: number;
+    warehouseId?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ locations: any[]; total: number }> {
+    const { page, limit, warehouseId, search, sortBy = 'created_at', sortOrder = 'desc' } = params;
+    const offset = (page - 1) * limit;
+
+    // Construir query base
+    let baseQuery = `
+      FROM product_locations pl
+      LEFT JOIN products p ON pl.product_id = p.id
+      LEFT JOIN warehouses w ON pl.warehouse_id = w.id
+    `;
+
+    // Construir condições WHERE
+    const conditions: string[] = [];
+    if (warehouseId) {
+      conditions.push(`pl.warehouse_id = '${warehouseId}'`);
+    }
+    if (search) {
+      conditions.push(`(
+        p.name LIKE '%${search}%' OR 
+        p.sku LIKE '%${search}%' OR 
+        w.name LIKE '%${search}%' OR 
+        pl.zone LIKE '%${search}%' OR 
+        pl.shelf LIKE '%${search}%' OR 
+        pl.bin LIKE '%${search}%'
+      )`);
+    }
+
+    const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+
+    // Query para contar total
+    const countQuery = `SELECT COUNT(*) as total ${baseQuery} ${whereClause}`;
+    const countResult = await db.execute(sql.raw(countQuery));
+    const total = parseInt((countResult[0] as any)[0].total);
+
+    // Validar sortBy para evitar SQL injection
+    const validSortColumns = ['created_at', 'zone', 'shelf', 'bin', 'p.name', 'w.name'];
+    const safeSortBy = validSortColumns.includes(sortBy) ? sortBy : 'pl.created_at';
+    const safeSortOrder = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    // Query para buscar dados paginados
+    const dataQuery = `
+      SELECT pl.id, pl.product_id, pl.warehouse_id, pl.zone, pl.shelf, pl.bin, 
+             pl.last_scanned, pl.scanned_by_user_id, pl.created_at,
+             p.id as p_id, p.name as p_name, p.sku as p_sku, p.barcode as p_barcode,
+             w.id as w_id, w.name as w_name
+      ${baseQuery}
+      ${whereClause}
+      ORDER BY ${safeSortBy} ${safeSortOrder}
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const dataResult = await db.execute(sql.raw(dataQuery));
+    
+    const locations = (dataResult[0] as any).map((row: any) => ({
+      id: row.id,
+      productId: row.product_id,
+      warehouseId: row.warehouse_id,
+      zone: row.zone,
+      shelf: row.shelf,
+      bin: row.bin,
+      lastScanned: row.last_scanned,
+      scannedByUserId: row.scanned_by_user_id,
+      createdAt: row.created_at,
+      product: row.p_id ? {
+        id: row.p_id,
+        name: row.p_name,
+        sku: row.p_sku,
+        barcode: row.p_barcode
+      } : null,
+      warehouse: row.w_id ? {
+        id: row.w_id,
+        name: row.w_name
+      } : null
+    }));
+
+    return { locations, total };
+  }
+
   static async getProductLocationById(id: string): Promise<any> {
     const result = await db.execute(sql`
       SELECT pl.id, pl.product_id, pl.warehouse_id, pl.zone, pl.shelf, pl.bin, 

@@ -1,6 +1,28 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { ProductLocationsModel } from './product-locations.model';
+import { BaseController } from '../base/base.controller';
+
+// Schema de validação para buscar localizações
+const getProductLocationsSchema = z.object({
+  warehouseId: z.string().optional()
+});
+
+// Schema de validação para buscar localizações com paginação
+const getProductLocationsWithPaginationSchema = z.object({
+  page: z.string().optional().default('1').transform(val => {
+    const parsed = parseInt(val);
+    return isNaN(parsed) || parsed < 1 ? 1 : parsed;
+  }),
+  limit: z.string().optional().default('5').transform(val => {
+    const parsed = parseInt(val);
+    return isNaN(parsed) || parsed < 1 || parsed > 100 ? 5 : parsed;
+  }),
+  warehouseId: z.string().optional(),
+  search: z.string().optional(),
+  sortBy: z.enum(['created_at', 'zone', 'shelf', 'bin', 'p.name', 'w.name']).optional().default('created_at'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc')
+});
 
 // Validation schemas
 const createProductLocationSchema = z.object({
@@ -30,18 +52,57 @@ const bulkAssignSchema = z.object({
   autoAssignBins: z.boolean().default(false)
 });
 
-export class ProductLocationsController {
+export class ProductLocationsController extends BaseController {
   static async getProductLocations(req: Request, res: Response) {
     try {
-      const warehouseId = req.query.warehouseId as string | undefined;
+      const { warehouseId } = getProductLocationsSchema.parse(req.query);
+      
       const locations = await ProductLocationsModel.getProductLocations(warehouseId);
-      res.json(locations);
-    } catch (error) {
-      console.error('Error fetching product locations:', error);
-      res.status(500).json({
-        message: "Erro ao buscar localizações de produtos",
-        error: error instanceof Error ? error.message : 'Unknown error'
+      
+      res.json({
+        success: true,
+        data: locations
       });
+    } catch (error) {
+      console.error('Erro ao buscar localizações:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  /**
+   * Buscar localizações de produtos com paginação
+   */
+  static async getProductLocationsWithPagination(req: Request, res: Response) {
+    const controller = new ProductLocationsController();
+    try {
+      const validatedParams = getProductLocationsWithPaginationSchema.parse(req.query);
+      
+      const { locations, total } = await ProductLocationsModel.getProductLocationsWithPagination(validatedParams);
+      
+      const totalPages = Math.ceil(total / validatedParams.limit);
+      
+      return controller.sendSuccessWithPagination(
+        res,
+        locations,
+        {
+          page: validatedParams.page,
+          limit: validatedParams.limit,
+          total,
+          totalPages
+        },
+        'Localizações carregadas com sucesso'
+      );
+    } catch (error) {
+      console.error('Erro ao buscar localizações com paginação:', error);
+      
+      if (error instanceof z.ZodError) {
+        return controller.handleValidationError(res, error);
+      }
+      
+      return controller.sendError(res, 'Erro interno do servidor', undefined, 500);
     }
   }
 

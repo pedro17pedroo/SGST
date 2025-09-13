@@ -159,6 +159,46 @@ export const orderItems = mysqlTable("order_items", {
   totalPrice: decimal("total_price", { precision: 12, scale: 2 }).notNull(),
 });
 
+// Carriers table - Transportadoras
+export const carriers = mysqlTable("carriers", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 50 }).notNull().unique(), // Código único da transportadora
+  type: varchar("type", { length: 50 }).notNull().default("external"), // internal, external
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  address: text("address"),
+  contactPerson: varchar("contact_person", { length: 255 }),
+  taxId: varchar("tax_id", { length: 50 }), // NIF ou número fiscal
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Vehicle Types table
+export const vehicleTypes = mysqlTable("vehicle_types", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull().default("commercial"), // commercial, passenger, heavy_duty
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Fuel Types table
+export const fuelTypes = mysqlTable("fuel_types", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull().default("liquid"), // liquid, gas, electric, hybrid
+  unit: varchar("unit", { length: 20 }).notNull().default("litros"), // litros, kWh, m³
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Vehicles table - Fleet Management
 export const vehicles = mysqlTable("vehicles", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
@@ -167,10 +207,11 @@ export const vehicles = mysqlTable("vehicles", {
   model: varchar("model", { length: 100 }).notNull(),
   year: int("year").notNull(),
   vin: varchar("vin", { length: 50 }),
-  type: varchar("type", { length: 50 }).notNull(), // truck, van, car
+  vehicleTypeId: varchar("vehicle_type_id", { length: 36 }).notNull().references(() => vehicleTypes.id),
   capacity: decimal("capacity", { precision: 8, scale: 2 }), // in kg or cubic meters
-  fuelType: varchar("fuel_type", { length: 50 }).default("gasoline"),
+  fuelTypeId: varchar("fuel_type_id", { length: 36 }).notNull().references(() => fuelTypes.id),
   status: varchar("status", { length: 50 }).notNull().default("available"), // available, in_use, maintenance, out_of_service
+  carrierId: varchar("carrier_id", { length: 36 }).notNull().references(() => carriers.id), // Referência à transportadora
   driverId: varchar("driver_id", { length: 36 }).references(() => users.id),
   currentLocation: json("current_location"), // {lat, lng, address}
   lastGpsUpdate: timestamp("last_gps_update"),
@@ -604,7 +645,15 @@ export const shipmentsRelations = relations(shipments, ({ one }) => ({
   }),
 }));
 
+export const carriersRelations = relations(carriers, ({ many }) => ({
+  vehicles: many(vehicles),
+}));
+
 export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
+  carrier: one(carriers, {
+    fields: [vehicles.carrierId],
+    references: [carriers.id],
+  }),
   driver: one(users, {
     fields: [vehicles.driverId],
     references: [users.id],
@@ -711,7 +760,7 @@ export const insertProductSchema = createInsertSchema(products).omit({
   price: z.string().min(1, "Preço é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço deve ser um número positivo"),
   weight: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) > 0), "Peso deve ser um número positivo"),
   minStockLevel: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), "Nível mínimo deve ser um número positivo"),
-  costPrice: z.string().min(1, "Preço de custo é obrigatório").refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Preço de custo deve ser um número positivo"),
+  costPrice: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), "Preço de custo deve ser um número não negativo"),
 });
 
 // Schema específico para atualização de produtos (omite campos únicos como SKU)
@@ -754,6 +803,32 @@ export const insertShipmentSchema = createInsertSchema(shipments).omit({
   id: true,
   createdAt: true,
 });
+
+export const insertCarrierSchema = createInsertSchema(carriers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateCarrierSchema = insertCarrierSchema.partial();
+
+// Vehicle Types schemas
+export const insertVehicleTypeSchema = createInsertSchema(vehicleTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateVehicleTypeSchema = insertVehicleTypeSchema.partial();
+
+// Fuel Types schemas
+export const insertFuelTypeSchema = createInsertSchema(fuelTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateFuelTypeSchema = insertFuelTypeSchema.partial();
 
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   id: true,
@@ -892,6 +967,15 @@ export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 export type Shipment = typeof shipments.$inferSelect;
 export type InsertShipment = z.infer<typeof insertShipmentSchema>;
+export type Carrier = typeof carriers.$inferSelect;
+export type InsertCarrier = z.infer<typeof insertCarrierSchema>;
+export type UpdateCarrier = z.infer<typeof updateCarrierSchema>;
+export type VehicleType = typeof vehicleTypes.$inferSelect;
+export type InsertVehicleType = z.infer<typeof insertVehicleTypeSchema>;
+export type UpdateVehicleType = z.infer<typeof updateVehicleTypeSchema>;
+export type FuelType = typeof fuelTypes.$inferSelect;
+export type InsertFuelType = z.infer<typeof insertFuelTypeSchema>;
+export type UpdateFuelType = z.infer<typeof updateFuelTypeSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
 export type Role = typeof roles.$inferSelect;

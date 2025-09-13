@@ -13,7 +13,7 @@ if (!process.env.DATABASE_URL) {
 
 // Criar pool de conexões MySQL com configurações otimizadas
 const pool = mysql.createPool({
-  uri: process.env.DATABASE_URL,
+  uri: process.env.DATABASE_URL + '?ssl={"rejectUnauthorized":false}',
   waitForConnections: true,
   connectionLimit: 10,
   maxIdle: 3,
@@ -21,11 +21,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
   // Configurações para lidar com ECONNRESET
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  // SSL configuração
-  ssl: {
-    rejectUnauthorized: false
-  }
+  keepAliveInitialDelay: 0
 });
 
 export const db = drizzle(pool, { schema, mode: 'default' });

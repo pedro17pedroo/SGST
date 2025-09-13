@@ -11,10 +11,11 @@ const createVehicleSchema = z.object({
   model: z.string().min(1, 'Model is required'),
   year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
   vin: z.string().optional(),
-  type: z.enum(['truck', 'van', 'car']),
+  vehicleTypeId: z.string().min(1, 'Vehicle type ID is required'),
   capacity: z.string().optional(),
-  fuelType: z.string().default('gasoline'),
+  fuelTypeId: z.string().min(1, 'Fuel type ID is required'),
   driverId: z.string().optional(),
+  carrierId: z.string().min(1, 'Carrier ID is required'),
 });
 
 const updateVehicleSchema = createVehicleSchema.partial();
@@ -57,7 +58,9 @@ export class FleetController {
   // Vehicle Management
   static async getVehicles(req: Request, res: Response) {
     try {
+      console.log('🚗 Iniciando busca de veículos...');
       const { status, type, driverId } = req.query;
+      console.log('📋 Parâmetros de consulta:', { status, type, driverId });
       
       const conditions = [];
       
@@ -66,16 +69,19 @@ export class FleetController {
       }
       
       if (type) {
-        conditions.push(eq(vehicles.type, type as string));
+        conditions.push(eq(vehicles.vehicleTypeId, type as string));
       }
       
       if (driverId) {
         conditions.push(eq(vehicles.driverId, driverId as string));
       }
       
+      console.log('🔍 Executando consulta no banco de dados...');
       const result = conditions.length > 0 
         ? await db.select().from(vehicles).where(and(...conditions)).orderBy(desc(vehicles.createdAt))
         : await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
+      
+      console.log('✅ Consulta executada com sucesso. Resultados:', result.length);
       
       res.json({
         success: true,
@@ -83,7 +89,8 @@ export class FleetController {
         message: 'Veículos obtidos com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao buscar veículos:', error);
+      console.error('❌ Erro detalhado ao buscar veículos:', error);
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'Sem stack trace');
       res.status(500).json({
         success: false,
         message: 'Falha ao buscar veículos',
@@ -98,6 +105,9 @@ export class FleetController {
       
       const [newVehicle] = await db.insert(vehicles).values({
         ...validatedData,
+        status: 'available',
+        isActive: true,
+        currentLocation: 'Depot',
       }).$returningId();
       
       res.status(201).json({
@@ -530,12 +540,12 @@ export class FleetController {
 
       // Total vehicles by type
       const vehiclesByType = await db.select({
-        type: vehicles.type,
+        vehicleTypeId: vehicles.vehicleTypeId,
         count: sql<number>`count(*)`
       })
       .from(vehicles)
       .where(eq(vehicles.isActive, true))
-      .groupBy(vehicles.type);
+      .groupBy(vehicles.vehicleTypeId);
 
       // Maintenance statistics
       const maintenanceStats = await db.select({

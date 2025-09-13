@@ -26,7 +26,16 @@ export class FleetStorage {
   // ===== VEHICLE MANAGEMENT =====
   
   async getVehicles(): Promise<Vehicle[]> {
-    return await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
+    console.log('=== DEBUG getVehicles ===');
+    try {
+      console.log('Executando query: db.select().from(vehicles).orderBy(desc(vehicles.createdAt))');
+      const result = await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
+      console.log('Query executada com sucesso. Resultados:', result.length);
+      return result;
+    } catch (error) {
+      console.error('ERRO em getVehicles:', error);
+      throw error;
+    }
   }
 
   async getVehicle(id: string): Promise<Vehicle | null> {
@@ -72,6 +81,18 @@ export class FleetStorage {
   async getAvailableVehicles(): Promise<Vehicle[]> {
     return await db.select().from(vehicles)
       .where(eq(vehicles.status, 'available'))
+      .orderBy(desc(vehicles.createdAt));
+  }
+
+  async getVehiclesByCarrier(carrierId: string, status?: string): Promise<Vehicle[]> {
+    const conditions = [eq(vehicles.carrierId, carrierId)];
+    
+    if (status) {
+      conditions.push(eq(vehicles.status, status));
+    }
+    
+    return await db.select().from(vehicles)
+      .where(and(...conditions))
       .orderBy(desc(vehicles.createdAt));
   }
 
@@ -148,7 +169,7 @@ export class FleetStorage {
   }
 
   async updateGPSStatus(vehicleId: string, status: string): Promise<Vehicle> {
-    const result = await updateAndReturn<Vehicle>(vehicles, vehicleId, { gpsStatus: status }, vehicles.id);
+    const result = await updateAndReturn<Vehicle>(vehicles, vehicleId, { lastGpsUpdate: new Date() }, vehicles.id);
     if (!result) {
       throw new Error('Failed to update GPS status');
     }

@@ -10,24 +10,46 @@ import {
   type GpsSession
 } from '@shared/schema';
 import { z } from 'zod';
+import { Logger } from '../../utils/logger';
 
 export class FleetController {
   // ===== VEHICLE MANAGEMENT =====
   
   static async getVehicles(req: Request, res: Response) {
     try {
-      const vehicles = await storage.getVehicles();
+      const { carrierId, status } = req.query;
+      
+      // Se carrierId for fornecido, buscar veículos por transportadora
+      if (carrierId) {
+        const vehicles = await storage.fleet.getVehiclesByCarrier(carrierId as string, status as string);
+        return res.json(vehicles);
+      }
+      
+      // Se status for fornecido, buscar veículos por status
+      if (status) {
+        const vehicles = await storage.fleet.getVehiclesByStatus(status as string);
+        return res.json(vehicles);
+      }
+      
+      // Caso contrário, buscar todos os veículos
+      const vehicles = await storage.fleet.getVehicles();
       res.json(vehicles);
     } catch (error) {
-      console.error('Error fetching vehicles:', error);
-      res.status(500).json({ error: 'Erro interno do servidor' });
-    }
+        Logger.error('=== ERRO DETALHADO em getVehicles ===', error instanceof Error ? error : new Error(String(error)));
+        Logger.error('Tipo do erro: ' + typeof error);
+        if (error instanceof Error) {
+          Logger.error('Mensagem: ' + error.message, error);
+          Logger.error('Stack: ' + (error.stack || 'No stack trace'), error);
+        }
+        Logger.error('Erro completo: ' + String(error), error instanceof Error ? error : new Error(String(error)));
+        res.status(500).json({ error: 'Erro interno do servidor' });
+      }
   }
 
   static async getVehicle(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const vehicle = await storage.getVehicle(id);
+      const vehicle = await storage.fleet.getVehicle(id);
       
       if (!vehicle) {
         return res.status(404).json({ error: 'Veículo não encontrado' });
@@ -42,32 +64,32 @@ export class FleetController {
 
   static async createVehicle(req: Request, res: Response) {
     try {
-      console.log('=== DEBUG: Dados recebidos do frontend ===');
-      console.log('req.body:', JSON.stringify(req.body, null, 2));
-      
-      const validatedData = insertVehicleSchema.parse(req.body);
-      console.log('=== DEBUG: Dados após validação ===');
-      console.log('validatedData.licensePlate:', JSON.stringify(validatedData.licensePlate));
+      Logger.debug('=== DEBUG: Dados recebidos do frontend ===', { metadata: { body: req.body } });
+        Logger.debug('req.body: ' + JSON.stringify(req.body, null, 2));
+        
+        const validatedData = insertVehicleSchema.parse(req.body);
+        Logger.debug('=== DEBUG: Dados após validação ===', { metadata: { validatedData } });
+        Logger.debug('validatedData.licensePlate: ' + JSON.stringify(validatedData.licensePlate));
       
       // Check if license plate already exists
-      const existingVehicle = await storage.getVehicleByLicensePlate(validatedData.licensePlate);
+      const existingVehicle = await storage.fleet.getVehicleByLicensePlate(validatedData.licensePlate);
       
       if (existingVehicle) {
-        console.log('=== DEBUG: Matrícula já existe ===');
-        console.log('Existing vehicle licensePlate:', JSON.stringify(existingVehicle.licensePlate));
-        return res.status(400).json({ error: 'Matrícula já registrada' });
-      }
-      
-      console.log('=== DEBUG: Criando novo veículo ===');
-      const vehicle = await storage.createVehicle(validatedData);
-      console.log('=== DEBUG: Veículo criado com sucesso ===');
+          Logger.debug('=== DEBUG: Matrícula já existe ===', { metadata: { existingVehicle } });
+          Logger.debug('Existing vehicle licensePlate: ' + JSON.stringify(existingVehicle.licensePlate));
+          return res.status(400).json({ error: 'Matrícula já registrada' });
+        }
+        
+        Logger.debug('=== DEBUG: Criando novo veículo ===');
+        const vehicle = await storage.fleet.createVehicle(validatedData);
+        Logger.debug('=== DEBUG: Veículo criado com sucesso ===', { metadata: { vehicle } });
       res.status(201).json(vehicle);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.log('=== DEBUG: Erro de validação Zod ===');
-        console.log('Zod errors:', JSON.stringify(error.errors, null, 2));
-        return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
-      }
+        if (error instanceof z.ZodError) {
+          Logger.debug('=== DEBUG: Erro de validação Zod ===', { metadata: { zodErrors: error.errors } });
+          Logger.debug('Zod errors: ' + JSON.stringify(error.errors, null, 2));
+          return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+        }
       console.error('Error creating vehicle:', error);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
@@ -78,7 +100,7 @@ export class FleetController {
       const { id } = req.params;
       const validatedData = insertVehicleSchema.partial().parse(req.body);
       
-      const vehicle = await storage.updateVehicle(id, validatedData);
+      const vehicle = await storage.fleet.updateVehicle(id, validatedData);
       res.json(vehicle);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -92,7 +114,7 @@ export class FleetController {
   static async deleteVehicle(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      await storage.deleteVehicle(id);
+      await storage.fleet.deleteVehicle(id);
       res.status(204).send();
     } catch (error) {
       console.error('Error deleting vehicle:', error);
@@ -103,7 +125,7 @@ export class FleetController {
   static async getVehiclesByStatus(req: Request, res: Response) {
     try {
       const { status } = req.params;
-      const vehicles = await storage.getVehiclesByStatus(status);
+      const vehicles = await storage.fleet.getVehiclesByStatus(status);
       res.json(vehicles);
     } catch (error) {
       console.error('Error fetching vehicles by status:', error);
@@ -113,7 +135,7 @@ export class FleetController {
 
   static async getAvailableVehicles(req: Request, res: Response) {
     try {
-      const vehicles = await storage.getAvailableVehicles();
+      const vehicles = await storage.fleet.getAvailableVehicles();
       res.json(vehicles);
     } catch (error) {
       console.error('Error fetching available vehicles:', error);
@@ -126,7 +148,7 @@ export class FleetController {
   static async getVehicleMaintenance(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const maintenance = await storage.getVehicleMaintenance(id);
+      const maintenance = await storage.fleet.getVehicleMaintenance(id);
       res.json(maintenance);
     } catch (error) {
       console.error('Error fetching vehicle maintenance:', error);
@@ -142,7 +164,7 @@ export class FleetController {
         vehicleId: id
       });
       
-      const maintenance = await storage.createVehicleMaintenance(validatedData);
+      const maintenance = await storage.fleet.createVehicleMaintenance(validatedData);
       res.status(201).json(maintenance);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -158,7 +180,7 @@ export class FleetController {
       const { id } = req.params;
       const validatedData = insertVehicleMaintenanceSchema.partial().parse(req.body);
       
-      const maintenance = await storage.updateMaintenance(id, validatedData);
+      const maintenance = await storage.fleet.updateMaintenance(id, validatedData);
       res.json(maintenance);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -171,7 +193,7 @@ export class FleetController {
 
   static async getUpcomingMaintenance(req: Request, res: Response) {
     try {
-      const maintenance = await storage.getUpcomingMaintenance();
+      const maintenance = await storage.fleet.getUpcomingMaintenance();
       res.json(maintenance);
     } catch (error) {
       console.error('Error fetching upcoming maintenance:', error);

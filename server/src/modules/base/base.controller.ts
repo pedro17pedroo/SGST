@@ -34,9 +34,9 @@ export const paginationSchema = z.object({
   page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
   limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 10)
 }).refine(data => {
-  return data.page >= 1 && data.limit >= 1 && data.limit <= 100;
+  return data.page >= 1 && data.limit >= 1 && data.limit <= 10000;
 }, {
-  message: "Page deve ser >= 1 e limit deve estar entre 1 e 100"
+  message: "Page deve ser >= 1 e limit deve estar entre 1 e 10000"
 });
 
 /**

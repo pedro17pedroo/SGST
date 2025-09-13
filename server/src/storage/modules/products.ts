@@ -14,9 +14,34 @@ export class ProductStorage {
     try {
       const results = await db
         .select({
-          product: products,
-          category: categories,
-          supplier: suppliers
+          // Campos do produto
+          id: products.id,
+          name: products.name,
+          description: products.description,
+          sku: products.sku,
+          barcode: products.barcode,
+          price: products.price,
+          costPrice: products.costPrice,
+          weight: products.weight,
+          dimensions: products.dimensions,
+          categoryId: products.categoryId,
+          supplierId: products.supplierId,
+          minStockLevel: products.minStockLevel,
+          isActive: products.isActive,
+          createdAt: products.createdAt,
+          // Campos da categoria
+          categoryId_cat: categories.id,
+          categoryName: categories.name,
+          categoryDescription: categories.description,
+          categoryIsActive: categories.isActive,
+          categoryCreatedAt: categories.createdAt,
+          // Campos do fornecedor
+          supplierId_sup: suppliers.id,
+          supplierName: suppliers.name,
+          supplierEmail: suppliers.email,
+          supplierPhone: suppliers.phone,
+          supplierAddress: suppliers.address,
+          supplierCreatedAt: suppliers.createdAt
         })
         .from(products)
         .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -27,9 +52,35 @@ export class ProductStorage {
       Logger.storage.success('getProducts', 'products', undefined, duration);
       
       return results.map(result => ({
-        ...result.product,
-        category: result.category,
-        supplier: result.supplier
+        id: result.id,
+        name: result.name,
+        description: result.description,
+        sku: result.sku,
+        barcode: result.barcode,
+        price: result.price,
+        costPrice: result.costPrice,
+        weight: result.weight,
+        dimensions: result.dimensions,
+        categoryId: result.categoryId,
+        supplierId: result.supplierId,
+        minStockLevel: result.minStockLevel,
+        isActive: result.isActive,
+        createdAt: result.createdAt,
+        category: result.categoryName ? {
+          id: result.categoryId_cat!,
+          name: result.categoryName,
+          description: result.categoryDescription,
+          isActive: result.categoryIsActive!,
+          createdAt: result.categoryCreatedAt!
+        } : null,
+        supplier: result.supplierName ? {
+          id: result.supplierId_sup!,
+          name: result.supplierName,
+          email: result.supplierEmail,
+          phone: result.supplierPhone,
+          address: result.supplierAddress,
+          createdAt: result.supplierCreatedAt!
+        } : null
       }));
     } catch (error) {
       Logger.storage.error('getProducts', 'products', error as Error);
@@ -190,8 +241,28 @@ export class ProductStorage {
   async getLowStockProducts(): Promise<Array<Product & { stock: number; category?: Category | null }>> {
     const results = await db
       .select({
-        product: products,
-        category: categories,
+        // Campos do produto
+        id: products.id,
+        name: products.name,
+        description: products.description,
+        sku: products.sku,
+        barcode: products.barcode,
+        price: products.price,
+        costPrice: products.costPrice,
+        weight: products.weight,
+        dimensions: products.dimensions,
+        categoryId: products.categoryId,
+        supplierId: products.supplierId,
+        minStockLevel: products.minStockLevel,
+        isActive: products.isActive,
+        createdAt: products.createdAt,
+        // Campos da categoria
+        categoryId_cat: categories.id,
+        categoryName: categories.name,
+        categoryDescription: categories.description,
+        categoryIsActive: categories.isActive,
+        categoryCreatedAt: categories.createdAt,
+        // Stock
         stock: sum(inventory.quantity)
       })
       .from(products)
@@ -201,8 +272,27 @@ export class ProductStorage {
       .having(lt(sum(inventory.quantity), 10)); // Default low stock threshold
     
     return results.map(result => ({
-      ...result.product,
-      category: result.category,
+      id: result.id,
+      name: result.name,
+      description: result.description,
+      sku: result.sku,
+      barcode: result.barcode,
+      price: result.price,
+      costPrice: result.costPrice,
+      weight: result.weight,
+      dimensions: result.dimensions,
+      categoryId: result.categoryId,
+      supplierId: result.supplierId,
+      minStockLevel: result.minStockLevel,
+      isActive: result.isActive,
+      createdAt: result.createdAt,
+      category: result.categoryName ? {
+        id: result.categoryId_cat!,
+        name: result.categoryName,
+        description: result.categoryDescription,
+        isActive: result.categoryIsActive!,
+        createdAt: result.categoryCreatedAt!
+      } : null,
       stock: Number(result.stock) || 0
     }));
   }

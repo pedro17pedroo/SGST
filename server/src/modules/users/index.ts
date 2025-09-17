@@ -10,13 +10,13 @@ export class UsersModule extends BaseModule {
     // Registrar rotas do módulo
     app.use('/api/users', userRoutes);
     
-    console.log(`✓ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 
   async unregister(app: Express): Promise<void> {
     // Em Express, não há uma forma direta de remover rotas
     // Em produção, isso seria implementado com hot-reload ou restart
-    console.log(`✗ Módulo ${this.config.name} desregistrado`);
+    // Módulo desregistrado
   }
 }
 

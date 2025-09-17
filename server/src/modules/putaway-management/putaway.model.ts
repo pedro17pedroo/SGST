@@ -29,7 +29,7 @@ export class PutawayManagementModel {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    console.log('Regra de putaway criada (mock):', rule);
+    // Regra de putaway criada (mock)
     return rule;
   }
 
@@ -45,13 +45,13 @@ export class PutawayManagementModel {
       ...data,
       updatedAt: new Date()
     };
-    console.log('Regra de putaway atualizada (mock):', rule);
+    // Regra de putaway atualizada (mock)
     return rule;
   }
 
   static async deletePutawayRule(id: string) {
     // Implementação temporária
-    console.log('Regra de putaway deletada (mock):', id);
+    // Regra de putaway deletada (mock)
     return true;
   }
 
@@ -63,7 +63,7 @@ export class PutawayManagementModel {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    console.log('Tarefa de putaway criada (mock):', task);
+    // Tarefa de putaway criada (mock)
     return task;
   }
 
@@ -79,7 +79,7 @@ export class PutawayManagementModel {
       ...data,
       updatedAt: new Date()
     };
-    console.log('Tarefa de putaway atualizada (mock):', task);
+    // Tarefa de putaway atualizada (mock)
     return task;
   }
 
@@ -90,7 +90,7 @@ export class PutawayManagementModel {
       ...data,
       createdAt: new Date()
     };
-    console.log('Pallet SSCC criado (mock):', pallet);
+    // Pallet SSCC criado (mock)
     return pallet;
   }
 
@@ -106,7 +106,7 @@ export class PutawayManagementModel {
       ...data,
       updatedAt: new Date()
     };
-    console.log('Pallet SSCC atualizado (mock):', pallet);
+    // Pallet SSCC atualizado (mock)
     return pallet;
   }
 
@@ -118,7 +118,7 @@ export class PutawayManagementModel {
       ...data,
       createdAt: new Date()
     };
-    console.log('Item adicionado ao pallet (mock):', item);
+    // Item adicionado ao pallet (mock)
     return item;
   }
 
@@ -129,7 +129,7 @@ export class PutawayManagementModel {
 
   static async removeItemFromPallet(palletId: string, itemId: string) {
     // Implementação temporária
-    console.log('Item removido do pallet (mock):', { palletId, itemId });
+    // Item removido do pallet (mock)
     return true;
   }
 
@@ -168,7 +168,7 @@ export class PutawayManagementModel {
       status,
       updatedAt: new Date()
     };
-    console.log('Status do pallet atualizado (mock):', pallet);
+    // Status do pallet atualizado (mock)
     return pallet;
   }
 

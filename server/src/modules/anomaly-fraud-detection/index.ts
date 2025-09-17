@@ -52,7 +52,7 @@ export class AnomalyFraudModule extends BaseModule {
    */
   public async register(app: Express): Promise<void> {
     try {
-      console.log(`[${this.config.name}] A registar módulo...`);
+      // A registar módulo
       
       // Registar rotas
       app.use(this.config.routes, anomalyFraudRoutes);
@@ -60,13 +60,13 @@ export class AnomalyFraudModule extends BaseModule {
       // Inicializar regras e padrões padrão
       await this.initializeDefaultData();
       
-      console.log(`[${this.config.name}] Módulo registado com sucesso`);
+      // Módulo registado com sucesso
       
       // Listar rotas disponíveis
       this.listAvailableRoutes();
       
     } catch (error) {
-      console.error(`[${this.config.name}] Erro ao registar módulo:`, error);
+      // Erro ao registar módulo
       throw error;
     }
   }
@@ -82,9 +82,9 @@ export class AnomalyFraudModule extends BaseModule {
       // Inicializar padrões padrão de fraude
       await AnomalyFraudModel.initializeDefaultPatterns();
       
-      console.log(`[${this.config.name}] Dados padrão inicializados`);
+      // Dados padrão inicializados
     } catch (error) {
-      console.error(`[${this.config.name}] Erro ao inicializar dados padrão:`, error);
+      // Erro ao inicializar dados padrão
       // Não lançar erro para não impedir o registo do módulo
     }
   }
@@ -133,8 +133,8 @@ export class AnomalyFraudModule extends BaseModule {
       'GET    /api/anomaly-fraud/health                   - Health check'
     ];
 
-    console.log(`[${this.config.name}] Rotas disponíveis:`);
-    routes.forEach(route => console.log(`  ${route}`));
+    // Rotas disponíveis
+    // Lista de rotas
   }
 }
 

@@ -6,7 +6,7 @@ export class ComplianceModule {
   static moduleName = 'Conformidade Regulamentar';
 
   async register(app: Express): Promise<void> {
-    app.use('/api', complianceRoutes);
+    app.use('/api/compliance', complianceRoutes);
   }
 }
 

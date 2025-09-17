@@ -14,11 +14,11 @@ export class AlertsModule extends BaseModule {
     // Registar rotas do módulo
     app.use('/api/alerts', alertsRoutes);
     
-    console.log(`✓ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 
   async unregister(app: Express): Promise<void> {
-    console.log(`✗ Módulo ${this.config.name} desregistrado`);
+    // Módulo desregistrado
   }
 }
 

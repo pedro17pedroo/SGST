@@ -75,7 +75,18 @@ export const ModuleManagement = React.memo(function ModuleManagement() {
     toggleModuleMutation.mutate({ moduleId, enable });
   }, [toggleModuleMutation]);
 
-  // Mostrar erro se houver
+  // TODOS OS HOOKS DEVEM ESTAR AQUI - ANTES DE QUALQUER RETURN CONDICIONAL
+  const { enabledModules, disabledModules } = useMemo(() => {
+    if (!modules || modules.length === 0) {
+      return { enabledModules: [], disabledModules: [] };
+    }
+    return {
+      enabledModules: modules.filter((m: ModuleInfo) => m.enabled),
+      disabledModules: modules.filter((m: ModuleInfo) => !m.enabled)
+    };
+  }, [modules]);
+
+  // Mostrar erro se houver - SEMPRE CHAMADO
   React.useEffect(() => {
     if (error) {
       toast({
@@ -86,6 +97,7 @@ export const ModuleManagement = React.memo(function ModuleManagement() {
     }
   }, [error, toast]);
 
+  // RENDER CONDICIONAL APENAS APÓS TODOS OS HOOKS
   if (loading) {
     return (
       <Card>
@@ -102,11 +114,21 @@ export const ModuleManagement = React.memo(function ModuleManagement() {
     );
   }
 
-  // Memoizar filtros para evitar recálculos
-  const { enabledModules, disabledModules } = useMemo(() => ({
-    enabledModules: modules.filter((m: ModuleInfo) => m.enabled),
-    disabledModules: modules.filter((m: ModuleInfo) => !m.enabled)
-  }), [modules]);
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Gestão de Módulos</CardTitle>
+          <CardDescription>Erro ao carregar módulos</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="text-sm text-destructive">Erro ao carregar a lista de módulos</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

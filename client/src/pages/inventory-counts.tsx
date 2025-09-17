@@ -1,11 +1,12 @@
-import { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInventoryCounts } from "@/hooks/api/use-inventory-counts";
 import { apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,33 +15,52 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
-import { Plus, ClipboardList, Calendar, MapPin, CheckCircle, Clock, AlertTriangle, User, Package } from "lucide-react";
+import { Plus, ClipboardList, Calendar, MapPin, CheckCircle, Clock, AlertTriangle, User, Package, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { z } from "zod";
+import { WarehouseCombobox } from "@/components/ui/warehouse-combobox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
 
 const inventoryCountSchema = z.object({
-  countNumber: z.string().min(1, "Número da contagem é obrigatório"),
-  type: z.enum(["cycle", "full", "spot"]),
-  warehouseId: z.string().min(1, "Armazém é obrigatório"),
-  scheduledDate: z.string().optional(),
-  notes: z.string().optional(),
+  name: z.string()
+    .min(1, "Nome da contagem é obrigatório")
+    .min(3, "Nome da contagem deve ter pelo menos 3 caracteres")
+    .max(50, "Nome da contagem deve ter no máximo 50 caracteres"),
+  type: z.enum(["cycle", "full", "spot"], {
+    required_error: "Tipo de contagem é obrigatório",
+    invalid_type_error: "Selecione um tipo de contagem válido",
+  }),
+  warehouseId: z.string()
+    .min(1, "Armazém é obrigatório")
+    .uuid("Selecione um armazém válido"),
+  scheduledDate: z.string()
+    .min(1, "Data programada é obrigatória")
+    .refine((date) => {
+      const selectedDate = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return selectedDate >= today;
+    }, "A data programada deve ser hoje ou no futuro"),
+  notes: z.string()
+    .max(500, "Observações devem ter no máximo 500 caracteres")
+    .optional(),
 }) as z.ZodType<any>;
 
 interface InventoryCount {
   id: string;
-  countNumber: string;
-  type: string;
-  status: string;
-  warehouse?: {
-    id: string;
-    name: string;
-  } | null;
-  user?: {
-    id: string;
-    username: string;
-  } | null;
-  scheduledDate?: string;
-  completedDate?: string;
+  name: string;
+  warehouseId: string;
+  warehouseName: string;
+  type: 'full' | 'cycle' | 'spot';
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
+  scheduledDate: string;
+  startedAt?: string;
+  completedAt?: string;
+  assignedTo: string[];
+  discrepancies: number;
+  accuracy: number;
   notes?: string;
+  createdBy: string;
   createdAt: string;
 }
 
@@ -53,12 +73,15 @@ interface Warehouse {
 
 export default function InventoryCountsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof inventoryCountSchema>>({
     resolver: zodResolver(inventoryCountSchema as any),
+    mode: "onChange", // Validação em tempo real
     defaultValues: {
       countNumber: "",
       type: "cycle",
@@ -68,14 +91,49 @@ export default function InventoryCountsPage() {
     },
   });
 
-  // Get inventory counts
-  const { data: counts, isLoading } = useQuery({
-    queryKey: ['/api/inventory-counts'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/inventory-counts');
-      return await response.json() as InventoryCount[];
+  // Auto-gerar número da contagem quando o diálogo abre
+  useEffect(() => {
+    if (isDialogOpen && !form.getValues("countNumber")) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+      const autoNumber = `CNT-${year}${month}${day}-${time}`;
+      form.setValue("countNumber", autoNumber);
     }
-  });
+  }, [isDialogOpen, form]);
+
+  // Definir data padrão para hoje
+  useEffect(() => {
+    if (isDialogOpen && !form.getValues("scheduledDate")) {
+      const today = new Date();
+      const todayString = today.toISOString().slice(0, 16); // formato datetime-local
+      form.setValue("scheduledDate", todayString);
+    }
+  }, [isDialogOpen, form]);
+
+  // Construir parâmetros de consulta
+  const queryParams = useMemo(() => {
+    return {
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy: 'createdAt',
+      sortOrder: 'desc' as const,
+    };
+  }, [currentPage, itemsPerPage]);
+
+  // Get inventory counts with pagination
+  const { data: countsResponse, isLoading } = useInventoryCounts(queryParams);
+  
+  // Extrair dados da resposta
+  const counts = countsResponse?.data || [];
+  const pagination = countsResponse?.pagination || {
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 0
+  };
 
   // Get warehouses for form
   const { data: warehouses } = useQuery({
@@ -91,8 +149,16 @@ export default function InventoryCountsPage() {
   // Create count mutation
   const createCountMutation = useMutation({
     mutationFn: async (data: z.infer<typeof inventoryCountSchema>) => {
+      // Gerar countNumber baseado no nome e timestamp
+      const countNumber = `${data.name.replace(/\s+/g, '_').toUpperCase()}_${Date.now()}`;
+      
+      // Converter scheduledDate para formato ISO datetime
+      const scheduledDateISO = data.scheduledDate ? new Date(data.scheduledDate).toISOString() : undefined;
+      
       const response = await apiRequest('POST', '/api/inventory-counts', {
          ...data,
+         countNumber,
+         scheduledDate: scheduledDateISO,
          userId: user?.id || 'anonymous-user'
        });
       return response.json();
@@ -164,129 +230,235 @@ export default function InventoryCountsPage() {
                 Nova Contagem
               </Button>
             </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Nova Contagem de Inventário</DialogTitle>
-            </DialogHeader>
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-semibold">
+                    Nova Contagem de Inventário
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground mt-1">
+                    Configure uma nova contagem para controlar e verificar o inventário do armazém selecionado.
+                  </DialogDescription>
+              </div>
+            </div>
+            {/* Indicador de progresso do formulário */}
+            <div className="mt-4">
+              <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                <span>Progresso do formulário</span>
+                <span>{Math.round(((form.watch("name") ? 1 : 0) + 
+                                  (form.watch("type") ? 1 : 0) + 
+                                  (form.watch("warehouseId") ? 1 : 0) + 
+                                  (form.watch("scheduledDate") ? 1 : 0)) / 4 * 100)}%</span>
+              </div>
+              <Progress 
+                value={((form.watch("name") ? 1 : 0) + 
+                        (form.watch("type") ? 1 : 0) + 
+                        (form.watch("warehouseId") ? 1 : 0) + 
+                        (form.watch("scheduledDate") ? 1 : 0)) / 4 * 100} 
+                className="h-2"
+              />
+            </div>
+          </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="countNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número da Contagem</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="CNT-2025-001" 
-                          {...field} 
-                          data-testid="input-count-number"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-6">
+                  {/* Informações Básicas */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <ClipboardList className="h-4 w-4" />
+                      Informações Básicas
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <ClipboardList className="h-4 w-4" />
+                              Nome da Contagem *
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Ex: Contagem Mensal Janeiro" 
+                                {...field} 
+                                data-testid="input-count-name"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Contagem</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-count-type">
-                            <SelectValue placeholder="Seleccione o tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="cycle">Contagem Cíclica</SelectItem>
-                          <SelectItem value="full">Contagem Completa</SelectItem>
-                          <SelectItem value="spot">Contagem Pontual</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              Tipo de Contagem *
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs max-w-xs">
+                                      <strong>Cíclica:</strong> Contagem regular programada<br/>
+                                      <strong>Completa:</strong> Contagem completa do inventário<br/>
+                                      <strong>Pontual:</strong> Contagem pontual de itens específicos
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-count-type">
+                                  <SelectValue placeholder="Seleccione o tipo" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="cycle">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                                    Contagem Cíclica
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="full">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                    Contagem Completa
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="spot">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                                    Contagem Pontual
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="warehouseId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Armazém</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-warehouse">
-                            <SelectValue placeholder="Seleccione o armazém" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.isArray(warehouses) && warehouses.map((warehouse) => (
-                            <SelectItem key={warehouse.id} value={warehouse.id}>
-                              {warehouse.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  {/* Localização */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      Localização
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="warehouseId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Armazém *</FormLabel>
+                          <FormControl>
+                            <WarehouseCombobox
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              placeholder="Pesquise e selecione um armazém..."
+                              data-testid="select-warehouse"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="scheduledDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data Programada</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="datetime-local" 
-                          {...field} 
-                          data-testid="input-scheduled-date"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  {/* Programação e Observações */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      Programação e Detalhes
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="scheduledDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data Programada</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="datetime-local" 
+                                {...field} 
+                                data-testid="input-scheduled-date"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Observações</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Observações sobre a contagem..." 
-                          {...field} 
-                          data-testid="textarea-notes"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <FormField
+                        control={form.control}
+                        name="notes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Observações</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Adicione observações sobre a contagem..." 
+                                className="min-h-[100px] resize-none"
+                                {...field} 
+                                data-testid="textarea-notes"
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Opcional: Detalhes adicionais sobre a contagem
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                <div className="flex justify-end space-x-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t">
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
+                    onClick={() => {
+                      form.reset();
+                      setIsDialogOpen(false);
+                    }}
+                    className="sm:w-auto w-full"
                     data-testid="button-cancel"
                   >
                     Cancelar
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={createCountMutation.isPending}
+                    disabled={createCountMutation.isPending || !form.formState.isValid}
+                    className="sm:w-auto w-full"
                     data-testid="button-submit"
                   >
-                    Criar Contagem
+                    {createCountMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Contagem
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>
@@ -353,8 +525,8 @@ export default function InventoryCountsPage() {
                             <ClipboardList className="w-6 h-6 text-muted-foreground" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-foreground" data-testid={`count-number-${count.id}`}>
-                              {count.countNumber}
+                            <p className="text-sm font-medium text-foreground" data-testid={`count-name-${count.id}`}>
+                              {count.name}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               Criada: {new Date(count.createdAt).toLocaleDateString('pt-PT')}
@@ -371,7 +543,7 @@ export default function InventoryCountsPage() {
                         <div className="flex items-center space-x-2">
                           <MapPin className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm text-foreground" data-testid={`warehouse-name-${count.id}`}>
-                            {count.warehouse?.name || 'Armazém não encontrado'}
+                            {count.warehouseName || 'Armazém não encontrado'}
                           </span>
                         </div>
                       </td>
@@ -389,10 +561,10 @@ export default function InventoryCountsPage() {
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
-                        {count.user ? (
+                        {count.createdBy ? (
                           <div className="flex items-center space-x-1">
                             <User className="w-4 h-4" />
-                            <span>{count.user.username}</span>
+                            <span>{count.createdBy}</span>
                           </div>
                         ) : (
                           "-"
@@ -424,6 +596,90 @@ export default function InventoryCountsPage() {
             </table>
           )}
         </div>
+
+        {/* Paginação */}
+        {countsResponse && counts.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">Itens por página:</span>
+              <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">
+                Página {pagination.page} de {pagination.totalPages} ({pagination.total} contagens)
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Anterior
+              </Button>
+              
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  const pageNumber = i + 1;
+                  const isCurrentPage = pageNumber === currentPage;
+                  
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={isCurrentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {pageNumber}
+                    </Button>
+                  );
+                })}
+                
+                {pagination.totalPages > 5 && (
+                  <>
+                    <span className="text-muted-foreground">...</span>
+                    <Button
+                      variant={currentPage === pagination.totalPages ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pagination.totalPages)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {pagination.totalPages}
+                    </Button>
+                  </>
+                )}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
+                disabled={currentPage >= pagination.totalPages}
+              >
+                Próxima
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
       </div>
     </div>

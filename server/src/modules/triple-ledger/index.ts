@@ -10,7 +10,7 @@ export const tripleLedgerModule = {
   },
   async register(app: Express) {
     app.use('/api/triple-ledger', tripleLedgerRoutes);
-    console.log('✓ Módulo Triple-Ledger Traceability registrado');
+    // Módulo Triple-Ledger Traceability registrado
   }
 };
 

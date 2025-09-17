@@ -129,17 +129,14 @@ export function useCustomers(params?: QueryParams) {
   // Calcular se pode carregar dados
   const canLoadData = useMemo(() => {
     const result = isAuthenticated && isReady && !isModulesLoading;
-    console.log('Debug useCustomers - isAuthenticated:', isAuthenticated);
-    console.log('Debug useCustomers - isReady:', isReady);
-    console.log('Debug useCustomers - isModulesLoading:', isModulesLoading);
-    console.log('Debug useCustomers - canLoadData:', result);
+    // Debug useCustomers - verificando condições
     return result;
   }, [isAuthenticated, isReady, isModulesLoading]);
   
   const query = useQuery<PaginatedResponse<Customer>, Error>({
     queryKey: CUSTOMERS_QUERY_KEYS.list(params),
     queryFn: () => {
-      console.log('Debug - Executando queryFn para buscar clientes');
+      // Debug - Executando queryFn para buscar clientes
       return customersService.getCustomers(params);
     },
     enabled: canLoadData,
@@ -149,7 +146,7 @@ export function useCustomers(params?: QueryParams) {
     retry: 3,
   });
   
-  console.log('Debug useCustomers - query result:', query);
+  // Debug useCustomers - query result
   return query;
 }
 

@@ -19,16 +19,16 @@ export class FuelTypesModule implements IModule {
       // Registrar rotas do módulo
       app.use('/api/fuel-types', fuelTypesRoutes);
       
-      console.log('✓ Módulo Tipos de Combustível registrado com sucesso');
+      // Módulo Tipos de Combustível registrado com sucesso
     } catch (error) {
-      console.error('❌ Erro ao registrar módulo Tipos de Combustível:', error);
+      // Erro ao registrar módulo Tipos de Combustível
       throw error;
     }
   }
 
   async unregister(app: Express): Promise<void> {
     // Implementar lógica de desregistro se necessário
-    console.log('✓ Módulo Tipos de Combustível desregistrado');
+    // Módulo Tipos de Combustível desregistrado
   }
 }
 

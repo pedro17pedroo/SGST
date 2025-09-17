@@ -10,11 +10,11 @@ export class InventoryModule extends BaseModule {
     // Registrar rotas do módulo
     app.use('/api/inventory', inventoryRoutes);
     
-    console.log(`✓ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 
   async unregister(app: Express): Promise<void> {
-    console.log(`✗ Módulo ${this.config.name} desregistrado`);
+    // Módulo desregistrado
   }
 }
 

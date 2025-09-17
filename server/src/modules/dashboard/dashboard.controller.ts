@@ -7,7 +7,7 @@ export class DashboardController {
       const stats = await DashboardModel.getStats();
       res.json(stats);
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      // Error fetching dashboard stats
       res.status(500).json({ 
         message: "Erro ao buscar estatísticas", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -20,7 +20,7 @@ export class DashboardController {
       const products = await DashboardModel.getTopProducts();
       res.json(products);
     } catch (error) {
-      console.error('Error fetching top products:', error);
+      // Error fetching top products
       res.status(500).json({ 
         message: "Erro ao buscar produtos principais", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -33,7 +33,7 @@ export class DashboardController {
       const activities = await DashboardModel.getRecentActivities();
       res.json(activities);
     } catch (error) {
-      console.error('Error fetching recent activities:', error);
+      // Error fetching recent activities
       res.status(500).json({ 
         message: "Erro ao buscar atividades recentes", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -46,7 +46,7 @@ export class DashboardController {
       const overview = await DashboardModel.getOverview();
       res.json(overview);
     } catch (error) {
-      console.error('Error fetching dashboard overview:', error);
+      // Error fetching dashboard overview
       res.status(500).json({ 
         message: "Erro ao carregar dashboard", 
         error: error instanceof Error ? error.message : 'Unknown error'

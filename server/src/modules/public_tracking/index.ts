@@ -10,11 +10,11 @@ export class PublicTrackingModule extends BaseModule {
     // Registrar rotas do módulo (públicas)
     app.use('/api/public', publicTrackingRoutes);
     
-    console.log(`✓ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 
   async unregister(app: Express): Promise<void> {
-    console.log(`✗ Módulo ${this.config.name} desregistrado`);
+    // Módulo desregistrado
   }
 }
 

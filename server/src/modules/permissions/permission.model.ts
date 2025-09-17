@@ -20,7 +20,7 @@ export class PermissionModel {
       const result = await db.select().from(permissions);
       return result;
     } catch (error) {
-      console.error('Erro ao buscar todas as permissões:', error);
+      // Erro ao buscar todas as permissões
       return [];
     }
   }
@@ -30,7 +30,7 @@ export class PermissionModel {
       const result = await db.select().from(permissions).where(eq(permissions.id, id)).limit(1);
       return result[0] || null;
     } catch (error) {
-      console.error('Erro ao buscar permissão por ID:', error);
+      // Erro ao buscar permissão por ID
       return null;
     }
   }
@@ -42,7 +42,7 @@ export class PermissionModel {
       await db.insert(permissions).values({ id, ...validatedData });
       return await this.getById(id);
     } catch (error) {
-      console.error('Erro ao criar permissão:', error);
+      // Erro ao criar permissão
       throw new Error('Erro ao criar permissão');
     }
   }
@@ -52,7 +52,7 @@ export class PermissionModel {
       await db.update(permissions).set(updateData).where(eq(permissions.id, id));
       return await this.getById(id);
     } catch (error) {
-      console.error('Erro ao atualizar permissão:', error);
+      // Erro ao atualizar permissão
       throw new Error('Erro ao atualizar permissão');
     }
   }
@@ -62,7 +62,7 @@ export class PermissionModel {
       await db.delete(permissions).where(eq(permissions.id, id));
       return true;
     } catch (error) {
-      console.error('Erro ao eliminar permissão:', error);
+      // Erro ao eliminar permissão
       return false;
     }
   }
@@ -72,7 +72,7 @@ export class PermissionModel {
       const result = await db.select().from(permissions).where(eq(permissions.module, module));
       return result;
     } catch (error) {
-      console.error('Erro ao buscar permissões por módulo:', error);
+      // Erro ao buscar permissões por módulo
       return [];
     }
   }
@@ -128,7 +128,7 @@ export class PermissionModel {
 
       return createdCount;
     } catch (error) {
-      console.error('Erro ao criar permissões padrão:', error);
+      // Erro ao criar permissões padrão
       throw new Error('Erro ao criar permissões padrão');
     }
   }

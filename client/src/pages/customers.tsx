@@ -74,10 +74,7 @@ export default function CustomersPage() {
   const customers = customersResponse?.data || [];
   
   // Debug: Log para verificar o estado dos dados
-  console.log('Debug - customersResponse:', customersResponse);
-  console.log('Debug - customers array:', customers);
-  console.log('Debug - isLoading:', isLoading);
-  console.log('Debug - error:', error);
+  // Debug - customers data
   
   // Calcular estatísticas baseadas nos filtros aplicados
   const customerStats = useMemo(() => {
@@ -233,7 +230,7 @@ export default function CustomersPage() {
       try {
         await deactivateCustomerMutation.mutateAsync(customerId);
       } catch (error) {
-        console.error('Erro ao desativar cliente:', error);
+      // Erro ao desativar cliente
       }
     }
   };
@@ -256,7 +253,7 @@ export default function CustomersPage() {
       try {
         await activateCustomerMutation.mutateAsync(customerId);
       } catch (error) {
-        console.error('Erro ao ativar cliente:', error);
+      // Erro ao ativar cliente
       }
     }
   };

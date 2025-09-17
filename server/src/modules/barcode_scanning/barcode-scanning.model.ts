@@ -1,5 +1,5 @@
-import storage from '../../storage.js';
-import type { InsertBarcodeScan, BarcodeScan, Product } from '../../storage/types.js';
+import storage from '../../storage';
+import type { InsertBarcodeScan, BarcodeScan, Product } from '../../storage/types';
 
 export class BarcodeScanningModel {
   static async getBarcodeScans(limit?: number) {

@@ -205,7 +205,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     description: 'Leitura de códigos de barras e QR',
     enabled: true,
     dependencies: ['products'],
-    routes: ['/api/barcode-scans'],
+    routes: ['/api/barcode-scanning'],
     tables: ['barcode_scans'],
     permissions: ['barcode_scans.read', 'barcode_scans.write']
   },
@@ -269,7 +269,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'advanced_analytics',
     name: 'Análises Avançadas',
     description: 'Análises avançadas e métricas de performance',
-    enabled: false,
+    enabled: true,
     dependencies: ['reports'],
     routes: ['/api/analytics'],
     tables: [],
@@ -324,7 +324,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'putaway_management',
     name: 'Putaway Otimizado',
     description: 'Putaway guiado por regras, cross-dock e geração automática de paletes SSCC',
-    enabled: true,
+    enabled: false,
     dependencies: ['smart_receiving', 'warehouses'],
     routes: ['/api/putaway', '/api/pallets'],
     tables: ['putaway_rules', 'putaway_tasks', 'sscc_pallets', 'pallet_items'],
@@ -335,7 +335,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'intelligent_replenishment',
     name: 'Reabastecimento Inteligente',
     description: 'IA para previsão de demanda, reabastecimento automático e alertas preditivos',
-    enabled: true,
+    enabled: false,
     dependencies: ['products', 'warehouses', 'suppliers'],
     routes: ['/api/replenishment'],
     tables: ['replenishment_rules', 'demand_forecasts'],
@@ -413,7 +413,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'ai_analytics',
     name: 'Análises Preditivas com IA',
     description: 'Análises preditivas e otimização com inteligência artificial',
-    enabled: true,
+    enabled: false,
     dependencies: ['products', 'inventory'],
     routes: ['/api/ai', '/api/ai-analytics', '/api/analytics'],
     tables: ['ai_models', 'demand_forecasts', 'price_optimization'],
@@ -457,7 +457,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'edi',
     name: 'EDI (Electronic Data Interchange)',
     description: 'Sistema completo de EDI para troca de dados eletrônicos com parceiros comerciais',
-    enabled: true,
+    enabled: false,
     dependencies: ['auth', 'users', 'suppliers'],
     routes: ['/api/edi'],
     tables: [
@@ -517,7 +517,7 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
     id: 'inventory_alerts',
     name: 'Alertas de Inventário',
     description: 'Sistema avançado de alertas para gestão de inventário com notificações de stock baixo, excesso e vencimento',
-    enabled: true,
+    enabled: false,
     dependencies: ['inventory', 'products', 'warehouses'],
     routes: ['/api/stock-alerts', '/api/inventory-alerts'],
     tables: [
@@ -565,6 +565,22 @@ export const MODULE_CONFIG: Record<string, ModuleConfig> = {
       'fuel_types.create',
       'fuel_types.update',
       'fuel_types.delete'
+    ]
+  },
+
+  batch_management: {
+    id: 'batch_management',
+    name: 'Gestão de Lotes',
+    description: 'Rastreamento de lotes, datas de validade e recall de produtos',
+    enabled: false,
+    dependencies: ['products', 'inventory'],
+    routes: ['/api/batches'],
+    tables: ['batches', 'batch_movements'],
+    permissions: [
+      'batches.read',
+      'batches.create',
+      'batches.update',
+      'batches.delete'
     ]
   }
 };

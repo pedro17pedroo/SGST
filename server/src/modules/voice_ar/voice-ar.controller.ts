@@ -94,7 +94,7 @@ export class VoiceARController {
         data: session
       });
     } catch (error: any) {
-      console.error('Erro ao criar sessão de Voice Picking:', error);
+      // Error creating voice picking session
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao criar sessão de Voice Picking',
@@ -120,7 +120,7 @@ export class VoiceARController {
         data: command
       });
     } catch (error: any) {
-      console.error('Erro ao processar comando de voz:', error);
+      // Error processing voice command
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao processar comando de voz',
@@ -151,7 +151,7 @@ export class VoiceARController {
         data: session
       });
     } catch (error: any) {
-      console.error('Erro ao obter sessão de Voice Picking:', error);
+      // Error fetching voice picking session
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -179,7 +179,7 @@ export class VoiceARController {
         total: sessions.length
       });
     } catch (error: any) {
-      console.error('Erro ao listar sessões de Voice Picking:', error);
+      // Error fetching voice picking sessions
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -203,7 +203,7 @@ export class VoiceARController {
         data: session
       });
     } catch (error: any) {
-      console.error('Erro ao completar sessão de Voice Picking:', error);
+      // Error completing voice picking session
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao completar sessão de Voice Picking'
@@ -229,7 +229,7 @@ export class VoiceARController {
         data: session
       });
     } catch (error: any) {
-      console.error('Erro ao criar sessão de AR:', error);
+      // Error creating AR session
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao criar sessão de AR',
@@ -255,7 +255,7 @@ export class VoiceARController {
         data: marker
       });
     } catch (error: any) {
-      console.error('Erro ao adicionar marcador AR:', error);
+      // Error adding AR marker
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao adicionar marcador AR',
@@ -281,7 +281,7 @@ export class VoiceARController {
         data: overlay
       });
     } catch (error: any) {
-      console.error('Erro ao adicionar overlay AR:', error);
+      // Error adding AR overlay
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao adicionar overlay AR',
@@ -312,7 +312,7 @@ export class VoiceARController {
         data: session
       });
     } catch (error: any) {
-      console.error('Erro ao obter sessão de AR:', error);
+      // Error fetching AR session
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -341,7 +341,7 @@ export class VoiceARController {
         total: sessions.length
       });
     } catch (error: any) {
-      console.error('Erro ao listar sessões de AR:', error);
+      // Error fetching AR sessions
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -365,7 +365,7 @@ export class VoiceARController {
         data: session
       });
     } catch (error: any) {
-      console.error('Erro ao completar sessão de AR:', error);
+      // Error completing AR session
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao completar sessão de AR'
@@ -390,7 +390,7 @@ export class VoiceARController {
         data: config
       });
     } catch (error: any) {
-      console.error('Erro ao obter configuração de Voice Picking:', error);
+      // Error fetching voice picking config
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -415,7 +415,7 @@ export class VoiceARController {
         data: config
       });
     } catch (error: any) {
-      console.error('Erro ao atualizar configuração de Voice Picking:', error);
+      // Error updating voice picking config
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao atualizar configuração de Voice Picking',
@@ -439,7 +439,7 @@ export class VoiceARController {
         data: config
       });
     } catch (error: any) {
-      console.error('Erro ao obter configuração de AR:', error);
+      // Error fetching AR config
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'
@@ -464,7 +464,7 @@ export class VoiceARController {
         data: config
       });
     } catch (error: any) {
-      console.error('Erro ao atualizar configuração de AR:', error);
+      // Error updating AR config
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao atualizar configuração de AR',
@@ -494,7 +494,7 @@ export class VoiceARController {
         data: analytics
       });
     } catch (error: any) {
-      console.error('Erro ao obter analytics de Voice Picking:', error);
+      // Error fetching voice picking analytics
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao obter analytics de Voice Picking',
@@ -522,7 +522,7 @@ export class VoiceARController {
         data: analytics
       });
     } catch (error: any) {
-      console.error('Erro ao obter analytics de AR:', error);
+      // Error fetching AR analytics
       res.status(400).json({
         success: false,
         message: error.message || 'Erro ao obter analytics de AR',
@@ -555,7 +555,7 @@ export class VoiceARController {
         }
       });
     } catch (error: any) {
-      console.error('Erro no health check:', error);
+      // Error in health check
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor'

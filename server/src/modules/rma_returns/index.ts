@@ -6,7 +6,7 @@ export class RMAReturnsModule {
   static moduleName = 'Sistema de Gestão de Devoluções (RMA)';
 
   async register(app: Express): Promise<void> {
-    app.use('/api', rmaReturnsRoutes);
+    app.use('/api/rma-returns', rmaReturnsRoutes);
   }
 }
 

@@ -37,7 +37,7 @@ export class InventoryModel {
         category: row.category || null
       }));
     } catch (error) {
-      console.error('Low stock products error:', error);
+      // Low stock products error
       return [];
     }
   }
@@ -174,7 +174,7 @@ export class InventoryModel {
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error('Error getting inventory summary:', error);
+      // Error getting inventory summary
       return {
         totalProducts: 0,
         totalStock: 0,

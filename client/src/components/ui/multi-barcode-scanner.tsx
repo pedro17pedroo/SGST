@@ -56,16 +56,16 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   // Detectar leitores laser conectados
   const detectLaserReaders = useCallback(async () => {
-    console.log('🔍 Detectando leitores laser...');
+    // Detectando leitores laser...
     
     try {
       // Verificar se a API WebHID está disponível (para leitores USB)
       if ('hid' in navigator) {
-        console.log('✅ WebHID API disponível');
+        // WebHID API disponível
         
         // Tentar obter dispositivos HID já autorizados
         const devices = await (navigator as any).hid.getDevices();
-        console.log('📱 Dispositivos HID encontrados:', devices.length);
+        // Dispositivos HID encontrados
         
         // Verificar se algum dispositivo parece ser um leitor de código de barras
         const barcodeReaders = devices.filter((device: any) => {
@@ -77,7 +77,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
         });
         
         if (barcodeReaders.length > 0) {
-          console.log('✅ Leitor laser detectado:', barcodeReaders[0]);
+          // Leitor laser detectado
           setMethods(prev => ({
             ...prev,
             laser: { ...prev.laser, available: true }
@@ -87,7 +87,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
       }
       
       // Fallback: assumir que um leitor laser pode estar conectado como teclado
-      console.log('📝 Configurando detecção por eventos de teclado');
+      // Configurando detecção por eventos de teclado
       setMethods(prev => ({
         ...prev,
         laser: { ...prev.laser, available: true }
@@ -95,7 +95,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
       return true;
       
     } catch (error) {
-      console.error('❌ Erro ao detectar leitores laser:', error);
+      // Erro ao detectar leitores laser
       setMethods(prev => ({
         ...prev,
         laser: { ...prev.laser, available: false, error: 'Erro na detecção' }
@@ -106,7 +106,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   // Configurar listener para leitura laser via teclado
   const setupLaserListener = useCallback(() => {
-    console.log('🎯 Configurando listener para laser...');
+    // Configurando listener para laser...
     
     const handleKeyPress = (event: KeyboardEvent) => {
       // Ignorar se estiver digitando em um input
@@ -119,7 +119,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
       if (event.key === 'Enter') {
         // Fim da leitura laser
         if (laserBufferRef.current.length > 3) {
-          console.log('✅ Código laser detectado:', laserBufferRef.current);
+          // Código laser detectado
           
           setMethods(prev => ({
             ...prev,
@@ -185,7 +185,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   // Tratamento de erro para métodos
   const handleMethodError = useCallback((method: ScanMethod, error: string) => {
-    console.log(`❌ Erro no método ${method}:`, error);
+    // Erro no método
     
     setMethods(prev => ({
       ...prev,
@@ -239,7 +239,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   // Iniciar câmera
   const startCamera = useCallback(async () => {
-    console.log('📹 Iniciando câmera...');
+    // Iniciando câmera...
     
     // Chamar callback quando a câmera for iniciada
     if (onCameraStart) {
@@ -272,7 +272,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
         };
       }
     } catch (error) {
-      console.error('❌ Erro ao iniciar câmera:', error);
+      // Erro ao iniciar câmera
       setMethods(prev => ({
         ...prev,
         camera: { ...prev.camera, status: 'error', error: 'Erro ao acessar câmera' }
@@ -292,7 +292,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
    const startScanning = useCallback(() => {
      if (!codeReaderRef.current || !videoRef.current || isScanning) return;
      
-     console.log('🔍 Iniciando escaneamento...');
+     // Iniciando escaneamento...
      setIsScanning(true);
      
      setMethods(prev => ({
@@ -309,7 +309,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
          
          if (result) {
            const code = result.getText();
-           console.log('✅ Código detectado pela câmera:', code);
+           // Código detectado pela câmera
            
            // Parar escaneamento após sucesso
            setIsScanning(false);
@@ -361,7 +361,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
        } catch (error) {
          // Ignorar erros de NotFoundException (normal durante escaneamento)
          if (!(error instanceof NotFoundException)) {
-           console.error('❌ Erro durante escaneamento:', error);
+           // Erro durante escaneamento
          }
        }
        
@@ -377,7 +377,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   // Parar escaneamento
   const stopScanning = useCallback(() => {
-    console.log('⏹️ Parando escaneamento...');
+    // Parando escaneamento...
     setIsScanning(false);
     
     if (scanningIntervalRef.current) {
@@ -393,7 +393,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   // Parar câmera
   const stopCamera = useCallback(() => {
-    console.log('📹 Parando câmera...');
+    // Parando câmera...
     
     // Parar escaneamento primeiro
     stopScanning();
@@ -418,7 +418,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
 
   // Ativar método de escaneamento com priorização
   const activateMethod = useCallback(async (method: ScanMethod) => {
-    console.log(`🔄 Ativando método: ${method}`);
+    // Ativando método
     
     // Parar câmera se estiver ativa
     if (isCameraActive) {
@@ -432,7 +432,7 @@ export const MultiBarcodeReader: React.FC<MultiBarcodeReaderProps> = ({
     setMethods(prev => {
       // Verificar se o método está disponível
       if (!prev[method].available) {
-        console.log(`❌ Método ${method} não está disponível`);
+        // Método não está disponível
         toast({
           title: "Método indisponível",
           description: `O método ${method} não está disponível no momento.`,

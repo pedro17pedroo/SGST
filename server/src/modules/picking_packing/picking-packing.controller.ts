@@ -347,7 +347,7 @@ export class PickingPackingController {
       
       res.status(201).json(wave);
     } catch (error) {
-      console.error('Error creating picking wave:', error);
+      // Error creating packing task
       res.status(500).json({
         message: "Erro ao criar onda de picking",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -404,7 +404,7 @@ export class PickingPackingController {
       
       res.json(tasks);
     } catch (error) {
-      console.error('Error fetching packing tasks:', error);
+      // Error fetching packing tasks
       res.status(500).json({
         message: "Erro ao buscar tarefas de embalagem",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -419,7 +419,7 @@ export class PickingPackingController {
       
       res.status(201).json(task);
     } catch (error) {
-      console.error('Error creating packing task:', error);
+      // Error creating picking task
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",

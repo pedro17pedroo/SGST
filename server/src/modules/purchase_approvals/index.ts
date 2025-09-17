@@ -7,7 +7,7 @@ export class PurchaseApprovalsModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
-    app.use('/api', purchaseApprovalsRoutes);
+    app.use('/api/purchase-approvals', purchaseApprovalsRoutes);
   }
 }
 

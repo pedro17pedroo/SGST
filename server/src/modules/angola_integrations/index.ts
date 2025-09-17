@@ -14,7 +14,7 @@ export class AngolaIntegrationsModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     app.use('/api/angola', routes);
-    console.log(`✅ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 }
 

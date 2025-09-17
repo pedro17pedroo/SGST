@@ -16,7 +16,7 @@ export class ReportsController {
       const report = await ReportsModel.getSalesReport(filters);
       res.json(report);
     } catch (error) {
-      console.error('Error generating sales report:', error);
+      // Error generating sales report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de vendas", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -37,7 +37,7 @@ export class ReportsController {
       const report = await ReportsModel.getInventoryReport(filters);
       res.json(report);
     } catch (error) {
-      console.error('Error generating inventory report:', error);
+      // Error generating inventory report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de inventário", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -58,7 +58,7 @@ export class ReportsController {
       const report = await ReportsModel.getPerformanceReport(filters);
       res.json(report);
     } catch (error) {
-      console.error('Error generating performance report:', error);
+      // Error generating performance report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de performance", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -81,7 +81,7 @@ export class ReportsController {
       const report = await ReportsModel.getInventoryTurnoverReport(filters);
       res.json(report);
     } catch (error) {
-      console.error('Error generating inventory turnover report:', error);
+      // Error generating inventory turnover report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de rotatividade", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -102,7 +102,7 @@ export class ReportsController {
       const report = await ReportsModel.getObsoleteInventoryReport(filters);
       res.json(report);
     } catch (error) {
-      console.error('Error generating obsolete inventory report:', error);
+      // Error generating obsolete inventory report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de inventário obsoleto", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -123,7 +123,7 @@ export class ReportsController {
       const report = await ReportsModel.getProductPerformanceReport(filters);
       res.json(report);
     } catch (error) {
-      console.error('Error generating product performance report:', error);
+      // Error generating product performance report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de desempenho de produtos", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -138,7 +138,7 @@ export class ReportsController {
       const report = await ReportsModel.getWarehouseEfficiencyReport(warehouseId as string);
       res.json(report);
     } catch (error) {
-      console.error('Error generating warehouse efficiency report:', error);
+      // Error generating warehouse efficiency report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de eficiência de armazém", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -153,7 +153,7 @@ export class ReportsController {
       const report = await ReportsModel.getStockValuationReport(warehouseId as string);
       res.json(report);
     } catch (error) {
-      console.error('Error generating stock valuation report:', error);
+      // Error generating stock valuation report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de avaliação de stock", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -174,7 +174,7 @@ export class ReportsController {
       const report = await ReportsModel.getSupplierPerformanceReport(filters);
       res.json(report);
     } catch (error) {
-      console.error('Error generating supplier performance report:', error);
+      // Error generating supplier performance report
       res.status(500).json({ 
         message: "Erro ao gerar relatório de desempenho de fornecedores", 
         error: error instanceof Error ? error.message : 'Unknown error'

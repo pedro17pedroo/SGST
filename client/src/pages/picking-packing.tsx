@@ -24,12 +24,12 @@ import {
   Plus,
   Search,
   MapPin,
-  Weight,
-  Ruler,
   User,
-  Scan,
+  Trash2,
   PackageCheck,
-  Trash2
+  Scan,
+  Weight,
+  Ruler
 } from "lucide-react";
 import { z } from "zod";
 
@@ -42,7 +42,7 @@ const pickingListItemSchema = z.object({
 
 // Picking List Schema
 const pickingListSchema = z.object({
-  orderNumber: z.string().min(1, "Número da encomenda é obrigatório"),
+  orderNumber: z.string().optional(), // Agora é opcional pois será gerado automaticamente
   warehouseId: z.string().min(1, "Armazém é obrigatório"),
   priority: z.enum(["low", "normal", "high", "urgent"]),
   notes: z.string().optional(),
@@ -111,21 +111,26 @@ interface PickingList {
   notes?: string;
 }
 
-
+// Função para gerar número único de encomenda
+const generateOrderNumber = () => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `ORD-${timestamp}-${random}`;
+};
 
 export default function PickingPackingPage() {
   const [activeTab, setActiveTab] = useState("picking");
   const [isPickingDialogOpen, setIsPickingDialogOpen] = useState(false);
   const [isPackingDialogOpen, setIsPackingDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [pickingItems, setPickingItems] = useState<Array<z.infer<typeof pickingListItemSchema>>>([]);
+  const [pickingItems, setPickingItems] = useState<z.infer<typeof pickingListItemSchema>[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const pickingForm = useForm<z.infer<typeof pickingListSchema>>({
     resolver: zodResolver(pickingListSchema as any),
     defaultValues: {
-      orderNumber: "",
+      orderNumber: generateOrderNumber(), // Gera automaticamente
       warehouseId: "",
       priority: "normal",
       notes: "",
@@ -148,50 +153,56 @@ export default function PickingPackingPage() {
   });
 
   // Get picking lists
-  const { data: pickingLists, isLoading: isLoadingPicking } = useQuery({
+  const { data: pickingLists = [], isLoading: isLoadingPicking } = useQuery({
     queryKey: ['/api/picking-lists'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/picking-lists');
-      return await response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     }
   });
 
   // Get packing tasks
-  const { data: packingTasks, isLoading: isLoadingPacking } = useQuery({
+  const { data: packingTasks = [], isLoading: isLoadingPacking } = useQuery({
     queryKey: ['/api/packing-tasks'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/packing-tasks');
-      return await response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     }
   });
 
   // Get warehouses for form
-  const { data: warehouses } = useQuery({
+  const { data: warehouses = [], isLoading: isLoadingWarehouses } = useQuery({
     queryKey: ['/api/warehouses'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/warehouses');
-      return await response.json();
+      const result = await response.json();
+      // Extrair dados do objeto de resposta
+      const data = result.data || result;
+      console.log('Warehouses data:', data); // Debug log
+      return Array.isArray(data) ? data : [];
     }
   });
 
   // Get products
-  const { data: products } = useQuery({
+  const { data: products = [] } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/products');
-      return await response.json();
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     }
   });
 
   // Get product locations
-  const { data: productLocations } = useQuery({
+  const { data: productLocations = [] } = useQuery({
     queryKey: ['/api/product-locations', pickingForm.watch('warehouseId')],
     queryFn: async () => {
       const warehouseId = pickingForm.getValues('warehouseId');
       if (!warehouseId) return [];
       const response = await apiRequest('GET', `/api/product-locations?warehouseId=${warehouseId}`);
       const result = await response.json();
-      // Extrair os dados da resposta paginada
       return result.data || [];
     },
     enabled: !!pickingForm.watch('warehouseId')
@@ -255,9 +266,9 @@ export default function PickingPackingPage() {
     // Validar se há pelo menos um item
     if (pickingItems.length === 0) {
       toast({
-        variant: "destructive",
-        title: "Erro de validação",
-        description: "Deve adicionar pelo menos um item à lista de picking.",
+        title: "Erro",
+        description: "Adicione pelo menos um item à lista de picking",
+        variant: "destructive"
       });
       return;
     }
@@ -267,19 +278,37 @@ export default function PickingPackingPage() {
     
     if (invalidItems.length > 0) {
       toast({
-        variant: "destructive",
-        title: "Erro de validação",
-        description: "Todos os itens devem ter um produto selecionado e quantidade maior que 0.",
+        title: "Erro",
+        description: "Todos os itens devem ter produto e quantidade válidos",
+        variant: "destructive"
       });
       return;
     }
 
-    const submitData = {
+    // Garantir que há um orderNumber (gerar novo se não existir)
+    const orderNumber = data.orderNumber || generateOrderNumber();
+
+    // Criar lista de picking com itens
+    const pickingData = {
       ...data,
+      orderNumber,
       items: pickingItems
     };
-    
-    createPickingMutation.mutate(submitData);
+
+    createPickingMutation.mutate(pickingData);
+  };
+
+  // Função para abrir o diálogo e gerar novo número
+  const openPickingDialog = () => {
+    const newOrderNumber = generateOrderNumber();
+    pickingForm.reset({
+      orderNumber: newOrderNumber,
+      warehouseId: "",
+      priority: "normal",
+      notes: "",
+    });
+    setPickingItems([]);
+    setIsPickingDialogOpen(true);
   };
 
   const addPickingItem = () => {
@@ -375,18 +404,19 @@ export default function PickingPackingPage() {
     return parts.length > 0 ? parts.join("-") : "Sem localização";
   };
 
-  const filteredPickingLists = pickingLists?.filter((list: PickingList) => 
+  const filteredPickingLists = Array.isArray(pickingLists) ? pickingLists.filter((list: PickingList) => 
     list && list.warehouse && 
     ((list.orderNumber && list.orderNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (list.pickNumber && list.pickNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
     list.warehouse.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  ) || [];
+  ) : [];
 
-  const filteredPackingTasks = packingTasks?.filter((task: any) => 
+  const filteredPackingTasks = Array.isArray(packingTasks) ? packingTasks.filter((task: any) => 
     task && task.pickingList && task.pickingList.orderNumber && task.packageType &&
     (task.pickingList.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.packageType.toLowerCase().includes(searchQuery.toLowerCase()))
-  ) || [];
+  ) : [];
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -424,13 +454,16 @@ export default function PickingPackingPage() {
         <TabsContent value="picking" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Listas de Picking</h2>
+            <Button 
+              data-testid="add-picking-list" 
+              className="bg-primary hover:bg-primary/90"
+              onClick={openPickingDialog}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Lista de Picking
+            </Button>
+
             <Dialog open={isPickingDialogOpen} onOpenChange={setIsPickingDialogOpen}>
-              <DialogTrigger asChild>
-                <Button data-testid="add-picking-list" className="bg-primary hover:bg-primary/90">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Lista de Picking
-                </Button>
-              </DialogTrigger>
               <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
                 <DialogHeader className="pb-4 border-b">
                   <DialogTitle className="text-xl font-semibold">Criar Nova Lista de Picking</DialogTitle>
@@ -450,13 +483,14 @@ export default function PickingPackingPage() {
                             name="orderNumber"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm font-medium">Número da Encomenda *</FormLabel>
+                                <FormLabel className="text-sm font-medium">Número da Encomenda (Gerado Automaticamente)</FormLabel>
                                 <FormControl>
                                   <Input 
-                                    placeholder="Ex: ORD-2025-001" 
                                     {...field} 
                                     data-testid="input-order-number"
-                                    className="h-10"
+                                    className="h-10 bg-muted"
+                                    readOnly
+                                    disabled
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -470,18 +504,30 @@ export default function PickingPackingPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-sm font-medium">Armazém *</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger data-testid="select-warehouse-picking" className="h-10">
                                       <SelectValue placeholder="Seleccione o armazém" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {warehouses?.filter((warehouse: Warehouse) => warehouse.name).map((warehouse: Warehouse) => (
-                                      <SelectItem key={warehouse.id} value={warehouse.id}>
-                                        {warehouse.name}
+                                    {isLoadingWarehouses ? (
+                                      <SelectItem value="loading" disabled>
+                                        Carregando armazéns...
                                       </SelectItem>
-                                    ))}
+                                    ) : (
+                                      Array.isArray(warehouses) && warehouses.length > 0 ? (
+                                        warehouses.map((warehouse: Warehouse) => (
+                                          <SelectItem key={warehouse.id} value={warehouse.id}>
+                                            {warehouse.name}
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <SelectItem value="no-warehouses" disabled>
+                                          Nenhum armazém encontrado
+                                        </SelectItem>
+                                      )
+                                    )}
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -637,7 +683,7 @@ export default function PickingPackingPage() {
                                   <SelectValue placeholder="Seleccione o produto" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {products?.filter((product: Product) => product.name && product.sku).map((product: Product) => (
+                                  {Array.isArray(products) && products.filter((product: Product) => product.name && product.sku).map((product: Product) => (
                                     <SelectItem key={product.id} value={product.id}>
                                       <div className="flex flex-col">
                                         <span className="font-medium">{product.name}</span>
@@ -680,7 +726,7 @@ export default function PickingPackingPage() {
                                       Sem localização específica
                                     </div>
                                   </SelectItem>
-                                  {productLocations?.filter((location: any) => 
+                                  {Array.isArray(productLocations) && productLocations.filter((location: any) => 
                                     location.productId === item.productId
                                   ).map((location: any) => (
                                     <SelectItem key={location.id} value={location.id}>
@@ -776,9 +822,9 @@ export default function PickingPackingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-foreground">Items ({list.items.length})</h4>
+                      <h4 className="text-sm font-medium text-foreground">Items ({list.items?.length || 0})</h4>
                       <div className="grid gap-2">
-                        {list.items.map((item: any) => (
+                        {Array.isArray(list.items) && list.items.map((item: any) => (
                           <div 
                             key={item.id} 
                             className="flex items-center justify-between p-2 bg-muted/50 rounded"
@@ -896,18 +942,18 @@ export default function PickingPackingPage() {
                                 // Debug: Log das listas de picking disponíveis
                           
                                 
-                                const filteredLists = pickingLists?.filter((list: PickingList) => {
+                                const filteredLists = Array.isArray(pickingLists) ? pickingLists.filter((list: PickingList) => {
                                   const isCompleted = list.status === 'completed';
                                   const hasIdentifier = list.orderNumber || list.pickNumber;
                                   
 
                                   
                                   return isCompleted && hasIdentifier;
-                                });
+                                }) : [];
                                 
                           
                                 
-                                return filteredLists?.map((list: PickingList) => (
+                                return filteredLists.map((list: PickingList) => (
                                   <SelectItem key={list.id} value={list.id}>
                                     {list.orderNumber || list.pickNumber}
                                   </SelectItem>

@@ -101,7 +101,7 @@ export class PurchaseOrdersController {
       
       res.json(purchaseOrders);
     } catch (error) {
-      console.error('Error fetching purchase orders:', error);
+      // Error fetching purchase orders
       res.status(500).json({
         message: "Erro ao buscar ordens de compra",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -135,7 +135,7 @@ export class PurchaseOrdersController {
         purchaseOrder
       });
     } catch (error) {
-      console.error('Error creating purchase order:', error);
+      // Error creating purchase order
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -166,7 +166,7 @@ export class PurchaseOrdersController {
         approval: result
       });
     } catch (error) {
-      console.error('Error processing purchase order approval:', error);
+      // Error processing purchase order approval
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -187,7 +187,7 @@ export class PurchaseOrdersController {
       
       res.json(workflows);
     } catch (error) {
-      console.error('Error fetching approval workflows:', error);
+      // Error fetching approval workflows
       res.status(500).json({
         message: "Erro ao buscar workflows de aprovação",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -210,7 +210,7 @@ export class PurchaseOrdersController {
         workflow
       });
     } catch (error) {
-      console.error('Error creating approval workflow:', error);
+      // Error creating approval workflow
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -250,7 +250,7 @@ export class PurchaseOrdersController {
         }))
       });
     } catch (error) {
-      console.error('Error fetching pending approvals:', error);
+      // Error fetching pending approvals
       res.status(500).json({
         message: "Erro ao buscar aprovações pendentes",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -272,7 +272,7 @@ export class PurchaseOrdersController {
       
       res.json(rules);
     } catch (error) {
-      console.error('Error fetching replenishment rules:', error);
+      // Error fetching replenishment rules
       res.status(500).json({
         message: "Erro ao buscar regras de reposição",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -295,7 +295,7 @@ export class PurchaseOrdersController {
         rule
       });
     } catch (error) {
-      console.error('Error creating replenishment rule:', error);
+      // Error creating replenishment rule
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -335,7 +335,7 @@ export class PurchaseOrdersController {
         }
       });
     } catch (error) {
-      console.error('Error triggering automatic replenishment:', error);
+      // Error triggering automatic replenishment
       res.status(500).json({
         message: "Erro ao executar reposição automática",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -371,7 +371,7 @@ export class PurchaseOrdersController {
         }))
       });
     } catch (error) {
-      console.error('Error fetching replenishment recommendations:', error);
+      // Error fetching replenishment recommendations
       res.status(500).json({
         message: "Erro ao buscar recomendações de reposição",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -402,7 +402,7 @@ export class PurchaseOrdersController {
         }
       });
     } catch (error) {
-      console.error('Error running automatic replenishment batch:', error);
+      // Error running automatic replenishment batch
       res.status(500).json({
         message: "Erro ao executar lote de reposição automática",
         error: error instanceof Error ? error.message : 'Unknown error'

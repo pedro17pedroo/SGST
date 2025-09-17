@@ -8,38 +8,38 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 // Implementação temporária dos métodos necessários para o ComputerVisionModel
 export class ComputerVisionModel {
   static async createCountingResult(data: any) {
-    console.log('createCountingResult chamado com dados:', data);
+    // createCountingResult chamado com dados
     // Retorna dados mock até as tabelas serem criadas
     return { id: 'mock-counting-result-id', ...data };
   }
 
   static async getCountingResult(id: string) {
-    console.log('getCountingResult chamado para ID:', id);
+    // getCountingResult chamado para ID
     return null;
   }
 
   static async getCountingResultsBySession(sessionId: string) {
-    console.log('getCountingResultsBySession chamado para sessão:', sessionId);
+    // getCountingResultsBySession chamado para sessão
     return [];
   }
 
   static async getAllCountingResults() {
-    console.log('getAllCountingResults chamado');
+    // getAllCountingResults chamado
     return [];
   }
 
   static async updateCountingResult(id: string, data: any) {
-    console.log('updateCountingResult chamado:', { id, data });
+    // updateCountingResult chamado
     return { id, ...data };
   }
 
   static async verifyCountingResult(id: string, verifiedBy: string) {
-    console.log('verifyCountingResult chamado:', { id, verifiedBy });
+    // verifyCountingResult chamado
     return { success: true, message: 'Resultado verificado (mock)' };
   }
 
   static async getCountingStats() {
-    console.log('getCountingStats chamado');
+    // getCountingStats chamado
     return {
       totalSessions: 0,
       totalResults: 0,
@@ -49,7 +49,7 @@ export class ComputerVisionModel {
   }
 
   static async processImage(imageUrl: string, sessionId: string) {
-    console.log('processImage chamado:', { imageUrl, sessionId });
+    // processImage chamado
     // Simula processamento de imagem
     return {
       success: true,
@@ -60,7 +60,7 @@ export class ComputerVisionModel {
   }
 
   static async simulateCountingSession(warehouseId: string, productCount: number) {
-    console.log('simulateCountingSession chamado:', { warehouseId, productCount });
+    // simulateCountingSession chamado
     
     // Simula uma sessão de contagem
     const sessionId = `session-${Date.now()}`;
@@ -89,7 +89,7 @@ export class ComputerVisionModel {
   }
 
   static async getDamageDetection(filters: any) {
-    console.log('getDamageDetection chamado com filtros:', filters);
+    // getDamageDetection chamado com filtros
     return {
       detectedDamages: [],
       totalItems: 0,
@@ -98,7 +98,7 @@ export class ComputerVisionModel {
   }
 
   static async getDamageDetectionResults() {
-    console.log('getDamageDetectionResults chamado');
+    // getDamageDetectionResults chamado
     // Retorna dados mock até as tabelas serem criadas
     return [];
   }
@@ -109,7 +109,7 @@ export class ComputerVisionModel {
     productId?: string;
     algorithm: string;
   }) {
-    console.log('processAutomatedCounting chamado:', data);
+    // processAutomatedCounting chamado
     
     // Simula processamento de visão computacional
     const mockDetectedCount = Math.floor(Math.random() * 50) + 1;

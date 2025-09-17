@@ -32,7 +32,7 @@ export class VoiceARModule extends BaseModule {
   };
 
   async register(app: Express): Promise<void> {
-    console.log('🎤🥽 Registrando módulo Voice Picking e AR...');
+    // Registrando módulo Voice Picking e AR
     
     // Registrar rotas
     app.use('/api/voice-ar', voiceARRoutes);
@@ -43,12 +43,12 @@ export class VoiceARModule extends BaseModule {
     // - Carregamento de modelos de machine learning
     // - Configuração de dispositivos de hardware
     
-    console.log('✅ Módulo Voice Picking e AR registrado com sucesso');
-    console.log(`📍 Rotas registradas em: /api/voice-ar`);
+    // Módulo Voice Picking e AR registrado com sucesso
+    // Rotas registradas em: /api/voice-ar
   }
 
   async unregister(app: Express): Promise<void> {
-    console.log('🧹 Desregistrando módulo Voice Picking e AR...');
+    // Desregistrando módulo Voice Picking e AR
     
     // Aqui poderia haver limpezas específicas como:
     // - Finalização de sessões ativas
@@ -56,7 +56,7 @@ export class VoiceARModule extends BaseModule {
     // - Salvamento de dados de sessão
     
     await super.unregister(app);
-    console.log('✅ Módulo Voice Picking e AR desregistrado');
+    // Módulo Voice Picking e AR desregistrado
   }
 
   getStatus() {

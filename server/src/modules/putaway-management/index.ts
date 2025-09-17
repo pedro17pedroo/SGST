@@ -8,13 +8,14 @@ export class PutawayManagementModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
-    app.use('/api', putawayRoutes);
+    app.use('/api/putaway', putawayRoutes);
+    app.use('/api/pallets', putawayRoutes);
     
-    console.log(`✓ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 
   async unregister(app: Express): Promise<void> {
-    console.log(`✗ Módulo ${this.config.name} desregistrado`);
+    // Módulo desregistrado
   }
 }
 

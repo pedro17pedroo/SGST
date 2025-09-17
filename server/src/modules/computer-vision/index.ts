@@ -8,7 +8,7 @@ export class ComputerVisionModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
-    app.use('/api', cvRoutes);
+    app.use('/api/cv', cvRoutes);
     
     console.log(`✓ Módulo ${this.config.name} registrado`);
   }

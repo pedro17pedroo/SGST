@@ -4,8 +4,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// import { apiServices } from '../../services/api.service'; // Removed unused import
-import type { QueryParams, ApiResponse } from '../../services/api.service';
+import { apiServices } from '../../services/api.service';
+import type { QueryParams, ApiResponse, PaginatedResponse } from '../../services/api.service';
 import { CACHE_CONFIG } from '../../config/api';
 import { useToast } from '../use-toast';
 
@@ -78,65 +78,24 @@ export const INVENTORY_COUNTS_QUERY_KEYS = {
 export function useInventoryCounts(params?: QueryParams) {
   const { toast } = useToast();
 
-  return useQuery<ApiResponse<InventoryCount[]>, Error>({
+  return useQuery<PaginatedResponse<InventoryCount>, Error>({
     queryKey: INVENTORY_COUNTS_QUERY_KEYS.list(params),
     queryFn: async () => {
-      // Simular dados de contagens
-      const counts: InventoryCount[] = [
-        {
-          id: 'count-1',
-          name: 'Contagem Mensal - Janeiro 2024',
-          warehouseId: 'warehouse-1',
-          warehouseName: 'Armazém Principal',
-          type: 'full',
-          status: 'completed',
-          scheduledDate: '2024-01-15T09:00:00Z',
-          startedAt: '2024-01-15T09:15:00Z',
-          completedAt: '2024-01-15T17:30:00Z',
-          assignedTo: ['user-1', 'user-2', 'user-3'],
-          items: [],
-          discrepancies: 12,
-          accuracy: 98.5,
-          notes: 'Contagem completa realizada com sucesso',
-          createdBy: 'user-admin',
-          createdAt: '2024-01-10T10:00:00Z',
-        },
-        {
-          id: 'count-2',
-          name: 'Contagem Cíclica - Zona A',
-          warehouseId: 'warehouse-1',
-          warehouseName: 'Armazém Principal',
-          type: 'cycle',
-          status: 'in_progress',
-          scheduledDate: '2024-01-20T14:00:00Z',
-          startedAt: '2024-01-20T14:05:00Z',
-          assignedTo: ['user-2'],
-          items: [],
-          discrepancies: 0,
-          accuracy: 0,
-          createdBy: 'user-admin',
-          createdAt: '2024-01-18T11:00:00Z',
-        },
-      ];
-
-      return {
-        data: counts,
-        success: true,
-        message: 'Contagens carregadas com sucesso',
-      };
-    },
-    staleTime: CACHE_CONFIG.dynamic.staleTime,
-    gcTime: CACHE_CONFIG.dynamic.gcTime,
-    retry: 2,
-    meta: {
-      onError: () => {
+      try {
+        const response = await apiServices.inventoryCounts.getInventoryCounts(params);
+        return response;
+      } catch (error: any) {
+        console.error('Erro ao carregar contagens de inventário:', error);
         toast({
           title: 'Erro ao carregar contagens',
-          description: 'Não foi possível carregar as contagens de inventário.',
+          description: error.message || 'Não foi possível carregar as contagens de inventário.',
           variant: 'destructive',
         });
-      },
+        throw error;
+      }
     },
+    staleTime: CACHE_CONFIG.static.staleTime,
+    gcTime: CACHE_CONFIG.static.gcTime,
   });
 }
 
@@ -149,66 +108,23 @@ export function useInventoryCount(id: string) {
   return useQuery<ApiResponse<InventoryCount>, Error>({
     queryKey: INVENTORY_COUNTS_QUERY_KEYS.detail(id),
     queryFn: async () => {
-      // Simular dados detalhados da contagem
-      const count: InventoryCount = {
-        id,
-        name: 'Contagem Mensal - Janeiro 2024',
-        warehouseId: 'warehouse-1',
-        warehouseName: 'Armazém Principal',
-        type: 'full',
-        status: 'in_progress',
-        scheduledDate: '2024-01-15T09:00:00Z',
-        startedAt: '2024-01-15T09:15:00Z',
-        assignedTo: ['user-1', 'user-2'],
-        items: [
-          {
-            id: 'item-1',
-            productId: 'prod-1',
-            productName: 'Produto A',
-            sku: 'SKU-001',
-            location: 'A-01-01',
-            expectedQuantity: 100,
-            countedQuantity: 98,
-            discrepancy: -2,
-            status: 'counted',
-            countedBy: 'user-1',
-            countedAt: '2024-01-15T10:30:00Z',
-          },
-          {
-            id: 'item-2',
-            productId: 'prod-2',
-            productName: 'Produto B',
-            sku: 'SKU-002',
-            location: 'A-01-02',
-            expectedQuantity: 50,
-            status: 'pending',
-          },
-        ],
-        discrepancies: 1,
-        accuracy: 99.0,
-        createdBy: 'user-admin',
-        createdAt: '2024-01-10T10:00:00Z',
-      };
-
-      return {
-        data: count,
-        success: true,
-        message: 'Contagem carregada com sucesso',
-      };
+      try {
+        const response = await apiServices.inventoryCounts.getInventoryCount(id);
+        return response;
+      } catch (error: any) {
+        console.error('Erro ao carregar detalhes da contagem:', error);
+        toast({
+          title: 'Erro ao carregar contagem',
+          description: error.message || 'Não foi possível carregar os detalhes da contagem.',
+          variant: 'destructive',
+        });
+        throw error;
+      }
     },
     enabled: !!id,
     staleTime: CACHE_CONFIG.dynamic.staleTime,
     gcTime: CACHE_CONFIG.dynamic.gcTime,
     retry: 2,
-    meta: {
-      onError: () => {
-        toast({
-          title: 'Erro ao carregar contagem',
-          description: 'Não foi possível carregar os detalhes da contagem.',
-          variant: 'destructive',
-        });
-      },
-    },
   });
 }
 
@@ -221,31 +137,13 @@ export function useCreateInventoryCount() {
 
   return useMutation<ApiResponse<InventoryCount>, Error, InventoryCountFormData>({
     mutationFn: async (countData) => {
-      // Simular criação de contagem
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newCount: InventoryCount = {
-        id: `count-${Date.now()}`,
-        name: countData.name,
-        warehouseId: countData.warehouseId,
-        warehouseName: 'Armazém Selecionado',
-        type: countData.type,
-        status: 'planned',
-        scheduledDate: countData.scheduledDate,
-        assignedTo: countData.assignedTo,
-        items: [],
-        discrepancies: 0,
-        accuracy: 0,
-        notes: countData.notes,
-        createdBy: 'current-user',
-        createdAt: new Date().toISOString(),
-      };
-      
-      return {
-        data: newCount,
-        success: true,
-        message: 'Contagem criada com sucesso',
-      };
+      try {
+        const response = await apiServices.inventoryCounts.createInventoryCount(countData);
+        return response;
+      } catch (error: any) {
+        console.error('Erro ao criar contagem:', error);
+        throw error;
+      }
     },
     onSuccess: (response) => {
       // Invalidar cache de listas
@@ -275,15 +173,14 @@ export function useStartInventoryCount() {
   const { toast } = useToast();
 
   return useMutation<ApiResponse<InventoryCount>, Error, string>({
-    mutationFn: async () => {
-      // Simular início da contagem
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return {
-        data: {} as InventoryCount,
-        success: true,
-        message: 'Contagem iniciada com sucesso',
-      };
+    mutationFn: async (countId) => {
+      try {
+        const response = await apiServices.inventoryCounts.startInventoryCount(countId);
+        return response;
+      } catch (error: any) {
+        console.error('Erro ao iniciar contagem:', error);
+        throw error;
+      }
     },
     onSuccess: (_, countId) => {
       // Atualizar cache específico
@@ -318,15 +215,17 @@ export function useUpdateCountItem() {
   const { toast } = useToast();
 
   return useMutation<ApiResponse<InventoryCountItem>, Error, { countId: string; update: CountItemUpdate }>({
-    mutationFn: async () => {
-      // Simular atualização do item
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      return {
-        data: {} as InventoryCountItem,
-        success: true,
-        message: 'Item atualizado com sucesso',
-      };
+    mutationFn: async ({ countId, update }) => {
+      try {
+        const response = await apiServices.inventoryCounts.updateInventoryCountItem(countId, update.itemId, {
+          countedQuantity: update.countedQuantity,
+          notes: update.notes
+        });
+        return response;
+      } catch (error: any) {
+        console.error('Erro ao atualizar item da contagem:', error);
+        throw error;
+      }
     },
     onSuccess: (_, { countId }) => {
       // Atualizar cache da contagem
@@ -358,15 +257,14 @@ export function useCompleteInventoryCount() {
   const { toast } = useToast();
 
   return useMutation<ApiResponse<InventoryCount>, Error, string>({
-    mutationFn: async () => {
-      // Simular finalização da contagem
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return {
-        data: {} as InventoryCount,
-        success: true,
-        message: 'Contagem finalizada com sucesso',
-      };
+    mutationFn: async (countId) => {
+      try {
+        const response = await apiServices.inventoryCounts.completeInventoryCount(countId);
+        return response;
+      } catch (error: any) {
+        console.error('Erro ao finalizar contagem:', error);
+        throw error;
+      }
     },
     onSuccess: (_, countId) => {
       // Atualizar caches

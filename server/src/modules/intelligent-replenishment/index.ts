@@ -8,7 +8,7 @@ export class IntelligentReplenishmentModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
-    app.use('/api', replenishmentRoutes);
+    app.use('/api/replenishment', replenishmentRoutes);
     
     console.log(`✓ Módulo ${this.config.name} registrado`);
   }

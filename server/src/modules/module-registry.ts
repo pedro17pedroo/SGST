@@ -39,6 +39,7 @@ import { permissionsModule } from './permissions/permission.module';
 import { ediModule } from './edi';
 import { anomalyFraudModule } from './anomaly-fraud-detection';
 import reportsModule from './reports';
+import advancedAnalyticsModule from './advanced_analytics';
 import alertsModule from './alerts';
 import returnsModule from './returns';
 import carriersModule from './carriers';
@@ -80,6 +81,7 @@ export class ModuleRegistry {
     this.modules.set('edi', ediModule);
     this.modules.set('anomaly_fraud_detection', anomalyFraudModule);
     this.modules.set('reports', reportsModule);
+    this.modules.set('advanced_analytics', advancedAnalyticsModule);
     this.modules.set('alerts', alertsModule);
     this.modules.set('returns', returnsModule);
     this.modules.set('carriers', carriersModule);
@@ -97,7 +99,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         initializeBarcodeScanningModule(app);
-        console.log('✓ Módulo Leitura de Códigos registrado');
+        // Módulo Leitura de Códigos registrado
       }
     });
 
@@ -111,7 +113,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         initializeInventoryCountsModule(app);
-        console.log('✓ Módulo Contagens de Inventário registrado');
+        // Módulo Contagens de Inventário registrado
       }
     });
 
@@ -125,7 +127,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         initializeProductLocationsModule(app);
-        console.log('✓ Módulo Localizações de Produtos registrado');
+        // Módulo Localizações de Produtos registrado
       }
     });
 
@@ -134,7 +136,7 @@ export class ModuleRegistry {
       config: ModuleManager.getModuleById('picking_packing')!,
       register: async (app: Express) => {
         initializePickingPackingModule(app);
-        console.log('✓ Módulo Picking & Packing registrado');
+        // Módulo Picking & Packing registrado
       }
     });
 
@@ -144,11 +146,11 @@ export class ModuleRegistry {
         id: 'batch_management', 
         name: 'Gestão de Lotes',
         description: 'Rastreamento de lotes e datas de validade',
-        enabled: true
+        enabled: false
       },
       register: async (app: Express) => {
         initializeBatchManagementModule(app);
-        console.log('✓ Módulo Gestão de Lotes registrado');
+        // Módulo Gestão de Lotes registrado
       }
     });
 
@@ -162,7 +164,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         initializeInventoryAlertsModule(app);
-        console.log('✓ Módulo Alertas de Inventário registrado');
+        // Módulo Alertas de Inventário registrado
       }
     });
 
@@ -177,7 +179,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { default: reportsRoutes } = await import('./reports/reports.routes.js');
         app.use('/api/reports', reportsRoutes);
-        console.log('✓ Módulo Relatórios Avançados registrado');
+        // Módulo Relatórios Avançados registrado
       }
     });
 
@@ -191,7 +193,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         initializeOfflineSyncModule(app);
-        console.log('✓ Módulo Sincronização Offline registrado');
+        // Módulo Sincronização Offline registrado
       }
     });
 
@@ -205,7 +207,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         // initializeComputerVisionModule(app); // Module not available
-        console.log('✓ Módulo Computer Vision Edge registrado');
+        // Módulo Computer Vision Edge registrado
       }
     });
 
@@ -219,7 +221,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         initializeRTLSModule(app);
-        console.log('✓ Módulo RTLS Híbrido registrado');
+        // Módulo RTLS Híbrido registrado
       }
     });
 
@@ -234,7 +236,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { initializeBackupRestoreModule } = await import('./backup_restore/index.js');
         await initializeBackupRestoreModule(app);
-        console.log('✓ Módulo Backup e Restore registrado');
+        // Módulo Backup e Restore registrado
       }
     });
 
@@ -248,7 +250,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { initializeGPSTrackingModule } = await import('./gps_tracking/index.js');
         await initializeGPSTrackingModule(app);
-        console.log('✓ Módulo GPS Tracking registrado');
+        // Módulo GPS Tracking registrado
       }
     });
 
@@ -262,7 +264,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { initializePurchaseApprovalsModule } = await import('./purchase_approvals/index.js');
         await initializePurchaseApprovalsModule(app);
-        console.log('✓ Módulo Aprovações de Compras registrado');
+        // Módulo Aprovações de Compras registrado
       }
     });
 
@@ -276,7 +278,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { initializeRMAReturnsModule } = await import('./rma_returns/index.js');
         await initializeRMAReturnsModule(app);
-        console.log('✓ Módulo Gestão de Devoluções (RMA) registrado');
+        // Módulo Gestão de Devoluções (RMA) registrado
       }
     });
 
@@ -285,12 +287,12 @@ export class ModuleRegistry {
         id: 'erp_integrations', 
         name: 'Integrações ERP/CRM',
         description: 'Integrações com SAP, Salesforce e e-commerce',
-        enabled: true
+        enabled: false
       },
       register: async (app: Express) => {
         const { initializeERPIntegrationsModule } = await import('./erp_integrations/index.js');
         await initializeERPIntegrationsModule(app);
-        console.log('✓ Módulo Integrações ERP/CRM registrado');
+        // Módulo Integrações ERP/CRM registrado
       }
     });
 
@@ -304,7 +306,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { initializeComplianceModule } = await import('./compliance/index.js');
         await initializeComplianceModule(app);
-        console.log('✓ Módulo Conformidade Regulamentar registrado');
+        // Módulo Conformidade Regulamentar registrado
       }
     });
 
@@ -318,7 +320,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { initializeAIAnalyticsModule } = await import('./ai_analytics/index.js');
         await initializeAIAnalyticsModule(app);
-        console.log('✓ Módulo Análises Preditivas com IA registrado');
+        // Módulo Análises Preditivas com IA registrado
       }
     });
 
@@ -333,7 +335,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { default: externalIntegrationsRoutes } = await import('./external_integrations/external-integrations.routes.js');
         app.use('/api/integrations', externalIntegrationsRoutes);
-        console.log('✓ Módulo Integrações Externas Enterprise registrado');
+        // Módulo Integrações Externas Enterprise registrado
       }
     });
 
@@ -348,7 +350,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { default: customDashboardsRoutes } = await import('./custom_dashboards/custom-dashboards.routes.js');
         app.use('/api/dashboards', customDashboardsRoutes);
-        console.log('✓ Módulo Dashboards Personalizáveis registrado');
+        // Módulo Dashboards Personalizáveis registrado
       }
     });
 
@@ -364,7 +366,7 @@ export class ModuleRegistry {
         // Use existing compliance module which includes quality controls
         const { complianceRoutes } = await import('./compliance/compliance.routes.js');
         app.use('/api/quality-control', complianceRoutes);
-        console.log('✓ Módulo Controlo de Qualidade registrado');
+        // Módulo Controlo de Qualidade registrado
       }
     });
 
@@ -379,7 +381,7 @@ export class ModuleRegistry {
       register: async (app: Express) => {
         const { aiAnalyticsRoutes } = await import('./ai_analytics/ai-analytics.routes.js');
         app.use('/api/ai-analytics', aiAnalyticsRoutes);
-        console.log('✓ Módulo IA Analytics Avançada registrado');
+        // Módulo IA Analytics Avançada registrado
       }
     });
 
@@ -393,7 +395,7 @@ export class ModuleRegistry {
       },
       register: async (app: Express) => {
         initializeAngolaOperationsModule(app);
-        console.log('✓ Módulo Operação em Angola registrado');
+        // Módulo Operação em Angola registrado
       }
     });
   }
@@ -401,7 +403,7 @@ export class ModuleRegistry {
   async registerEnabledModules(app: Express): Promise<void> {
     const enabledModules = ModuleManager.getEnabledModules();
     
-    console.log('📦 Iniciando registro de módulos...');
+    // Iniciando registro de módulos
     
     for (const moduleConfig of enabledModules) {
       const module = this.modules.get(moduleConfig.id);
@@ -410,20 +412,21 @@ export class ModuleRegistry {
         try {
           // Verificar dependências antes de registrar
           if (ModuleManager.validateDependencies(moduleConfig.id)) {
+            console.log(`🔧 Registrando módulo: ${moduleConfig.name} (${moduleConfig.id})`);
             await module.register(app);
             this.registeredModules.add(moduleConfig.id);
           } else {
-            console.warn(`⚠️  Módulo ${moduleConfig.name} ignorado - dependências não atendidas`);
+            console.log(`⚠️ Módulo ${moduleConfig.name} ignorado - dependências não atendidas`);
           }
         } catch (error) {
           console.error(`❌ Erro ao registrar módulo ${moduleConfig.name}:`, error);
         }
       } else {
-        console.warn(`⚠️  Implementação do módulo ${moduleConfig.name} não encontrada`);
+        console.log(`❌ Implementação do módulo ${moduleConfig.name} (${moduleConfig.id}) não encontrada`);
       }
     }
     
-    console.log(`✅ ${this.registeredModules.size} módulos registrados com sucesso`);
+    // Módulos registrados com sucesso
   }
 
   async unregisterModule(app: Express, moduleId: string): Promise<boolean> {
@@ -433,10 +436,10 @@ export class ModuleRegistry {
       try {
         await module.unregister?.(app);
         this.registeredModules.delete(moduleId);
-        console.log(`✗ Módulo ${module.config.name} desregistrado`);
+        // Módulo desregistrado
         return true;
       } catch (error) {
-        console.error(`❌ Erro ao desregistrar módulo ${module.config.name}:`, error);
+        // Erro ao desregistrar módulo
         return false;
       }
     }

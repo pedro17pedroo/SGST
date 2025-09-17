@@ -696,7 +696,7 @@ export class AnomalyFraudModel {
       await this.createAnomalyRule(ruleData);
     }
     
-    console.log(`🔒 ${defaultRules.length} regras de anomalia inicializadas`);
+    // Regras de anomalia inicializadas
   }
 
   static async initializeDefaultPatterns(): Promise<void> {
@@ -732,6 +732,6 @@ export class AnomalyFraudModel {
       await this.createFraudPattern(patternData);
     }
     
-    console.log(`🔒 ${defaultPatterns.length} padrões de fraude inicializados`);
+    // Padrões de fraude inicializados
   }
 }

@@ -11,7 +11,7 @@ export class InventoryController {
       const products = await InventoryModel.getLowStockProducts();
       res.json(products);
     } catch (error) {
-      console.error('Error fetching low stock products:', error);
+      // Error fetching low stock products
       res.status(500).json({ 
         message: "Erro ao buscar produtos com baixo stock", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -25,7 +25,7 @@ export class InventoryController {
       const inventory = await InventoryModel.getInventoryByWarehouse(warehouseId);
       res.json(inventory);
     } catch (error) {
-      console.error('Error fetching warehouse inventory:', error);
+      // Error fetching warehouse inventory
       res.status(500).json({ 
         message: "Erro ao buscar inventário do armazém", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -39,7 +39,7 @@ export class InventoryController {
       const inventory = await InventoryModel.getProductInventory(productId);
       res.json(inventory);
     } catch (error) {
-      console.error('Error fetching product inventory:', error);
+      // Error fetching product inventory
       res.status(500).json({ 
         message: "Erro ao buscar inventário do produto", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -55,7 +55,7 @@ export class InventoryController {
       const inventory = await InventoryModel.updateInventory(productId, warehouseId, quantity);
       res.json(inventory);
     } catch (error) {
-      console.error('Error updating inventory:', error);
+      // Error updating inventory
       res.status(500).json({ 
         message: "Erro ao atualizar inventário", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -68,7 +68,7 @@ export class InventoryController {
       const inventory = await InventoryModel.getAllInventory();
       res.json(inventory);
     } catch (error) {
-      console.error('Error fetching all inventory:', error);
+      // Error fetching all inventory
       res.status(500).json({ 
         message: "Erro ao buscar inventário", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -81,7 +81,7 @@ export class InventoryController {
       const summary = await InventoryModel.getInventorySummary();
       res.json(summary);
     } catch (error) {
-      console.error('Error fetching inventory summary:', error);
+      // Error fetching inventory summary
       res.status(500).json({ 
         message: "Erro ao buscar resumo do inventário", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -117,7 +117,7 @@ export class InventoryController {
         }
       });
     } catch (error) {
-      console.error('Error fetching stock movements:', error);
+      // Error fetching stock movements
       res.status(500).json({ 
         success: false,
         message: "Erro ao buscar movimentações de stock", 
@@ -161,18 +161,15 @@ export class InventoryController {
         insertData.reference = reference;
       }
 
-      console.log('Dados para inserção:', insertData);
-
       // Inserir o movimento no banco de dados
       const [insertResult] = await db.insert(stockMovements).values(insertData);
-      console.log('Resultado da inserção:', insertResult);
       
       // Atualizar o inventário baseado no tipo de movimento
       await InventoryController.updateInventoryFromMovement(productId, warehouseId, type.toLowerCase(), quantity);
       
       res.status(201).json({ success: true, message: 'Movimentação criada com sucesso' });
     } catch (error) {
-      console.error('Error creating stock movement:', error);
+      // Error creating stock movement
       res.status(500).json({ 
         message: "Erro ao criar movimentação de stock", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -190,7 +187,7 @@ export class InventoryController {
       ];
       res.json(zones);
     } catch (error) {
-      console.error('Error fetching warehouse zones:', error);
+      // Error fetching warehouse zones
       res.status(500).json({ 
         message: "Erro ao buscar zonas do armazém", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -223,7 +220,7 @@ export class InventoryController {
         total: alerts.length
       });
     } catch (error) {
-      console.error('Error fetching stock alerts:', error);
+      // Error fetching stock alerts
       res.status(500).json({ 
         message: "Erro ao buscar alertas de stock", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -280,9 +277,9 @@ export class InventoryController {
       // Atualizar o inventário
       await InventoryModel.updateInventory(productId, warehouseId, newQuantity);
       
-      console.log(`Inventário atualizado: Produto ${productId}, Armazém ${warehouseId}, Nova quantidade: ${newQuantity}`);
+      // Inventário atualizado
     } catch (error) {
-      console.error('Erro ao atualizar inventário:', error);
+      // Erro ao atualizar inventário
       throw error;
     }
   }

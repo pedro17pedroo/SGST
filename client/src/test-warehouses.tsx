@@ -10,12 +10,12 @@ interface Warehouse {
 }
 
 export function TestWarehouses() {
-  console.log('🧪 TestWarehouses component rendered');
+  // TestWarehouses component rendered
   
   const { data: warehouses, isLoading, error } = useQuery<Warehouse[]>({
     queryKey: ['test-warehouses'],
     queryFn: async () => {
-      console.log('🧪 Executando query de teste para armazéns...');
+      // Executando query de teste para armazéns...
       const response = await apiRequest('GET', '/api/warehouses');
       
       if (!response.ok) {
@@ -23,7 +23,7 @@ export function TestWarehouses() {
       }
       
       const result = await response.json();
-      console.log('🧪 Resultado da query de teste:', result);
+      // Resultado da query de teste
       
       return result.data || result;
     },
@@ -32,7 +32,7 @@ export function TestWarehouses() {
     retry: false
   });
   
-  console.log('🧪 Estado da query:', { warehouses, isLoading, error });
+  // Estado da query
   
   return (
     <div style={{ padding: '20px', border: '2px solid red', margin: '10px' }}>

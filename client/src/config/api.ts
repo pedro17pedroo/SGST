@@ -161,6 +161,19 @@ export const API_ENDPOINTS = {
     lowStock: '/api/inventory/low-stock',
   },
 
+  // Contagens de Inventário
+  inventoryCounts: {
+    list: '/api/inventory-counts',
+    create: '/api/inventory-counts',
+    get: (id: string) => `/api/inventory-counts/${id}`,
+    update: (id: string) => `/api/inventory-counts/${id}`,
+    delete: (id: string) => `/api/inventory-counts/${id}`,
+    start: (id: string) => `/api/inventory-counts/${id}/start`,
+    complete: (id: string) => `/api/inventory-counts/${id}/complete`,
+    items: (id: string) => `/api/inventory-counts/${id}/items`,
+    updateItem: (countId: string, itemId: string) => `/api/inventory-counts/${countId}/items/${itemId}`,
+  },
+
   // Encomendas
   orders: {
     list: '/api/orders',
@@ -183,6 +196,15 @@ export const API_ENDPOINTS = {
     vehicles: {
       available: '/api/shipping/vehicles/available',
     },
+  },
+
+  // Escaneamento de Códigos de Barras
+  barcodeScanning: {
+    scan: '/api/barcode-scanning/scan',
+    scans: '/api/barcode-scanning/scans',
+    productScans: (productId: string) => `/api/barcode-scanning/product/${productId}/scans`,
+    findProduct: (barcode: string) => `/api/barcode-scanning/product/${barcode}`,
+    lastLocation: (productId: string) => `/api/barcode-scanning/product/${productId}/last-location`,
   },
 
   // Frota

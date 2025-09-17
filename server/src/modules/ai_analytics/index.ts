@@ -6,7 +6,7 @@ export class AIAnalyticsModule {
   static moduleName = 'Análises Preditivas com IA';
 
   async register(app: Express): Promise<void> {
-    app.use('/api', aiAnalyticsRoutes);
+    app.use('/api/ai-analytics', aiAnalyticsRoutes);
   }
 }
 

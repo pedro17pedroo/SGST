@@ -8,7 +8,8 @@ export class SmartReceivingModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
-    app.use('/api', receivingRoutes);
+    app.use('/api/receiving', receivingRoutes);
+    app.use('/api/asn', receivingRoutes);
     
     console.log(`✓ Módulo ${this.config.name} registrado`);
   }

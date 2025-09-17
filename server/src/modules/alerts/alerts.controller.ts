@@ -44,7 +44,7 @@ export class AlertsController {
         total: alerts.length
       });
     } catch (error) {
-      console.error('Error fetching alerts:', error);
+      // Error fetching alerts
       res.status(500).json({ 
         message: "Erro ao buscar alertas", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -80,7 +80,7 @@ export class AlertsController {
         data: alert
       });
     } catch (error) {
-      console.error('Error fetching alert:', error);
+      // Error fetching alert
       res.status(500).json({ 
         message: "Erro ao buscar alerta", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -117,7 +117,7 @@ export class AlertsController {
         message: 'Alerta criado com sucesso'
       });
     } catch (error) {
-      console.error('Error creating alert:', error);
+      // Error creating alert
       res.status(500).json({ 
         message: "Erro ao criar alerta", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -146,7 +146,7 @@ export class AlertsController {
         message: 'Alerta atualizado com sucesso'
       });
     } catch (error) {
-      console.error('Error updating alert:', error);
+      // Error updating alert
       res.status(500).json({ 
         message: "Erro ao atualizar alerta", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -175,7 +175,7 @@ export class AlertsController {
         message: 'Alerta reconhecido com sucesso'
       });
     } catch (error) {
-      console.error('Error acknowledging alert:', error);
+      // Error acknowledging alert
       res.status(500).json({ 
         message: "Erro ao reconhecer alerta", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -196,7 +196,7 @@ export class AlertsController {
         message: 'Alerta eliminado com sucesso'
       });
     } catch (error) {
-      console.error('Error deleting alert:', error);
+      // Error deleting alert
       res.status(500).json({ 
         message: "Erro ao eliminar alerta", 
         error: error instanceof Error ? error.message : 'Unknown error'

@@ -75,7 +75,7 @@ export class GPSTrackingController {
         alerts: alerts.length > 0 ? alerts : undefined
       });
     } catch (error) {
-      console.error('Error updating location:', error);
+      // Error updating location
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -102,7 +102,7 @@ export class GPSTrackingController {
       
       res.json(location);
     } catch (error) {
-      console.error('Error getting location:', error);
+      // Error getting location
       res.status(500).json({
         message: "Erro ao buscar localização",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -125,7 +125,7 @@ export class GPSTrackingController {
       
       res.json(history);
     } catch (error) {
-      console.error('Error getting location history:', error);
+      // Error getting location history
       res.status(500).json({
         message: "Erro ao buscar histórico de localização",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -148,7 +148,7 @@ export class GPSTrackingController {
         device
       });
     } catch (error) {
-      console.error('Error registering device:', error);
+      // Error registering device
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -172,7 +172,7 @@ export class GPSTrackingController {
       
       res.json(devices);
     } catch (error) {
-      console.error('Error listing devices:', error);
+      // Error listing devices
       res.status(500).json({
         message: "Erro ao listar dispositivos",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -200,7 +200,7 @@ export class GPSTrackingController {
         device
       });
     } catch (error) {
-      console.error('Error updating device:', error);
+      // Error updating device
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -227,7 +227,7 @@ export class GPSTrackingController {
       
       res.json({ message: "Dispositivo eliminado com sucesso" });
     } catch (error) {
-      console.error('Error deleting device:', error);
+      // Error deleting device
       res.status(500).json({
         message: "Erro ao eliminar dispositivo",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -250,7 +250,7 @@ export class GPSTrackingController {
         geofence
       });
     } catch (error) {
-      console.error('Error creating geofence:', error);
+      // Error creating geofence
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -273,7 +273,7 @@ export class GPSTrackingController {
       
       res.json(geofences);
     } catch (error) {
-      console.error('Error listing geofences:', error);
+      // Error listing geofences
       res.status(500).json({
         message: "Erro ao listar geofences",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -301,7 +301,7 @@ export class GPSTrackingController {
         geofence
       });
     } catch (error) {
-      console.error('Error updating geofence:', error);
+      // Error updating geofence
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -328,7 +328,7 @@ export class GPSTrackingController {
       
       res.json({ message: "Geofence eliminada com sucesso" });
     } catch (error) {
-      console.error('Error deleting geofence:', error);
+      // Error deleting geofence
       res.status(500).json({
         message: "Erro ao eliminar geofence",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -345,7 +345,7 @@ export class GPSTrackingController {
       
       res.json(alerts);
     } catch (error) {
-      console.error('Error getting GPS alerts:', error);
+      // Error getting GPS alerts
       res.status(500).json({
         message: "Erro ao buscar alertas GPS",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -371,7 +371,7 @@ export class GPSTrackingController {
         alert
       });
     } catch (error) {
-      console.error('Error acknowledging alert:', error);
+      // Error acknowledging alert
       res.status(500).json({
         message: "Erro ao reconhecer alerta",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -401,7 +401,7 @@ export class GPSTrackingController {
         route: optimizedRoute
       });
     } catch (error) {
-      console.error('Error optimizing route:', error);
+      // Error optimizing route
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -428,7 +428,7 @@ export class GPSTrackingController {
       
       res.json(route);
     } catch (error) {
-      console.error('Error getting route:', error);
+      // Error getting route
       res.status(500).json({
         message: "Erro ao buscar rota",
         error: error instanceof Error ? error.message : 'Unknown error'

@@ -17,7 +17,7 @@ export class GreenETAModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     app.use("/api/green-eta", greenEtaRoutes);
-    console.log(`✓ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 }
 

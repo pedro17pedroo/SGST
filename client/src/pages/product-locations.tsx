@@ -104,12 +104,11 @@ export default function ProductLocationsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  console.log('🔄 ProductLocationsPage renderizado');
-  console.log('🔄 Estado do diálogo:', isDialogOpen);
+  // ProductLocationsPage renderizado
   
   // Monitor component mount
   useEffect(() => {
-    console.log('🔄 Componente montado - iniciando carregamento de dados');
+    // Componente montado - iniciando carregamento de dados
   }, []);
 
   const form = useForm<ProductLocationFormData>({
@@ -158,9 +157,7 @@ export default function ProductLocationsPage() {
       if (!response.ok) throw new Error('Failed to fetch products');
       const result = await response.json();
       const productsData = Array.isArray(result.data) ? result.data as Product[] : [];
-      console.log('🔍 Produtos carregados:', productsData);
-      console.log('🔍 Total de produtos:', productsData.length);
-      console.log('🔍 Procurando por "Teste 1":', productsData.filter(p => p.name.toLowerCase().includes('teste')));
+      // Produtos carregados
       return productsData;
     },
     staleTime: 30 * 1000, // 30 seconds - more frequent updates
@@ -176,32 +173,31 @@ export default function ProductLocationsPage() {
     queryKey: ['warehouses'],
     queryFn: async () => {
       try {
-        console.log('🏢 Iniciando chamada para carregar armazéns...');
+        // Iniciando chamada para carregar armazéns...
         const response = await apiRequest('GET', '/api/warehouses');
-        console.log('🏢 Resposta da API de armazéns:', response.status, response.statusText);
+        // Resposta da API de armazéns
         
         if (!response.ok) {
-          console.error('🏢 Erro na resposta da API:', response.status, response.statusText);
+          // Erro na resposta da API
           throw new Error(`Failed to fetch warehouses: ${response.status}`);
         }
         
         const result = await response.json();
-        console.log('🏢 Dados recebidos da API de armazéns:', result);
+        // Dados recebidos da API de armazéns
         
         // A API retorna { success: true, data: [...], pagination: {...} }
         if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data)) {
-          console.log('🏢 Armazéns carregados com sucesso:', result.data.length, 'itens');
-          console.log('🏢 Lista de armazéns:', result.data);
+          // Armazéns carregados com sucesso
           return result.data;
         } else if (Array.isArray(result)) {
-          console.log('🏢 Armazéns em formato de array:', result.length, 'itens');
+          // Armazéns em formato de array
           return result;
         } else {
-          console.warn('🏢 Formato de dados inesperado dos armazéns:', result);
+          // Formato de dados inesperado dos armazéns
           return [];
         }
       } catch (error) {
-        console.error('🏢 Erro ao carregar armazéns:', error);
+        // Erro ao carregar armazéns
         throw error; // Propagar o erro em vez de retornar array vazio
       }
     },
@@ -216,18 +212,12 @@ export default function ProductLocationsPage() {
   
   // Ensure warehouses is always an array
   const safeWarehouses = Array.isArray(warehouses) ? warehouses : [];
-  console.log('🏢 SafeWarehouses processados:', safeWarehouses.length, 'itens');
-  console.log('🏢 Estado de carregamento:', { warehousesLoading, warehousesError });
+  // SafeWarehouses processados
   
   // Monitor warehouses data changes
-  useEffect(() => {
-    console.log('🏢 Dados de armazéns mudaram:', {
-      warehouses: warehouses?.length || 0,
-      safeWarehouses: safeWarehouses.length,
-      loading: warehousesLoading,
-      error: warehousesError
-    });
-  }, [warehouses, safeWarehouses, warehousesLoading, warehousesError]);
+   useEffect(() => {
+     // Dados de armazéns mudaram
+   }, [warehouses, safeWarehouses, warehousesLoading, warehousesError]);
 
   // Filter warehouses based on search
   const filteredWarehouses = safeWarehouses.filter((warehouse) => {
@@ -239,8 +229,7 @@ export default function ProductLocationsPage() {
     
     return nameMatch || addressMatch;
   });
-  console.log('🏢 Armazéns filtrados:', filteredWarehouses.length, 'itens');
-  console.log('🏢 Lista filtrada:', filteredWarehouses.map(w => ({ id: w.id, name: w.name })));
+  // Armazéns filtrados
 
 
 
@@ -352,7 +341,7 @@ export default function ProductLocationsPage() {
                           
                           // Debug log para o termo de busca específico
                           if (searchTerm.includes('teste')) {
-                            console.log(`🔍 Filtro Debug - Produto: ${product.name}, SKU: ${product.sku}, Termo: "${searchTerm}", Nome Match: ${nameMatch}, SKU Match: ${skuMatch}, Barcode Match: ${barcodeMatch}, Final: ${matches}`);
+                            // Filtro Debug - verificando correspondências
                           }
                           
                           return matches;

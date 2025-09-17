@@ -7,7 +7,7 @@ export class BackupRestoreModule {
 
   async register(app: Express): Promise<void> {
     // Registrar rotas do módulo
-    app.use('/api', backupRestoreRoutes);
+    app.use('/api/backup-restore', backupRestoreRoutes);
   }
 }
 

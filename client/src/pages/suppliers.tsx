@@ -302,14 +302,7 @@ export default function Suppliers() {
   };
 
   // Debug logs
-  console.log('Suppliers Debug:', {
-    queryParams,
-    suppliersResponse,
-    suppliers,
-    pagination,
-    isLoading,
-    error
-  });
+  // // Suppliers Debug
 
   return (
     <div className="min-h-screen bg-background">

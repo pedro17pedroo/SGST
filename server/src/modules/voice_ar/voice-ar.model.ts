@@ -132,7 +132,7 @@ export class VoiceARModel {
     };
 
     this.voicePickingSessions.set(sessionId, session);
-    console.log(`🎤 Sessão de Voice Picking criada: ${sessionId}`);
+    // Sessão de Voice Picking criada
     
     return session;
   }
@@ -182,7 +182,7 @@ export class VoiceARModel {
 
     this.voicePickingSessions.set(sessionId, session);
     
-    console.log(`🎤 Comando processado: "${data.recognizedText}" -> ${action}`);
+    // Comando processado
     return command;
   }
 
@@ -269,7 +269,7 @@ export class VoiceARModel {
     session.totalTime = session.completedAt.getTime() - session.startedAt.getTime();
     
     this.voicePickingSessions.set(sessionId, session);
-    console.log(`🎤 Sessão de Voice Picking completada: ${sessionId}`);
+    // Sessão de Voice Picking completada
     
     return session;
   }
@@ -297,7 +297,7 @@ export class VoiceARModel {
     };
 
     this.arSessions.set(sessionId, session);
-    console.log(`🥽 Sessão de AR criada: ${sessionId}`);
+    // Sessão de AR criada
     
     return session;
   }
@@ -325,7 +325,7 @@ export class VoiceARModel {
     session.arMarkers.push(marker);
     this.arSessions.set(sessionId, session);
     
-    console.log(`🥽 Marcador AR adicionado: ${marker.id}`);
+    // Marcador AR adicionado
     return marker;
   }
 
@@ -356,7 +356,7 @@ export class VoiceARModel {
     session.overlayData.push(overlay);
     this.arSessions.set(sessionId, session);
     
-    console.log(`🥽 Overlay AR adicionado: ${overlay.id}`);
+    // Overlay AR adicionado
     return overlay;
   }
 
@@ -391,7 +391,7 @@ export class VoiceARModel {
     session.completedAt = new Date();
     
     this.arSessions.set(sessionId, session);
-    console.log(`🥽 Sessão de AR completada: ${sessionId}`);
+    // Sessão de AR completada
     
     return session;
   }
@@ -430,7 +430,7 @@ export class VoiceARModel {
     const updatedConfig = { ...config, ...updates };
     
     this.voiceConfigs.set(warehouseId, updatedConfig);
-    console.log(`🎤 Configuração de Voice Picking atualizada para armazém: ${warehouseId}`);
+    // Configuração de Voice Picking atualizada
     
     return updatedConfig;
   }
@@ -467,7 +467,7 @@ export class VoiceARModel {
     const updatedConfig = { ...config, ...updates };
     
     this.arConfigs.set(warehouseId, updatedConfig);
-    console.log(`🥽 Configuração de AR atualizada para armazém: ${warehouseId}`);
+    // Configuração de AR atualizada
     
     return updatedConfig;
   }

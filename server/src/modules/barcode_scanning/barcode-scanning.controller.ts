@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { BarcodeScanningModel } from './barcode-scanning.model.js';
+import { BarcodeScanningModel } from './barcode-scanning.model';
 
 // Validation schemas
 const createBarcodeScanSchema = z.object({
@@ -30,7 +30,7 @@ export class BarcodeScanningController {
       const scans = await BarcodeScanningModel.getBarcodeScans(limit);
       res.json(scans);
     } catch (error) {
-      console.error('Error fetching barcode scans:', error);
+      // Error fetching barcode scans
       res.status(500).json({ 
         message: "Erro ao buscar escaneamentos",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -70,7 +70,7 @@ export class BarcodeScanningController {
 
       res.status(201).json(scan);
     } catch (error) {
-      console.error('Error creating barcode scan:', error);
+      // Error creating barcode scan
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
           message: "Dados inválidos",
@@ -91,7 +91,7 @@ export class BarcodeScanningController {
       const scans = await BarcodeScanningModel.getBarcodeScansByProduct(productId);
       res.json(scans);
     } catch (error) {
-      console.error('Error fetching product scans:', error);
+      // Error fetching product scans
       res.status(500).json({ 
         message: "Erro ao buscar escaneamentos do produto",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -113,7 +113,7 @@ export class BarcodeScanningController {
 
       res.json(product);
     } catch (error) {
-      console.error('Error finding product by barcode:', error);
+      // Error finding product by barcode
       res.status(500).json({ 
         message: "Erro ao buscar produto",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -129,7 +129,7 @@ export class BarcodeScanningController {
       const updatedScan = await BarcodeScanningModel.updateScanLocation(scanId, validated);
       res.json(updatedScan);
     } catch (error) {
-      console.error('Error updating scan location:', error);
+      // Error updating scan location
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
           message: "Dados inválidos",
@@ -157,7 +157,7 @@ export class BarcodeScanningController {
 
       res.json(location);
     } catch (error) {
-      console.error('Error fetching last product location:', error);
+      // Error fetching last product location
       res.status(500).json({ 
         message: "Erro ao buscar última localização",
         error: error instanceof Error ? error.message : 'Unknown error'

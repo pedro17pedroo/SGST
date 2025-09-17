@@ -50,7 +50,7 @@ export class FuelTypesController {
         message: 'Tipos de combustível listados com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao listar tipos de combustível:', error);
+      // Erro ao listar tipos de combustível
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -80,7 +80,7 @@ export class FuelTypesController {
         message: 'Tipo de combustível encontrado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao buscar tipo de combustível:', error);
+      // Erro ao buscar tipo de combustível
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -114,7 +114,7 @@ export class FuelTypesController {
         message: 'Tipo de combustível criado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao criar tipo de combustível:', error);
+      // Erro ao criar tipo de combustível
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({
@@ -170,7 +170,7 @@ export class FuelTypesController {
         message: 'Tipo de combustível atualizado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao atualizar tipo de combustível:', error);
+      // Erro ao atualizar tipo de combustível
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({
@@ -218,7 +218,7 @@ export class FuelTypesController {
         });
       }
     } catch (error) {
-      console.error('Erro ao excluir tipo de combustível:', error);
+      // Erro ao excluir tipo de combustível
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -240,7 +240,7 @@ export class FuelTypesController {
         message: 'Tipos de combustível ativos listados com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao buscar tipos de combustível ativos:', error);
+      // Erro ao buscar tipos de combustível ativos
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -265,7 +265,7 @@ export class FuelTypesController {
         message: isUnique ? 'Nome disponível' : 'Nome já está em uso'
       });
     } catch (error) {
-      console.error('Erro ao verificar unicidade do nome:', error);
+      // Erro ao verificar unicidade do nome
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',
@@ -287,7 +287,7 @@ export class FuelTypesController {
         message: 'Unidades listadas com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao buscar unidades:', error);
+      // Erro ao buscar unidades
       res.status(500).json({
         success: false,
         message: 'Erro interno do servidor',

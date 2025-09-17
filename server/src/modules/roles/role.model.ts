@@ -18,7 +18,7 @@ export class RoleModel {
       const result = await db.select().from(roles);
       return result;
     } catch (error) {
-      console.error('Erro ao buscar todos os perfis:', error);
+      // Erro ao buscar todos os perfis
       return [];
     }
   }
@@ -28,7 +28,7 @@ export class RoleModel {
       const result = await db.select().from(roles).where(eq(roles.id, id)).limit(1);
       return result[0] || null;
     } catch (error) {
-      console.error('Erro ao buscar perfil por ID:', error);
+      // Erro ao buscar perfil por ID
       return null;
     }
   }
@@ -40,7 +40,7 @@ export class RoleModel {
       await db.insert(roles).values({ id, ...validatedData });
       return await this.getById(id);
     } catch (error) {
-      console.error('Erro ao criar perfil:', error);
+      // Erro ao criar perfil
       throw new Error('Erro ao criar perfil');
     }
   }
@@ -50,7 +50,7 @@ export class RoleModel {
       await db.update(roles).set(updateData).where(eq(roles.id, id));
       return await this.getById(id);
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      // Erro ao atualizar perfil
       throw new Error('Erro ao atualizar perfil');
     }
   }
@@ -60,7 +60,7 @@ export class RoleModel {
       await db.delete(roles).where(eq(roles.id, id));
       return true;
     } catch (error) {
-      console.error('Erro ao eliminar perfil:', error);
+      // Erro ao eliminar perfil
       return false;
     }
   }
@@ -81,7 +81,7 @@ export class RoleModel {
       
       return result;
     } catch (error) {
-      console.error('Erro ao buscar permissões do perfil:', error);
+      // Erro ao buscar permissões do perfil
       return [];
     }
   }
@@ -97,7 +97,7 @@ export class RoleModel {
       
       return { id, roleId, permissionId };
     } catch (error) {
-      console.error('Erro ao adicionar permissão ao perfil:', error);
+      // Erro ao adicionar permissão ao perfil
       throw new Error('Erro ao adicionar permissão ao perfil');
     }
   }
@@ -109,7 +109,7 @@ export class RoleModel {
       
       return true;
     } catch (error) {
-      console.error('Erro ao remover permissão do perfil:', error);
+      // Erro ao remover permissão do perfil
       return false;
     }
   }
@@ -131,7 +131,7 @@ export class RoleModel {
       
       return true;
     } catch (error) {
-      console.error('Erro ao definir permissões do perfil:', error);
+      // Erro ao definir permissões do perfil
       throw new Error('Erro ao definir permissões do perfil');
     }
   }
@@ -151,7 +151,7 @@ export class RoleModel {
       
       return result;
     } catch (error) {
-      console.error('Erro ao buscar utilizadores com perfil:', error);
+      // Erro ao buscar utilizadores com perfil
       return [];
     }
   }

@@ -36,7 +36,7 @@ export class PutawayManagementController {
         rule
       });
     } catch (error) {
-      console.error('Error creating putaway rule:', error);
+      // Error creating putaway rule
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -58,7 +58,7 @@ export class PutawayManagementController {
       const rules = await PutawayManagementModel.getAllPutawayRules(warehouseId as string);
       res.json(rules);
     } catch (error) {
-      console.error('Error fetching putaway rules:', error);
+      // Error fetching putaway rules
       res.status(500).json({ 
         message: "Erro ao buscar regras de putaway", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -77,7 +77,7 @@ export class PutawayManagementController {
       
       res.json(rule);
     } catch (error) {
-      console.error('Error fetching putaway rule:', error);
+      // Error fetching putaway rule
       res.status(500).json({ 
         message: "Erro ao buscar regra de putaway", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -95,7 +95,7 @@ export class PutawayManagementController {
         rule
       });
     } catch (error) {
-      console.error('Error updating putaway rule:', error);
+      // Error updating putaway rule
       res.status(500).json({ 
         message: "Erro ao atualizar regra de putaway", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -112,7 +112,7 @@ export class PutawayManagementController {
         message: "Regra de putaway eliminada com sucesso"
       });
     } catch (error) {
-      console.error('Error deleting putaway rule:', error);
+      // Error deleting putaway rule
       res.status(500).json({ 
         message: "Erro ao eliminar regra de putaway", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -160,7 +160,7 @@ export class PutawayManagementController {
         suggestion
       });
     } catch (error) {
-      console.error('Error creating putaway task:', error);
+      // Error creating putaway task
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -182,7 +182,7 @@ export class PutawayManagementController {
       const tasks = await PutawayManagementModel.getAllPutawayTasks(warehouseId as string);
       res.json(tasks);
     } catch (error) {
-      console.error('Error fetching putaway tasks:', error);
+      // Error fetching putaway tasks
       res.status(500).json({ 
         message: "Erro ao buscar tarefas de putaway", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -201,7 +201,7 @@ export class PutawayManagementController {
       
       res.json(task);
     } catch (error) {
-      console.error('Error fetching putaway task:', error);
+      // Error fetching putaway task
       res.status(500).json({ 
         message: "Erro ao buscar tarefa de putaway", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -224,7 +224,7 @@ export class PutawayManagementController {
         task
       });
     } catch (error) {
-      console.error('Error assigning putaway task:', error);
+      // Error assigning putaway task
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -256,7 +256,7 @@ export class PutawayManagementController {
         task
       });
     } catch (error) {
-      console.error('Error updating putaway task status:', error);
+      // Error updating putaway task status
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -298,7 +298,7 @@ export class PutawayManagementController {
         pallet
       });
     } catch (error) {
-      console.error('Error creating SSCC pallet:', error);
+      // Error creating SSCC pallet
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -320,7 +320,7 @@ export class PutawayManagementController {
       const pallets = await PutawayManagementModel.getAllSsccPallets(warehouseId as string);
       res.json(pallets);
     } catch (error) {
-      console.error('Error fetching SSCC pallets:', error);
+      // Error fetching SSCC pallets
       res.status(500).json({ 
         message: "Erro ao buscar paletes SSCC", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -339,7 +339,7 @@ export class PutawayManagementController {
       
       res.json(pallet);
     } catch (error) {
-      console.error('Error fetching SSCC pallet:', error);
+      // Error fetching SSCC pallet
       res.status(500).json({ 
         message: "Erro ao buscar palete SSCC", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -376,7 +376,7 @@ export class PutawayManagementController {
         item
       });
     } catch (error) {
-      console.error('Error adding item to pallet:', error);
+      // Error adding item to pallet
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -398,7 +398,7 @@ export class PutawayManagementController {
       const items = await PutawayManagementModel.getPalletItems(id);
       res.json(items);
     } catch (error) {
-      console.error('Error fetching pallet items:', error);
+      // Error fetching pallet items
       res.status(500).json({ 
         message: "Erro ao buscar itens do palete", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -421,7 +421,7 @@ export class PutawayManagementController {
         pallet
       });
     } catch (error) {
-      console.error('Error updating pallet status:', error);
+      // Error updating pallet status
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -453,7 +453,7 @@ export class PutawayManagementController {
         suggestion
       });
     } catch (error) {
-      console.error('Error suggesting optimal location:', error);
+      // Error suggesting optimal location
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -484,7 +484,7 @@ export class PutawayManagementController {
         evaluation
       });
     } catch (error) {
-      console.error('Error evaluating cross-dock:', error);
+      // Error evaluating cross-dock
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -506,7 +506,7 @@ export class PutawayManagementController {
       const stats = await PutawayManagementModel.getPutawayStats(warehouseId as string);
       res.json(stats);
     } catch (error) {
-      console.error('Error fetching putaway stats:', error);
+      // Error fetching putaway stats
       res.status(500).json({ 
         message: "Erro ao buscar estatísticas de putaway", 
         error: error instanceof Error ? error.message : 'Unknown error'

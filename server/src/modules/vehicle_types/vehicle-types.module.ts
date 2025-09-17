@@ -19,16 +19,16 @@ export class VehicleTypesModule implements IModule {
       // Registrar rotas do módulo
       app.use('/api/vehicle-types', vehicleTypesRoutes);
       
-      console.log('✓ Módulo Tipos de Veículo registrado com sucesso');
+      // Módulo Tipos de Veículo registrado com sucesso
     } catch (error) {
-      console.error('❌ Erro ao registrar módulo Tipos de Veículo:', error);
+      // Erro ao registrar módulo Tipos de Veículo
       throw error;
     }
   }
 
   async unregister(app: Express): Promise<void> {
     // Implementar lógica de desregistro se necessário
-    console.log('✓ Módulo Tipos de Veículo desregistrado');
+    // Módulo Tipos de Veículo desregistrado
   }
 }
 

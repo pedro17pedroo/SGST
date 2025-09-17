@@ -17,7 +17,7 @@ export class DigitalTwinModule extends BaseModule {
 
   async register(app: Express): Promise<void> {
     app.use("/api/digital-twin", digitalTwinRoutes);
-    console.log(`✓ Módulo ${this.config.name} registrado`);
+    // Módulo registrado
   }
 }
 

@@ -10,7 +10,7 @@ export class RTLSController {
       const deviceData = req.body;
       const device = await RTLSModel.registerDevice(deviceData);
 
-      console.log(`📡 Dispositivo RTLS registrado: ${device.id} (${device.type})`);
+      // Dispositivo RTLS registrado
 
       res.status(201).json({
         message: 'Device registered successfully',
@@ -18,7 +18,7 @@ export class RTLSController {
       });
 
     } catch (error) {
-      console.error('Erro ao registrar dispositivo RTLS:', error);
+      // Erro ao registrar dispositivo RTLS
       res.status(500).json({ 
         message: 'Failed to register device', 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -101,7 +101,7 @@ export class RTLSController {
         return res.status(404).json({ message: 'Device not found' });
       }
 
-      console.log(`🗑️ Dispositivo RTLS removido: ${deviceId}`);
+      // Dispositivo RTLS removido
 
       res.json({ message: 'Device removed successfully' });
 
@@ -119,7 +119,7 @@ export class RTLSController {
       const locationData: RTLSLocation = req.body;
       await RTLSModel.updateLocation(locationData);
 
-      console.log(`📍 Localização atualizada para dispositivo ${locationData.deviceId}: (${locationData.x}, ${locationData.y}) ±${locationData.accuracy}cm`);
+      // Localização atualizada para dispositivo
 
       res.json({
         message: 'Location updated successfully',
@@ -127,7 +127,7 @@ export class RTLSController {
       });
 
     } catch (error) {
-      console.error('Erro ao atualizar localização:', error);
+      // Erro ao atualizar localização
       res.status(500).json({ 
         message: 'Failed to update location', 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -185,7 +185,7 @@ export class RTLSController {
       const geofenceData = req.body;
       const geofence = await RTLSModel.createGeofence(geofenceData);
 
-      console.log(`🎯 Geofence criada: ${geofence.name} (${geofence.type})`);
+      // Geofence criada
 
       res.status(201).json({
         message: 'Geofence created successfully',
@@ -193,7 +193,7 @@ export class RTLSController {
       });
 
     } catch (error) {
-      console.error('Erro ao criar geofence:', error);
+      // Erro ao criar geofence
       res.status(500).json({ 
         message: 'Failed to create geofence', 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -255,7 +255,7 @@ export class RTLSController {
         return res.status(404).json({ message: 'Geofence not found' });
       }
 
-      console.log(`🗑️ Geofence removida: ${geofenceId}`);
+      // Geofence removida
 
       res.json({ message: 'Geofence deleted successfully' });
 
@@ -325,7 +325,7 @@ export class RTLSController {
       const assetData = req.body;
       const asset = await RTLSModel.createAsset(assetData);
 
-      console.log(`📦 Asset criado: ${asset.assetId} (${asset.assetType})`);
+      // Asset criado
 
       res.status(201).json({
         message: 'Asset created successfully',
@@ -333,7 +333,7 @@ export class RTLSController {
       });
 
     } catch (error) {
-      console.error('Erro ao criar asset:', error);
+      // Erro ao criar asset
       res.status(500).json({ 
         message: 'Failed to create asset', 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -444,7 +444,7 @@ export class RTLSController {
         return res.status(404).json({ message: 'Event not found' });
       }
 
-      console.log(`✅ Evento RTLS confirmado: ${eventId}`);
+      // Evento RTLS confirmado
 
       res.json({ message: 'Event acknowledged successfully' });
 
@@ -475,7 +475,7 @@ export class RTLSController {
       const config = req.body;
       await RTLSModel.updateConfiguration(config);
 
-      console.log('🔧 Configuração RTLS atualizada');
+      // Configuração RTLS atualizada
 
       res.json({
         message: 'Configuration updated successfully',

@@ -62,7 +62,7 @@ export class OfflineSyncModel {
 
     if (conflictingOp) {
       // Detectar conflito
-      console.log(`⚠️ Conflito detectado para entidade ${operation.entityId}`);
+      // Conflito detectado para entidade
       
       const conflictData = {
         localOperation: operation,
@@ -88,7 +88,7 @@ export class OfflineSyncModel {
       ops.push(operation);
       this.syncedOperations.set(operation.entityId, ops);
 
-      console.log(`✅ Operação ${operation.type} aplicada para ${operation.entity}:${operation.entityId}`);
+      // Operação aplicada
     }
 
     return { success };
@@ -114,18 +114,18 @@ export class OfflineSyncModel {
         case 'shipments':
           return await this.applyShipmentOperation(operation);
         default:
-          console.log(`⚠️ Entidade não suportada: ${operation.entity}`);
+          // Entidade não suportada
           return false;
       }
     } catch (error) {
-      console.error(`❌ Erro ao aplicar operação ${operation.id}:`, error);
+      // Erro ao aplicar operação
       return false;
     }
   }
 
   private static async applyProductOperation(operation: CRDTOperation): Promise<boolean> {
     // Simulação - integraria com ProductModel real
-    console.log(`🔄 Aplicando operação ${operation.type} em produto ${operation.entityId}`);
+    // Aplicando operação em produto
     
     // Aqui faria a operação real no banco de dados
     // Exemplo: ProductModel.create/update/delete(operation.data)
@@ -134,7 +134,7 @@ export class OfflineSyncModel {
   }
 
   private static async applyInventoryOperation(operation: CRDTOperation): Promise<boolean> {
-    console.log(`📦 Aplicando operação ${operation.type} em inventário ${operation.entityId}`);
+    // Aplicando operação em inventário
     
     // Integraria com InventoryModel real
     // Operações críticas como movimentos de stock precisam de validação extra
@@ -143,7 +143,7 @@ export class OfflineSyncModel {
   }
 
   private static async applyOrderOperation(operation: CRDTOperation): Promise<boolean> {
-    console.log(`📋 Aplicando operação ${operation.type} em encomenda ${operation.entityId}`);
+    // Aplicando operação em encomenda
     
     // Integraria com OrderModel real
     
@@ -151,7 +151,7 @@ export class OfflineSyncModel {
   }
 
   private static async applyShipmentOperation(operation: CRDTOperation): Promise<boolean> {
-    console.log(`🚚 Aplicando operação ${operation.type} em envio ${operation.entityId}`);
+    // Aplicando operação em envio
     
     // Integraria com ShipmentModel real
     
@@ -195,7 +195,7 @@ export class OfflineSyncModel {
       throw new Error('Conflict not found');
     }
 
-    console.log(`🔧 Resolvendo conflito ${operationId} com resolução: ${resolution}`);
+    // Resolvendo conflito
 
     if (resolution === 'local_wins') {
       // Aplicar operação local
@@ -242,7 +242,7 @@ export class OfflineSyncModel {
       }
     }
 
-    console.log(`🧹 Limpeza: removidas ${removedCount} operações antigas`);
+    // Limpeza: operações antigas removidas
     return removedCount;
   }
 }

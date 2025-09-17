@@ -149,7 +149,7 @@ export class AngolaIntegrationsModel {
       this.mobilePaymentProviders.set(id, { ...provider, id });
     });
 
-    console.log(`💳 ${providers.length} provedores de pagamento móvel inicializados para Angola`);
+    // Provedores de pagamento móvel inicializados para Angola
   }
 
   // EMIS Integration Methods
@@ -162,7 +162,7 @@ export class AngolaIntegrationsModel {
 
     this.emisIntegrations.set(integration.id, integration);
     
-    console.log(`📊 Integração EMIS criada: ${integration.companyTaxId}`);
+    // Integração EMIS criada
     
     return integration;
   }
@@ -220,10 +220,10 @@ export class AngolaIntegrationsModel {
         invoice.qrCode = `data:image/png;base64,${nanoid(200)}`;
       }
       this.emisInvoices.set(invoice.id, invoice);
-      console.log(`📋 Fatura ${invoice.invoiceNumber} ${success ? 'aprovada' : 'rejeitada'} pelo EMIS`);
+      // Fatura processada pelo EMIS
     }, 2000);
 
-    console.log(`📋 Fatura ${invoice.invoiceNumber} submetida ao EMIS`);
+    // Fatura submetida ao EMIS
     
     return invoice;
   }
@@ -238,7 +238,7 @@ export class AngolaIntegrationsModel {
 
     this.multicaixaIntegrations.set(integration.id, integration);
     
-    console.log(`🏦 Integração Multicaixa criada: ${integration.merchantId}`);
+    // Integração Multicaixa criada
     
     return integration;
   }
@@ -284,10 +284,10 @@ export class AngolaIntegrationsModel {
         transaction.failureReason = 'Insufficient funds';
       }
       this.paymentTransactions.set(transaction.id, transaction);
-      console.log(`💳 Pagamento Multicaixa ${transaction.reference} ${success ? 'aprovado' : 'rejeitado'}`);
+      // Pagamento Multicaixa processado
     }, 3000);
 
-    console.log(`💳 Pagamento Multicaixa iniciado: ${transaction.reference}`);
+    // Pagamento Multicaixa iniciado
     
     return transaction;
   }
@@ -338,10 +338,10 @@ export class AngolaIntegrationsModel {
         transaction.failureReason = 'Payment declined by provider';
       }
       this.paymentTransactions.set(transaction.id, transaction);
-      console.log(`📱 Pagamento ${provider.name} ${transaction.reference} ${success ? 'aprovado' : 'rejeitado'}`);
+      // Pagamento móvel processado
     }, 5000);
 
-    console.log(`📱 Pagamento ${provider.name} iniciado: ${transaction.reference}`);
+    // Pagamento móvel iniciado
     
     return transaction;
   }

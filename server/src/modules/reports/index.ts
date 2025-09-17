@@ -15,7 +15,7 @@ const reportsModule: IModule = {
   },
   register: async (app: Express) => {
     app.use('/api/reports', reportsRoutes);
-    console.log('✓ Módulo Relatórios registrado');
+    // Módulo registrado
   }
 };
 

@@ -97,7 +97,7 @@ export class ReturnsController extends BaseController {
     }
   }
   static async getReturns(req: Request, res: Response) {
-    console.log('🔍 DEBUG: ReturnsController.getReturns chamado');
+    // ReturnsController.getReturns chamado
     const controller = new ReturnsController();
     try {
       const { page, limit } = controller.validatePagination(req);

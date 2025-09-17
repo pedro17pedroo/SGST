@@ -159,6 +159,47 @@ export const orderItems = mysqlTable("order_items", {
   totalPrice: decimal("total_price", { precision: 12, scale: 2 }).notNull(),
 });
 
+// Returns table - Devoluções
+export const returns = mysqlTable("returns", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  returnNumber: varchar("return_number", { length: 100 }).notNull().unique(),
+  orderNumber: varchar("order_number", { length: 100 }),
+  orderId: varchar("order_id", { length: 36 }).references(() => orders.id),
+  type: varchar("type", { length: 50 }).notNull().default("customer"), // customer, supplier, internal
+  customerId: varchar("customer_id", { length: 36 }).references(() => customers.id),
+  customerName: varchar("customer_name", { length: 255 }),
+  customerEmail: varchar("customer_email", { length: 255 }),
+  customerPhone: varchar("customer_phone", { length: 50 }),
+  supplierId: varchar("supplier_id", { length: 36 }).references(() => suppliers.id),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected, processing, completed, cancelled
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, urgent
+  reason: text("reason").notNull(),
+  condition: varchar("condition", { length: 50 }).default("used"), // new, damaged, used, defective
+  refundMethod: varchar("refund_method", { length: 50 }).default("cash"), // cash, credit, store_credit, exchange
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  refundAmount: decimal("refund_amount", { precision: 12, scale: 2 }),
+  notes: text("notes"),
+  inspectionNotes: text("inspection_notes"),
+  userId: varchar("user_id", { length: 36 }).references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+  processedAt: timestamp("processed_at"),
+  completedAt: timestamp("completed_at"),
+});
+
+// Return items table - Itens de devolução
+export const returnItems = mysqlTable("return_items", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  returnId: varchar("return_id", { length: 36 }).notNull().references(() => returns.id),
+  productId: varchar("product_id", { length: 36 }).notNull().references(() => products.id),
+  productName: varchar("product_name", { length: 255 }).notNull(),
+  quantity: int("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  condition: varchar("condition", { length: 50 }).notNull().default("used"), // new, used, damaged, defective
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Carriers table - Transportadoras
 export const carriers = mysqlTable("carriers", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
@@ -515,6 +556,7 @@ export const realTimeVisualization = mysqlTable("real_time_visualization", {
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
+  returns: many(returns),
   stockMovements: many(stockMovements),
   shipments: many(shipments),
   inventoryCounts: many(inventoryCounts),
@@ -528,11 +570,13 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
 
 export const customersRelations = relations(customers, ({ many }) => ({
   orders: many(orders),
+  returns: many(returns),
 }));
 
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
   products: many(products),
   orders: many(orders),
+  returns: many(returns),
 }));
 
 export const warehousesRelations = relations(warehouses, ({ many }) => ({
@@ -555,8 +599,10 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   inventory: many(inventory),
   stockMovements: many(stockMovements),
   orderItems: many(orderItems),
+  returnItems: many(returnItems),
   productLocations: many(productLocations),
   inventoryCountItems: many(inventoryCountItems),
+  pickingListItems: many(pickingListItems),
   barcodeScans: many(barcodeScans),
   batches: many(batches),
 }));
@@ -616,6 +662,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
     references: [users.id],
   }),
   orderItems: many(orderItems),
+  returns: many(returns),
   shipments: many(shipments),
 }));
 
@@ -626,6 +673,37 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   }),
   product: one(products, {
     fields: [orderItems.productId],
+    references: [products.id],
+  }),
+}));
+
+export const returnsRelations = relations(returns, ({ one, many }) => ({
+  order: one(orders, {
+    fields: [returns.orderId],
+    references: [orders.id],
+  }),
+  customer: one(customers, {
+    fields: [returns.customerId],
+    references: [customers.id],
+  }),
+  supplier: one(suppliers, {
+    fields: [returns.supplierId],
+    references: [suppliers.id],
+  }),
+  user: one(users, {
+    fields: [returns.userId],
+    references: [users.id],
+  }),
+  returnItems: many(returnItems),
+}));
+
+export const returnItemsRelations = relations(returnItems, ({ one }) => ({
+  return: one(returns, {
+    fields: [returnItems.returnId],
+    references: [returns.id],
+  }),
+  product: one(products, {
+    fields: [returnItems.productId],
     references: [products.id],
   }),
 }));
@@ -718,6 +796,35 @@ export const permissionsRelations = relations(permissions, ({ many }) => ({
   rolePermissions: many(rolePermissions),
 }));
 
+// Relações para Inventory Counts
+export const inventoryCountsRelations = relations(inventoryCounts, ({ one, many }) => ({
+  warehouse: one(warehouses, {
+    fields: [inventoryCounts.warehouseId],
+    references: [warehouses.id],
+  }),
+  user: one(users, {
+    fields: [inventoryCounts.userId],
+    references: [users.id],
+  }),
+  items: many(inventoryCountItems),
+}));
+
+// Relações para Inventory Count Items
+export const inventoryCountItemsRelations = relations(inventoryCountItems, ({ one }) => ({
+  inventoryCount: one(inventoryCounts, {
+    fields: [inventoryCountItems.countId],
+    references: [inventoryCounts.id],
+  }),
+  product: one(products, {
+    fields: [inventoryCountItems.productId],
+    references: [products.id],
+  }),
+  countedByUser: one(users, {
+    fields: [inventoryCountItems.countedByUserId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -791,6 +898,26 @@ export const insertStockMovementSchema = createInsertSchema(stockMovements).omit
 });
 
 export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertReturnSchema = createInsertSchema(returns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  approvedAt: true,
+  processedAt: true,
+  completedAt: true,
+});
+
+export const updateReturnSchema = createInsertSchema(returns).omit({
+  id: true,
+  returnNumber: true,
+  createdAt: true,
+}).partial();
+
+export const insertReturnItemSchema = createInsertSchema(returnItems).omit({
   id: true,
   createdAt: true,
 });
@@ -965,6 +1092,11 @@ export type Order = typeof orders.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+export type Return = typeof returns.$inferSelect;
+export type InsertReturn = z.infer<typeof insertReturnSchema>;
+export type UpdateReturn = z.infer<typeof updateReturnSchema>;
+export type ReturnItem = typeof returnItems.$inferSelect;
+export type InsertReturnItem = z.infer<typeof insertReturnItemSchema>;
 export type Shipment = typeof shipments.$inferSelect;
 export type InsertShipment = z.infer<typeof insertShipmentSchema>;
 export type Carrier = typeof carriers.$inferSelect;

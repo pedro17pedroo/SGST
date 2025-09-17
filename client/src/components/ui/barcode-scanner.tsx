@@ -84,22 +84,22 @@ export function BarcodeScanner({
         setSelectedDeviceId(backCamera?.deviceId || devices[0].deviceId);
       }
     } catch (err) {
-      console.error('Erro ao listar dispositivos de vídeo:', err);
+        // Erro ao listar dispositivos de vídeo
       setError('Não foi possível acessar os dispositivos de câmera');
     }
   }, [selectedDeviceId]);
 
   // Iniciar escaneamento com detecção melhorada e logs detalhados
   const startScanning = useCallback(async () => {
-    console.log('🚀 Iniciando escaneamento...');
+    // Iniciando escaneamento...
     
     if (!codeReaderRef.current) {
-      console.error('❌ CodeReader não está disponível');
+      // CodeReader não está disponível
       return;
     }
     
     if (!videoRef.current) {
-      console.error('❌ Vídeo não está disponível');
+      // Vídeo não está disponível
       return;
     }
     
@@ -108,8 +108,7 @@ export function BarcodeScanner({
       setError(null);
       setScanResult(null);
       
-      console.log('📹 Configurando escaneamento com dispositivo:', selectedDeviceId);
-      console.log('📹 Video element:', videoRef.current);
+      // Configurando escaneamento com dispositivo
       
       // ZXing-js usa configurações internas otimizadas automaticamente
       
@@ -119,7 +118,7 @@ export function BarcodeScanner({
         (result: Result | null, error?: Error) => {
           if (result) {
             const barcodeText = result.getText();
-            console.log('✅ Código detectado automaticamente:', barcodeText);
+            // Código detectado automaticamente
             setScanResult(barcodeText);
             setScannedCode(barcodeText);
             
@@ -133,16 +132,14 @@ export function BarcodeScanner({
           }
           
           if (error && !(error instanceof NotFoundException)) {
-            console.error('❌ Erro durante escaneamento:', error);
+            // Erro durante escaneamento
           }
         }
       );
       
-      console.log('✅ Escaneamento iniciado com sucesso');
+      // Escaneamento iniciado com sucesso
     } catch (err) {
-      console.error('❌ Erro ao iniciar escaneamento:', err);
-      console.error('❌ Tipo do erro:', typeof err);
-      console.error('❌ Stack trace:', err instanceof Error ? err.stack : 'N/A');
+      // Erro ao iniciar escaneamento
       setError('Erro ao acessar a câmera. Verifique as permissões.');
       setIsScanning(false);
       
@@ -184,7 +181,7 @@ export function BarcodeScanner({
         });
       }
     } catch (err) {
-      console.error('Erro ao controlar flash:', err);
+        // Erro ao controlar flash
       toast({
         title: "Erro no flash",
         description: "Não foi possível controlar o flash da câmera.",
@@ -195,20 +192,20 @@ export function BarcodeScanner({
 
   // Capturar frame manualmente - versão simplificada
   const captureFrame = useCallback(async () => {
-    console.log('🔍 Iniciando captura de frame...');
+    // Iniciando captura de frame...
     
     if (!codeReaderRef.current) {
-      console.error('❌ CodeReader não está disponível');
+      // CodeReader não está disponível
       return;
     }
     
     if (!videoRef.current) {
-      console.error('❌ Vídeo não está disponível');
+      // Vídeo não está disponível
       return;
     }
     
     if (videoRef.current.readyState !== 4) {
-      console.error('❌ Vídeo não está pronto (readyState:', videoRef.current.readyState, ')');
+      // Vídeo não está pronto
       toast({
         title: "Vídeo não está pronto",
         description: "Aguarde o vídeo carregar completamente.",
@@ -218,7 +215,7 @@ export function BarcodeScanner({
     }
     
     try {
-      console.log('📹 Criando canvas para captura...');
+      // Criando canvas para captura...
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       
@@ -230,22 +227,22 @@ export function BarcodeScanner({
       canvas.width = videoRef.current.videoWidth || 640;
       canvas.height = videoRef.current.videoHeight || 480;
       
-      console.log(`📐 Dimensões do canvas: ${canvas.width}x${canvas.height}`);
+      // Dimensões do canvas definidas
       
       // Desenhar frame atual do vídeo no canvas
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       
       // Converter para data URL
       const imageDataUrl = canvas.toDataURL('image/png');
-      console.log('🖼️ Imagem capturada, tamanho:', imageDataUrl.length, 'caracteres');
+      // Imagem capturada
       
       // Tentar decodificar
-      console.log('🔍 Tentando decodificar...');
+      // Tentando decodificar...
       const result = await codeReaderRef.current.decodeFromImage(undefined, imageDataUrl);
       
       if (result) {
         const barcodeText = result.getText();
-        console.log('✅ Código encontrado:', barcodeText);
+        // Código encontrado
         
         setScanResult(barcodeText);
         setScannedCode(barcodeText);
@@ -255,12 +252,12 @@ export function BarcodeScanner({
           description: `Código: ${barcodeText}`,
         });
       } else {
-        console.log('❌ Nenhum resultado retornado');
+        // Nenhum resultado retornado
         throw new Error('Nenhum código de barras detectado');
       }
       
     } catch (err) {
-      console.error('❌ Erro ao capturar frame:', err);
+      // Erro ao capturar frame
       toast({
         title: "Nenhum código encontrado",
         description: "Tente posicionar melhor o código de barras na câmera.",

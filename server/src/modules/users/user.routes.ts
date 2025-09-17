@@ -8,6 +8,16 @@ const router = Router();
 // Aplicar middleware de proteção do módulo
 router.use(moduleGuard('users'));
 
+// Rota de teste para debug do middleware de bypass (ANTES do requireAuth)
+router.get('/test-bypass', (req, res) => {
+  console.log('🧪 Rota de teste do módulo users acessada (ANTES do requireAuth)');
+  res.json({ 
+    message: 'User module test successful!', 
+    timestamp: new Date().toISOString(),
+    note: 'Esta rota está ANTES do requireAuth no módulo users'
+  });
+});
+
 // Todas as rotas de utilizadores requerem autenticação
 router.use(requireAuth);
 
@@ -30,6 +40,8 @@ router.post('/:id/roles', requireAdmin, UserController.addRoleToUser);
 
 // DELETE /api/users/:id/roles - Remover perfil do utilizador
 router.delete('/:id/roles', requireAdmin, UserController.removeRoleFromUser);
+
+
 
 // GET /api/users/:id/permissions - Buscar permissões do utilizador
 router.get('/:id/permissions', requireRole(['admin', 'manager']), UserController.getUserPermissions);

@@ -6,7 +6,7 @@ export class ERPIntegrationsModule {
   static moduleName = 'Integrações ERP/CRM';
 
   async register(app: Express): Promise<void> {
-    app.use('/api', erpIntegrationsRoutes);
+    app.use('/api/integrations', erpIntegrationsRoutes);
   }
 }
 

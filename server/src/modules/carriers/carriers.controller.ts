@@ -67,7 +67,7 @@ export class CarriersController {
       const result = await carriersModel.getCarriers(page, limit, filters);
       res.json(result);
     } catch (error) {
-      console.error('Error fetching carriers:', error);
+      // Error fetching carriers
       res.status(500).json({ 
         message: "Erro ao buscar transportadoras", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -89,7 +89,7 @@ export class CarriersController {
       
       res.json(carrier);
     } catch (error) {
-      console.error('Error fetching carrier:', error);
+      // Error fetching carrier
       res.status(500).json({ 
         message: "Erro ao buscar transportadora", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -124,7 +124,7 @@ export class CarriersController {
         });
       }
       
-      console.error('Error creating carrier:', error);
+      // Error creating carrier
       res.status(500).json({ 
         message: "Erro ao criar transportadora", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -158,7 +158,7 @@ export class CarriersController {
         });
       }
       
-      console.error('Error updating carrier:', error);
+      // Error updating carrier
       res.status(500).json({ 
         message: "Erro ao atualizar transportadora", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -187,7 +187,7 @@ export class CarriersController {
         res.status(500).json({ message: 'Erro ao deletar transportadora' });
       }
     } catch (error) {
-      console.error('Error deleting carrier:', error);
+      // Error deleting carrier
       res.status(500).json({ 
         message: "Erro ao deletar transportadora", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -203,7 +203,7 @@ export class CarriersController {
       const carriers = await carriersModel.getActiveCarriers();
       res.json(carriers);
     } catch (error) {
-      console.error('Error fetching active carriers:', error);
+      // Error fetching active carriers
       res.status(500).json({ 
         message: "Erro ao buscar transportadoras ativas", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -224,7 +224,7 @@ export class CarriersController {
       });
       res.json(result.carriers);
     } catch (error) {
-      console.error('Error fetching internal carriers:', error);
+      // Error fetching internal carriers
       res.status(500).json({ 
         message: "Erro ao buscar transportadoras internas", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -243,7 +243,7 @@ export class CarriersController {
       const isUnique = await carriersModel.isCodeUnique(code, excludeId as string);
       res.json({ isUnique });
     } catch (error) {
-      console.error('Error checking code uniqueness:', error);
+      // Error checking code uniqueness
       res.status(500).json({ 
         message: "Erro ao verificar unicidade do código", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -259,7 +259,7 @@ export class CarriersController {
       const internalCarrier = await carriersModel.ensureInternalCarrier();
       res.json(internalCarrier);
     } catch (error) {
-      console.error('Error ensuring internal carrier:', error);
+      // Error ensuring internal carrier
       res.status(500).json({ 
         message: "Erro ao garantir transportadora interna", 
         error: error instanceof Error ? error.message : 'Unknown error'

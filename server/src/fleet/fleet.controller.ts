@@ -58,9 +58,9 @@ export class FleetController {
   // Vehicle Management
   static async getVehicles(req: Request, res: Response) {
     try {
-      console.log('🚗 Iniciando busca de veículos...');
+      // Iniciando busca de veículos...
       const { status, type, driverId } = req.query;
-      console.log('📋 Parâmetros de consulta:', { status, type, driverId });
+      // Parâmetros de consulta
       
       const conditions = [];
       
@@ -76,12 +76,12 @@ export class FleetController {
         conditions.push(eq(vehicles.driverId, driverId as string));
       }
       
-      console.log('🔍 Executando consulta no banco de dados...');
+      // Executando consulta no banco de dados...
       const result = conditions.length > 0 
         ? await db.select().from(vehicles).where(and(...conditions)).orderBy(desc(vehicles.createdAt))
         : await db.select().from(vehicles).orderBy(desc(vehicles.createdAt));
       
-      console.log('✅ Consulta executada com sucesso. Resultados:', result.length);
+      // Consulta executada com sucesso
       
       res.json({
         success: true,
@@ -89,8 +89,7 @@ export class FleetController {
         message: 'Veículos obtidos com sucesso'
       });
     } catch (error) {
-      console.error('❌ Erro detalhado ao buscar veículos:', error);
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'Sem stack trace');
+      // Erro detalhado ao buscar veículos
       res.status(500).json({
         success: false,
         message: 'Falha ao buscar veículos',
@@ -116,7 +115,7 @@ export class FleetController {
         message: 'Veículo criado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao criar veículo:', error);
+      // Erro ao criar veículo
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
@@ -151,7 +150,7 @@ export class FleetController {
         message: 'Veículo obtido com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao buscar veículo:', error);
+      // Erro ao buscar veículo
       res.status(500).json({
         success: false,
         message: 'Falha ao buscar veículo',
@@ -184,7 +183,7 @@ export class FleetController {
         message: 'Veículo atualizado com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao atualizar veículo:', error);
+      // Erro ao atualizar veículo
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
@@ -222,7 +221,7 @@ export class FleetController {
         message: 'Veículo removido com sucesso'
       });
     } catch (error) {
-      console.error('Erro ao remover veículo:', error);
+      // Erro ao remover veículo
       res.status(500).json({
         success: false,
         message: 'Falha ao remover veículo',

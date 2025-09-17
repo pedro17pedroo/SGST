@@ -74,7 +74,7 @@ export class AngolaIntegrationsController {
         isActive: true
       });
 
-      console.log(`📊 Nova integração EMIS criada: ${integration.companyTaxId}`);
+      // Nova integração EMIS criada
 
       res.status(201).json({
         message: 'Integração EMIS criada com sucesso',
@@ -88,7 +88,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao criar integração EMIS:', error);
+      // Erro ao criar integração EMIS
       res.status(400).json({ 
         message: 'Erro ao criar integração EMIS',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -108,7 +108,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao testar conexão EMIS:', error);
+      // Erro ao testar conexão EMIS
       res.status(500).json({ 
         message: 'Erro ao testar conexão EMIS',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -122,7 +122,7 @@ export class AngolaIntegrationsController {
       
       const invoice = await AngolaIntegrationsModel.submitInvoiceToEMIS(validated);
 
-      console.log(`📋 Fatura ${invoice.invoiceNumber} submetida ao EMIS`);
+      // Fatura submetida ao EMIS
 
       res.status(201).json({
         message: 'Fatura submetida ao EMIS com sucesso',
@@ -137,7 +137,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao submeter fatura ao EMIS:', error);
+      // Erro ao submeter fatura ao EMIS
       res.status(400).json({ 
         message: 'Erro ao submeter fatura ao EMIS',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -176,7 +176,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter faturas EMIS:', error);
+      // Erro ao obter faturas EMIS
       res.status(500).json({ 
         message: 'Erro ao obter faturas EMIS',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -200,7 +200,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter fatura EMIS:', error);
+      // Erro ao obter fatura EMIS
       res.status(500).json({ 
         message: 'Erro ao obter fatura EMIS',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -218,7 +218,7 @@ export class AngolaIntegrationsController {
         isActive: true
       });
 
-      console.log(`🏦 Nova integração Multicaixa criada: ${integration.merchantId}`);
+      // Nova integração Multicaixa criada
 
       res.status(201).json({
         message: 'Integração Multicaixa criada com sucesso',
@@ -232,7 +232,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao criar integração Multicaixa:', error);
+      // Erro ao criar integração Multicaixa
       res.status(400).json({ 
         message: 'Erro ao criar integração Multicaixa',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -246,7 +246,7 @@ export class AngolaIntegrationsController {
       
       const transaction = await AngolaIntegrationsModel.processMulticaixaPayment(validated);
 
-      console.log(`💳 Pagamento Multicaixa iniciado: ${transaction.reference}`);
+      // Pagamento Multicaixa iniciado
 
       res.status(201).json({
         message: 'Pagamento Multicaixa iniciado com sucesso',
@@ -261,7 +261,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao processar pagamento Multicaixa:', error);
+      // Erro ao processar pagamento Multicaixa
       res.status(400).json({ 
         message: 'Erro ao processar pagamento Multicaixa',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -288,7 +288,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter provedores de pagamento móvel:', error);
+      // Erro ao obter provedores de pagamento móvel
       res.status(500).json({ 
         message: 'Erro ao obter provedores de pagamento móvel',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -302,7 +302,7 @@ export class AngolaIntegrationsController {
       
       const transaction = await AngolaIntegrationsModel.processMobilePayment(validated);
 
-      console.log(`📱 Pagamento móvel iniciado: ${transaction.reference}`);
+      // Pagamento móvel iniciado
 
       res.status(201).json({
         message: 'Pagamento móvel iniciado com sucesso',
@@ -319,7 +319,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao processar pagamento móvel:', error);
+      // Erro ao processar pagamento móvel
       res.status(400).json({ 
         message: 'Erro ao processar pagamento móvel',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -344,7 +344,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter transação:', error);
+      // Erro ao obter transação
       res.status(500).json({ 
         message: 'Erro ao obter transação',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -376,7 +376,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter pagamentos da encomenda:', error);
+      // Erro ao obter pagamentos da encomenda
       res.status(500).json({ 
         message: 'Erro ao obter pagamentos da encomenda',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -403,7 +403,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter integrações EMIS:', error);
+      // Erro ao obter integrações EMIS
       res.status(500).json({ 
         message: 'Erro ao obter integrações EMIS',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -429,7 +429,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter integrações Multicaixa:', error);
+      // Erro ao obter integrações Multicaixa
       res.status(500).json({ 
         message: 'Erro ao obter integrações Multicaixa',
         error: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -463,7 +463,7 @@ export class AngolaIntegrationsController {
       });
 
     } catch (error) {
-      console.error('Erro ao obter estatísticas das integrações:', error);
+      // Erro ao obter estatísticas das integrações
       res.status(500).json({ 
         message: 'Erro ao obter estatísticas das integrações',
         error: error instanceof Error ? error.message : 'Erro desconhecido'

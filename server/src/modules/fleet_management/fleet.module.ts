@@ -15,7 +15,7 @@ export const fleetManagementModule: IModule = {
   config,
   register: async (app: Express) => {
     app.use('/api/fleet', fleetRoutes);
-    console.log('✓ Módulo Gestão de Veículos registrado');
+    // Módulo Gestão de Veículos registrado
   }
 };
 

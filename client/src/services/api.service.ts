@@ -253,13 +253,13 @@ export const customersService = {
     const response = await apiRequest('GET', url);
     const apiResponse = await processResponse<{success: boolean, message: string, data: any[]}>(response);
     
-    console.log('Debug customersService.getCustomers - apiResponse:', apiResponse);
+    // Debug customersService.getCustomers - apiResponse
     
     // A API retorna { success: true, message: '...', data: customers }
     // Extrair o array de clientes da resposta
     const customers = apiResponse.data || [];
     
-    console.log('Debug customersService.getCustomers - customers array:', customers);
+    // Debug customersService.getCustomers - customers array
     
     // Retornar no formato PaginatedResponse esperado pelo hook
     const result = {
@@ -274,7 +274,7 @@ export const customersService = {
       }
     } as PaginatedResponse<any>;
     
-    console.log('Debug customersService.getCustomers - result:', result);
+    // Debug customersService.getCustomers - result
     return result;
   },
 
@@ -350,19 +350,18 @@ export const suppliersService = {
    * Criar novo fornecedor
    */
   async createSupplier(supplierData: any) {
-    console.log('suppliersService.createSupplier - Dados recebidos:', supplierData);
-    console.log('suppliersService.createSupplier - Endpoint:', API_ENDPOINTS.suppliers.create);
+    // suppliersService.createSupplier - Dados recebidos
     
     try {
       const response = await apiRequest('POST', API_ENDPOINTS.suppliers.create, supplierData);
-      console.log('suppliersService.createSupplier - Resposta bruta:', response);
+      // suppliersService.createSupplier - Resposta bruta
       
       const processedResponse = processResponse<ApiResponse<any>>(response);
-      console.log('suppliersService.createSupplier - Resposta processada:', processedResponse);
+      // suppliersService.createSupplier - Resposta processada
       
       return processedResponse;
     } catch (error) {
-      console.error('suppliersService.createSupplier - Erro:', error);
+      // suppliersService.createSupplier - Erro
       throw error;
     }
   },
@@ -434,6 +433,82 @@ export const inventoryService = {
   async getLowStockProducts() {
     const response = await apiRequest('GET', API_ENDPOINTS.inventory.lowStock);
     return processResponse<ApiResponse<any[]>>(response);
+  },
+};
+
+// === SERVIÇOS DE CONTAGENS DE INVENTÁRIO ===
+export const inventoryCountsService = {
+  /**
+   * Listar contagens de inventário
+   */
+  async getInventoryCounts(params?: QueryParams) {
+    const url = buildApiUrl(API_ENDPOINTS.inventoryCounts.list, params);
+    const response = await apiRequest('GET', url);
+    return processResponse<PaginatedResponse<any>>(response);
+  },
+
+  /**
+   * Obter contagem por ID
+   */
+  async getInventoryCount(id: string) {
+    const response = await apiRequest('GET', API_ENDPOINTS.inventoryCounts.get(id));
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Criar nova contagem
+   */
+  async createInventoryCount(countData: any) {
+    const response = await apiRequest('POST', API_ENDPOINTS.inventoryCounts.create, countData);
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Atualizar contagem
+   */
+  async updateInventoryCount(id: string, countData: any) {
+    const response = await apiRequest('PUT', API_ENDPOINTS.inventoryCounts.update(id), countData);
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Eliminar contagem
+   */
+  async deleteInventoryCount(id: string) {
+    const response = await apiRequest('DELETE', API_ENDPOINTS.inventoryCounts.delete(id));
+    return processResponse<ApiResponse>(response);
+  },
+
+  /**
+   * Iniciar contagem
+   */
+  async startInventoryCount(id: string) {
+    const response = await apiRequest('POST', API_ENDPOINTS.inventoryCounts.start(id));
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Finalizar contagem
+   */
+  async completeInventoryCount(id: string) {
+    const response = await apiRequest('POST', API_ENDPOINTS.inventoryCounts.complete(id));
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Obter itens da contagem
+   */
+  async getInventoryCountItems(id: string) {
+    const response = await apiRequest('GET', API_ENDPOINTS.inventoryCounts.items(id));
+    return processResponse<ApiResponse<any[]>>(response);
+  },
+
+  /**
+   * Atualizar item da contagem
+   */
+  async updateInventoryCountItem(countId: string, itemId: string, itemData: any) {
+    const response = await apiRequest('PUT', API_ENDPOINTS.inventoryCounts.updateItem(countId, itemId), itemData);
+    return processResponse<ApiResponse<any>>(response);
   },
 };
 
@@ -1112,6 +1187,71 @@ export const productLocationsService = {
   },
 };
 
+// === SERVIÇOS DE ESCANEAMENTO DE CÓDIGOS DE BARRAS ===
+export const barcodeScanningService = {
+  /**
+   * Criar novo escaneamento de código de barras
+   */
+  async createBarcodeScan(scanData: any) {
+    const response = await apiRequest('POST', API_ENDPOINTS.barcodeScanning.scan, scanData);
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Obter histórico de escaneamentos
+   */
+  async getBarcodeScans(params?: QueryParams) {
+    const queryString = params ? new URLSearchParams({
+      page: params.page?.toString() || '1',
+      limit: params.limit?.toString() || '10',
+      ...(params.search && { search: params.search }),
+      ...(params.sortBy && { sortBy: params.sortBy }),
+      ...(params.sortOrder && { sortOrder: params.sortOrder }),
+      ...Object.fromEntries(
+        Object.entries(params).filter(([key]) => !['page', 'limit', 'search', 'sortBy', 'sortOrder'].includes(key))
+          .map(([key, value]) => [key, String(value)])
+      )
+    }).toString() : '';
+    
+    const endpoint = queryString ? `${API_ENDPOINTS.barcodeScanning.scans}?${queryString}` : API_ENDPOINTS.barcodeScanning.scans;
+    const response = await apiRequest('GET', endpoint);
+    return processResponse<PaginatedResponse<any>>(response);
+  },
+
+  /**
+   * Obter escaneamentos por produto
+   */
+  async getBarcodeScansForProduct(productId: string, params?: QueryParams) {
+    const queryString = params ? new URLSearchParams({
+      page: params.page?.toString() || '1',
+      limit: params.limit?.toString() || '10',
+      ...(params.search && { search: params.search }),
+      ...(params.sortBy && { sortBy: params.sortBy }),
+      ...(params.sortOrder && { sortOrder: params.sortOrder }),
+    }).toString() : '';
+    
+    const endpoint = queryString ? `${API_ENDPOINTS.barcodeScanning.productScans(productId)}?${queryString}` : API_ENDPOINTS.barcodeScanning.productScans(productId);
+    const response = await apiRequest('GET', endpoint);
+    return processResponse<PaginatedResponse<any>>(response);
+  },
+
+  /**
+   * Buscar produto por código de barras
+   */
+  async findProductByBarcode(barcode: string) {
+    const response = await apiRequest('GET', API_ENDPOINTS.barcodeScanning.findProduct(barcode));
+    return processResponse<ApiResponse<any>>(response);
+  },
+
+  /**
+   * Obter última localização do produto
+   */
+  async getLastProductLocation(productId: string) {
+    const response = await apiRequest('GET', API_ENDPOINTS.barcodeScanning.lastLocation(productId));
+    return processResponse<ApiResponse<any>>(response);
+  },
+};
+
 export const apiServices = {
   auth: authService,
   dashboard: dashboardService,
@@ -1120,6 +1260,7 @@ export const apiServices = {
   customers: customersService,
   suppliers: suppliersService,
   inventory: inventoryService,
+  inventoryCounts: inventoryCountsService,
   orders: ordersService,
   shipping: shippingService,
   publicTracking: publicTrackingService,
@@ -1134,6 +1275,7 @@ export const apiServices = {
   roles: rolesService,
   alerts: alertsService,
   productLocations: productLocationsService,
+  barcodeScanning: barcodeScanningService,
 };
 
 // Exportar como default para facilitar importação

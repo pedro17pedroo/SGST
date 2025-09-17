@@ -45,7 +45,7 @@ export class BatchManagementController {
       
       res.json(batches);
     } catch (error) {
-      console.error('Error fetching batches:', error);
+      // Error fetching batches
       res.status(500).json({
         message: "Erro ao buscar lotes",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -66,7 +66,7 @@ export class BatchManagementController {
 
       res.json(batch);
     } catch (error) {
-      console.error('Error fetching batch:', error);
+      // Error fetching batch
       res.status(500).json({
         message: "Erro ao buscar lote",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -96,7 +96,7 @@ export class BatchManagementController {
       const batch = await BatchManagementModel.createBatch(validated);
       res.status(201).json(batch);
     } catch (error) {
-      console.error('Error creating batch:', error);
+      // Error creating batch
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -127,7 +127,7 @@ export class BatchManagementController {
       const batch = await BatchManagementModel.updateBatch(id, validated);
       res.json(batch);
     } catch (error) {
-      console.error('Error updating batch:', error);
+      // Error updating batch
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -148,7 +148,7 @@ export class BatchManagementController {
       await BatchManagementModel.deleteBatch(id);
       res.status(204).send();
     } catch (error) {
-      console.error('Error deleting batch:', error);
+      // Error deleting batch
       res.status(500).json({
         message: "Erro ao eliminar lote",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -164,7 +164,7 @@ export class BatchManagementController {
       const result = await BatchManagementModel.addProductsToBatch(id, validated);
       res.json(result);
     } catch (error) {
-      console.error('Error adding products to batch:', error);
+      // Error adding products to batch
       if (error instanceof z.ZodError) {
         res.status(400).json({
           message: "Dados inválidos",
@@ -186,7 +186,7 @@ export class BatchManagementController {
       await BatchManagementModel.removeProductFromBatch(id, quantity);
       res.status(204).send();
     } catch (error) {
-      console.error('Error removing product from batch:', error);
+      // Error removing product from batch
       res.status(500).json({
         message: "Erro ao remover produto do lote",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -200,7 +200,7 @@ export class BatchManagementController {
       const alerts = await BatchManagementModel.getExpiryAlerts(id);
       res.json(alerts);
     } catch (error) {
-      console.error('Error getting expiry alerts:', error);
+      // Error getting expiry alerts
       res.status(500).json({
         message: "Erro ao buscar alertas de validade",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -216,7 +216,7 @@ export class BatchManagementController {
       const products = await BatchManagementModel.getExpiringProducts(daysAhead, warehouseId);
       res.json(products);
     } catch (error) {
-      console.error('Error getting expiring products:', error);
+      // Error getting expiring products
       res.status(500).json({
         message: "Erro ao buscar produtos a expirar",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -230,7 +230,7 @@ export class BatchManagementController {
       const products = await BatchManagementModel.getExpiredProducts(warehouseId);
       res.json(products);
     } catch (error) {
-      console.error('Error getting expired products:', error);
+      // Error getting expired products
       res.status(500).json({
         message: "Erro ao buscar produtos expirados",
         error: error instanceof Error ? error.message : 'Unknown error'

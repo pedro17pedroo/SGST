@@ -8,17 +8,24 @@ export class ReturnsModule extends BaseModule {
   config = MODULE_CONFIG.returns;
 
   async register(app: Express): Promise<void> {
-    console.log('🔍 DEBUG: Iniciando registro do módulo returns...');
-    console.log('🔍 DEBUG: returnsRoutes:', typeof returnsRoutes);
-    
-    // Registrar rotas do módulo com middleware de proteção
-    app.use('/api/returns', moduleGuard('returns'), returnsRoutes);
-    console.log('✓ Módulo Gestão de Devoluções registrado');
-    console.log('🔍 DEBUG: Rotas /api/returns registradas com sucesso');
+    try {
+      console.log('🔍 DEBUG Returns: Iniciando registo do módulo returns...');
+      console.log('🔍 DEBUG Returns: Tipo do app:', typeof app);
+      console.log('🔍 DEBUG Returns: Tipo das rotas:', typeof returnsRoutes);
+      
+      // Registrar rotas do módulo com middleware de proteção
+      app.use('/api/returns', moduleGuard('returns'), returnsRoutes);
+      
+      console.log('✅ Rotas de returns registradas com sucesso');
+      console.log('✅ Rotas registradas no caminho: /api/returns');
+    } catch (error) {
+      console.error('❌ Erro ao registrar rotas de returns:', error);
+      throw error;
+    }
   }
 
   async unregister(app: Express): Promise<void> {
-    console.log(`✗ Módulo ${this.config.name} desregistrado`);
+    // Módulo desregistrado
   }
 }
 

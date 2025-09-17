@@ -70,9 +70,18 @@ export class InventoryCountsModel {
     }
   }
 
-  static async getInventoryCount(id: string) {
-    // TODO: Implementar com Drizzle quando as tabelas estiverem criadas
-    return null;
+  static async getInventoryCount(id: string): Promise<InventoryCount | null> {
+    try {
+      const result = await db
+        .select()
+        .from(inventoryCounts)
+        .where(eq(inventoryCounts.id, id))
+        .limit(1);
+      
+      return result[0] || null;
+    } catch (error) {
+      throw new Error(`Erro ao buscar contagem de inventário: ${error}`);
+    }
   }
 
   static async createInventoryCount(count: InsertInventoryCount) {
@@ -81,38 +90,101 @@ export class InventoryCountsModel {
     return await insertAndReturn<InventoryCount>(inventoryCounts, countData, inventoryCountsTable.id, id);
   }
 
-  static async updateInventoryCount(id: string, count: Partial<InsertInventoryCount>) {
-    return await updateAndReturn<InventoryCount>(inventoryCounts, id, count, inventoryCountsTable.id);
+  static async updateInventoryCount(id: string, count: Partial<InsertInventoryCount>): Promise<InventoryCount | null> {
+    try {
+      await db
+        .update(inventoryCounts)
+        .set(count)
+        .where(eq(inventoryCounts.id, id));
+      
+      return await this.getInventoryCount(id);
+    } catch (error) {
+      throw new Error(`Erro ao atualizar contagem de inventário: ${error}`);
+    }
   }
 
-  static async deleteInventoryCount(id: string) {
-    // TODO: Implementar com Drizzle quando as tabelas estiverem criadas
-    throw new Error('Inventory counts not implemented yet - tables missing');
+  static async deleteInventoryCount(id: string): Promise<boolean> {
+    try {
+      // Verificar se a contagem existe antes de deletar
+      const existingCount = await this.getInventoryCount(id);
+      if (!existingCount) {
+        return false;
+      }
+      
+      // Primeiro, deletar todos os itens da contagem
+      await db
+        .delete(inventoryCountItems)
+        .where(eq(inventoryCountItems.countId, id));
+      
+      // Depois, deletar a contagem
+      await db
+        .delete(inventoryCounts)
+        .where(eq(inventoryCounts.id, id));
+      
+      return true;
+    } catch (error) {
+      throw new Error(`Erro ao deletar contagem de inventário: ${error}`);
+    }
   }
 
-  static async getInventoryCountItems(countId: string) {
-    // TODO: Implementar com Drizzle quando as tabelas estiverem criadas
-    return [];
+  static async getInventoryCountItems(countId: string): Promise<InventoryCountItem[]> {
+    try {
+      const result = await db
+        .select()
+        .from(inventoryCountItems)
+        .where(eq(inventoryCountItems.countId, countId));
+      
+      return result;
+    } catch (error) {
+      throw new Error(`Erro ao buscar itens da contagem: ${error}`);
+    }
   }
 
-  static async getInventoryCountItem(id: string) {
-    // TODO: Implementar com Drizzle quando as tabelas estiverem criadas
-    return {
-      id,
-      expectedQuantity: 0,
-      countedQuantity: 0,
-      variance: 0
-    };
+  static async getInventoryCountItem(id: string): Promise<InventoryCountItem | null> {
+    try {
+      const result = await db
+        .select()
+        .from(inventoryCountItems)
+        .where(eq(inventoryCountItems.id, id))
+        .limit(1);
+      
+      return result[0] || null;
+    } catch (error) {
+      throw new Error(`Erro ao buscar item da contagem: ${error}`);
+    }
   }
 
-  static async createInventoryCountItem(item: InsertInventoryCountItem) {
-    // TODO: Implementar com Drizzle quando as tabelas estiverem criadas
-    throw new Error('Inventory count items not implemented yet - tables missing');
+  static async createInventoryCountItem(item: InsertInventoryCountItem): Promise<InventoryCountItem> {
+    try {
+      const newItem = {
+        id: randomUUID(),
+        ...item
+      };
+      
+      await db.insert(inventoryCountItems).values(newItem);
+      
+      const result = await this.getInventoryCountItem(newItem.id);
+      if (!result) {
+        throw new Error('Falha ao criar item da contagem');
+      }
+      
+      return result;
+    } catch (error) {
+      throw new Error(`Erro ao criar item da contagem: ${error}`);
+    }
   }
 
-  static async updateInventoryCountItem(id: string, item: Partial<InsertInventoryCountItem>) {
-    // TODO: Implementar com Drizzle quando as tabelas estiverem criadas
-    throw new Error('Inventory count items not implemented yet - tables missing');
+  static async updateInventoryCountItem(id: string, item: Partial<InsertInventoryCountItem>): Promise<InventoryCountItem | null> {
+    try {
+      await db
+        .update(inventoryCountItems)
+        .set(item)
+        .where(eq(inventoryCountItems.id, id));
+      
+      return await this.getInventoryCountItem(id);
+    } catch (error) {
+      throw new Error(`Erro ao atualizar item da contagem: ${error}`);
+    }
   }
 
   static async generateCountList(countId: string, filters: {

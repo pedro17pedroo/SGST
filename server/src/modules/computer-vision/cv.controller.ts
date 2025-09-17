@@ -20,7 +20,7 @@ export class ComputerVisionController {
         result
       });
     } catch (error) {
-      console.error('Error processing image:', error);
+      // Error processing image
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -49,7 +49,7 @@ export class ComputerVisionController {
       
       res.json(results);
     } catch (error) {
-      console.error('Error fetching counting results:', error);
+      // Error fetching counting results
       res.status(500).json({ 
         message: "Erro ao buscar resultados de contagem", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -68,7 +68,7 @@ export class ComputerVisionController {
       
       res.json(result);
     } catch (error) {
-      console.error('Error fetching counting result:', error);
+      // Error fetching counting result
       res.status(500).json({ 
         message: "Erro ao buscar resultado de contagem", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -92,7 +92,7 @@ export class ComputerVisionController {
         result
       });
     } catch (error) {
-      console.error('Error verifying counting result:', error);
+      // Error verifying counting result
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -118,7 +118,7 @@ export class ComputerVisionController {
         result
       });
     } catch (error) {
-      console.error('Error updating counting result:', error);
+      // Error updating counting result
       res.status(500).json({ 
         message: "Erro ao atualizar resultado de contagem", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -131,7 +131,7 @@ export class ComputerVisionController {
       const stats = await ComputerVisionModel.getCountingStats();
       res.json(stats);
     } catch (error) {
-      console.error('Error fetching counting stats:', error);
+      // Error fetching counting stats
       res.status(500).json({ 
         message: "Erro ao buscar estatísticas de contagem", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -144,7 +144,7 @@ export class ComputerVisionController {
       const results = await ComputerVisionModel.getDamageDetectionResults();
       res.json(results);
     } catch (error) {
-      console.error('Error fetching damage detection results:', error);
+      // Error fetching damage detection results
       res.status(500).json({ 
         message: "Erro ao buscar resultados de detecção de danos", 
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -181,7 +181,7 @@ export class ComputerVisionController {
         results
       });
     } catch (error) {
-      console.error('Error simulating counting session:', error);
+      // Error simulating counting session
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 

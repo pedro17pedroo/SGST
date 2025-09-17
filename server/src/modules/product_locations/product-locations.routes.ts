@@ -4,17 +4,17 @@ import { ProductLocationsController } from './product-locations.controller';
 const router = Router();
 
 // Product locations endpoints
-router.get('/product-locations/paginated', ProductLocationsController.getProductLocationsWithPagination);
-router.get('/product-locations', ProductLocationsController.getProductLocations);
-router.get('/product-locations/:id', ProductLocationsController.getProductLocation);
-router.post('/product-locations', ProductLocationsController.createProductLocation);
-router.patch('/product-locations/:id', ProductLocationsController.updateProductLocation);
-router.delete('/product-locations/:id', ProductLocationsController.deleteProductLocation);
+router.get('/paginated', ProductLocationsController.getProductLocationsWithPagination);
+router.get('/', ProductLocationsController.getProductLocations);
+router.get('/:id', ProductLocationsController.getProductLocation);
+router.post('/', ProductLocationsController.createProductLocation);
+router.patch('/:id', ProductLocationsController.updateProductLocation);
+router.delete('/:id', ProductLocationsController.deleteProductLocation);
 
 // Location management
 router.get('/warehouses/:warehouseId/locations', ProductLocationsController.getWarehouseLocations);
-router.post('/product-locations/bulk-assign', ProductLocationsController.bulkAssignLocations);
-router.get('/product-locations/search/:productId', ProductLocationsController.findProductLocation);
+router.post('/bulk-assign', ProductLocationsController.bulkAssignLocations);
+router.get('/search/:productId', ProductLocationsController.findProductLocation);
 
 // Zone and bin management
 router.get('/warehouses/:warehouseId/zones', ProductLocationsController.getWarehouseZones);
